@@ -1,0 +1,43 @@
+* Test heading top-level
+
+This file is for testing helm-org-quicksearch.
+
+#+BEGIN_SRC elisp
+(helm-org-quicksearch-get-candidates "pomegr strawberry")
+(helm-org-quicksearch-get-candidates "top-level")
+#+END_SRC
+
+** Heading A: strawberry
+
+Keywords: pomegranate boisenberry
+
+** Heading B: pomegranate boisenberry
+
+** Heading C: pomegranate
+
+** Heading D: boisenberry
+
+** Heading E
+
+pomegranate
+
+** Heading F green
+
+boisenberry
+
+** Heading G
+red orange yellow green blue indigo violet
+black black black black blue black black
+
+*** Heading G.1
+
+green eggs and strawberry ham
+
+** Heading H: Helm 
+
+What is it with all this food?
+
+*** Heading H.1
+
+Emacs
+
