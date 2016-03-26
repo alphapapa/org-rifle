@@ -113,8 +113,8 @@ POSITION is the position in BUFFER where the candidate heading begins."
               ;; Reduce matching lines to matched word with context
               (setq matched-words-with-context
                     (cl-loop for line in (map 'list 'car matching-lines-in-node)
-                             for token in input
-                             append (cl-loop for re = (rx-to-string
+                             append (cl-loop for token in input
+                                             for re = (rx-to-string
                                                        `(and (repeat 0 ,helm-org-quicksearch-context-words
                                                                      (and (1+ (not space))
                                                                           (or (1+ space)
@@ -126,7 +126,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                                                           (1+ (not space))))))
                                              for m = (string-match re line end)
                                              for end = (match-end 1)
-                                             while m
+                                             when m
                                              collect (concat "..." (match-string-no-properties 0 line) "..."))))
 
               ;; Returning list in format: (string-joining-heading-and-lines-by-newlines node-beg)
