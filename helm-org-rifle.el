@@ -45,11 +45,11 @@
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
 
-For large result sets, this may be slow, although it doesn't seem
-to be the bottleneck.")
+For large result sets this may be slow, although it doesn't seem
+to be a major bottleneck.")
 
 (defcustom helm-org-rifle-show-path nil
-  "Show the whole heading path instead of just the node's heading.")
+  "Show the whole heading path instead of just the entry's heading.")
 
 (defun helm-org-rifle ()
   "This is my rifle. There are many like it, but this one is mine.
