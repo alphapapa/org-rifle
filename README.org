@@ -61,11 +61,11 @@ Right now, if more than one term appears in the same range, parts of that range 
 
 *** TODO Further profiling
 
-=helm-org-rifle-get-candidates-in-buffer= can probably be optimized more with =elp=.  This might also help with figuring out the duplicate-candidates bug.
+=helm-org-rifle-get-candidates-in-buffer= might be able to be optimized more with =elp=.  But the "low-hanging fruit" is probably gone, and performance seems good.
 
-*** TODO Match limit
+*** MAYBE Match limit
 
-=org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.
+=org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
 
 *** MAYBE Optionally include TODO keyword and/or tags
 
