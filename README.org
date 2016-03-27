@@ -14,7 +14,7 @@ An animation is worth...a million words?
 
 [[screencast.gif]]
 
-With =helm-org-rifle-show-path= set to =t=:
+With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is shown:
 
 [[screenshot-path.png]]
 
