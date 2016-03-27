@@ -31,6 +31,12 @@
 ;; but it might still be useful, depending on how big one's org files
 ;; are.
 
+;;;;; MAYBE Optionally include TODO keyword and/or tags
+
+;; It could be handy to be able to match against the TODO keyword and
+;; tags.  Would make it more complicated, but probably not too hard, and
+;; maybe worth it.
+
 ;;; Code:
 
 (defcustom helm-org-rifle-context-words 10
@@ -148,7 +154,6 @@ POSITION is the position in BUFFER where the candidate heading begins."
 
                  ;; TODO: Some of these can be moved down to after the match is confirmed
                  ;; Heading text
-                 ;; MAYBE: Optionally include TODO keyword and/or tags
 
 
                  ;; Note: org-fontify-like-in-org-mode uses temporary buffers that load
