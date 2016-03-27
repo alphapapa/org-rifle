@@ -38,9 +38,10 @@
 ;;; Usage
 
 ;; Run the command `helm-org-rifle', type some words, and all current
-;; `org-mode' buffers will be rifled through.  Hit "RET" to show the
-;; selected entry.  You can also show the entry in an indirect buffer
-;; by selecting that action from the Helm actions list.
+;; `org-mode' buffers will be rifled through, with results grouped by
+;; buffer.  Hit "RET" to show the selected entry.  You can also show
+;; the entry in an indirect buffer by selecting that action from the
+;; Helm actions list.
 
 ;;; Credits:
 

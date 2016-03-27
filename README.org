@@ -4,7 +4,7 @@ This is my rifle.  There are many like it, but this one is mine.  My rifle is my
 
 What does my rifle do?  It searches rapidly through my Org files, quickly bringing me the information I need to defeat the enemy.
 
-This package is a continuation of the fantastic [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]] packages, now with Helm support. It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context to make it easy to acquire your target.
+This package is a continuation of the fantastic [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]] packages, now with Helm support. It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context and grouped by buffer to make it easy to acquire your target.
 
 Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
 
@@ -20,7 +20,7 @@ Then you can customize the =helm-org-rifle= group if you like.
 
 * Usage
 
-Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
+Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through, with results grouped by buffer.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
 
 * Credits
 
