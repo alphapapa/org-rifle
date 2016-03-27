@@ -1,10 +1,10 @@
 * Test heading top-level
 
-This file is for testing helm-org-quicksearch.
+This file is for testing helm-org-rifle.
 
 #+BEGIN_SRC elisp
-(helm-org-quicksearch-get-candidates "pomegr blueberry")
-(helm-org-quicksearch-get-candidates "top-level")
+(helm-org-rifle-get-candidates "pomegr blueberry")
+(helm-org-rifle-get-candidates "top-level")
 #+END_SRC
 
 ** Heading A: blueberry
@@ -40,6 +40,10 @@ What is it with all this food?
 *** Heading H.1
 
 Emacs
+
+** Heading I: emacs
+
+helm :)
 
 * Test code for eval'ing
 
@@ -151,10 +155,10 @@ guessing the regexp is too complicated or unoptimized.
                                                          (and (or word-boundary
                                                                   (1+ space))
                                                               (1+ (not space))))))
-
-                                 This one line uses about 95% of the runtime of this function
+  
+                                 ;;  This one line uses about 95% of the runtime of this function
                                  for m = (string-match re line end)
-
+  
                                  for end = (match-end 1)
                                  when m
                                  collect (match-string-no-properties 0 line))))
@@ -197,7 +201,3 @@ This is the version currently in-use.
   ;; issue.
   (fontified-heading (org-fontify-like-in-org-mode plain-heading))
 #+END_SRC
-
-#+begin_src emacs-lisp
-(provide 'helm-org-rifle)
-#+end_src
