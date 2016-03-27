@@ -103,11 +103,13 @@ one for each open Org buffer."
                           :delayed 0.5
                           :multiline t
                           :volatile t
-                          :action (lambda (candidate)
-                                    (setq helm-org-rifle-result-count 0)
-                                    (switch-to-buffer (helm-attr 'buffer))
-                                    (goto-char (car candidate))
-                                    (org-reveal))
+                          :action (helm-make-actions
+                                   "Show entry" (lambda (candidate)
+                                                  (setq helm-org-rifle-result-count 0)
+                                                  (switch-to-buffer (helm-attr 'buffer))
+                                                  (goto-char (car candidate))
+                                                  (org-show-entry))
+                                   "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer)
                           :after-init-hook (lambda ()
                                              (with-current-buffer helm-buffer
                                                (face-remap-set-base 'helm-selection
