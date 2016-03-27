@@ -23,6 +23,14 @@
 ;; something to do with the way we're using multiple sources,
 ;; one-per-buffer.
 
+;;;; Ideas
+
+;;;;; TODO Match limit
+
+;; =org-search-goto= had a match limit.  I removed it to simplify things,
+;; but it might still be useful, depending on how big one's org files
+;; are.
+
 ;;; Code:
 
 (defcustom helm-org-rifle-context-words 10
