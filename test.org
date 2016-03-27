@@ -687,3 +687,53 @@ Does searching for "solution" match this subheading?
 *** Test entry
 
 Solutions
+
+** Order-sensitive matching
+
+We want order to be irrelevant.  So searching for "bravo alpha" should match the following subheading...
+
+And it does.  Except...
+
+#+BEGIN_SRC elisp
+;; This works
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "emacs org-mode")
+
+;; This works
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "org-mode emac")
+
+;; This gives a weird args-out-of-range error.  Does it only happen in this large file?
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "org-mode emacs")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/reference.org") "org-mode emacs")
+
+;; No, it happens in the smaller file too...are hyphens the problem?...yes...
+#+END_SRC
+
+*** Test entry
+
+alpha bravo
+
+** Hyphenated words cause order-sensitive matching?
+
+#+BEGIN_SRC elisp
+;; This works fine
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "alpha charlie-delta")
+
+;; So does this
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "charlie-delta")
+
+;; And this
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "charlie-delta alpha")
+
+;; But this does not!
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "org-mode alpha")
+
+;; But this works!
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "org-mode blah")
+#+END_SRC
+
+The problem seems to be when the hyphenated word is on a different line than the non-hyphenated word (and we're only dealing with two words here...).  I sure don't know why.  Will have to step through the matching code...
+
+*** Test entry
+
+alpha bravo charlie-delta
+argh org-mode blah

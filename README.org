@@ -49,6 +49,12 @@ I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edi
 
 None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
+Well, okay, I just found a small one...
+
+*** Weirdness with hyphenated words
+
+When searching for multiple words, if one of them is hyphenated, and it's on a different line in the matching Org entry than the non-hyphenated word, it seems to cause an =args-out-of-range= error.  And it depends on the order of the words too.  Very weird.  Will have to step through the matching code...  At least it's a minor bug.
+
 ** Ideas
 
 *** TODO Substring matching
