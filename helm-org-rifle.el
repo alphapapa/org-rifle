@@ -151,15 +151,6 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                (outline-previous-heading))))
                  (components (org-heading-components))
                  (path (org-get-outline-path))
-
-                 ;; TODO: Some of these can be moved down to after the match is confirmed
-                 ;; Heading text
-
-
-                 ;; Note: org-fontify-like-in-org-mode uses temporary buffers that load
-                 ;; org-mode and therefore org-mode-hook.  This could be a performance
-                 ;; issue.
-
                  (heading (nth 4 components))
                  (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
                              (save-excursion
@@ -199,10 +190,6 @@ POSITION is the position in BUFFER where the candidate heading begins."
                            always (cl-loop for m in (append (list heading) (map 'list 'car matching-lines-in-node))
                                            thereis (s-contains? token m t)))
               ;; Node matches all tokens
-
-
-
-              ;; Attempt at a faster version
               (setq matched-words-with-context
                     (cl-loop for line in (map 'list 'car matching-lines-in-node)
                              append (cl-loop for token in input
@@ -215,10 +202,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                              when m
                                              collect (match-string-no-properties 0 line))))
 
-              ;;  (setq matched-words-with-context (map 'list 'car matching-lines-in-node))
-
-
-              ;; Returning list in format: (string-joining-heading-and-lines-by-newlines node-beg)
+              ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
               (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
                                                       path)
                                                  (if helm-org-rifle-fontify-headings
@@ -260,6 +244,8 @@ created."
         (buffer-string)))))
 
 ;;; Test code for eval'ing
+
+;; These come in handy while coding.
 
 ;;;; Open Helm session on current org buffers
 
