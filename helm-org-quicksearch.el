@@ -42,7 +42,7 @@ Candidates are returned in this format: (STRING . POSITION)
 
 STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading begins."
-  (let* ((input (split-string input " " t))
+  (let* ((input (split-string (s-collapse-whitespace (s-trim input)) " " t))
          (match-all-tokens-re (when input
                                 (mapconcat (lambda (m)
                                              (concat "\\(" (regexp-quote m) "\\)"))
