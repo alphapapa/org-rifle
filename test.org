@@ -708,6 +708,8 @@ And it does.  Except...
 ;; No, it happens in the smaller file too...are hyphens the problem?...yes...
 #+END_SRC
 
+
+
 *** Test entry
 
 alpha bravo
@@ -732,6 +734,10 @@ alpha bravo
 #+END_SRC
 
 The problem seems to be when the hyphenated word is on a different line than the non-hyphenated word (and we're only dealing with two words here...).  I sure don't know why.  Will have to step through the matching code...
+
+*** ivy-regex-ignore-order
+
+The =ivy-regex-ignore-order= setting in [[http://oremacs.com/swiper/#completion-styles][ivy/swiper]] might help with figuring this out.
 
 *** Test entry
 

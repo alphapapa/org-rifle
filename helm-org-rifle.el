@@ -199,13 +199,13 @@ format: (STRING .  POSITION)
 STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading begins."
   (let* ((input (split-string input " " t))
-         (match-all-tokens-re (when input
-                                (mapconcat (lambda (m)
-                                             (concat helm-org-rifle-re-begin-part
-                                                     (regexp-quote m)
-                                                     helm-org-rifle-re-end-part))
-                                           input
-                                           "\\|")))
+         (tokens-group-re (when input
+                            (concat "\\("
+                                    (mapconcat (lambda (token)
+                                                 (regexp-quote token))
+                                               input "\\|")
+                                    "\\)")))
+         (match-all-tokens-re (concat helm-org-rifle-re-begin-part tokens-group-re helm-org-rifle-re-end-part))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
@@ -236,7 +236,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                   (cl-loop for token in input
                            append (cl-loop initially (goto-char node-beg)
                                            while (search-forward-regexp (concat helm-org-rifle-re-begin-part
-                                                                                token
+                                                                                (regexp-quote token)
                                                                                 helm-org-rifle-re-end-part)
                                                                         node-end t)
                                            collect (line-beginning-position)
@@ -265,15 +265,16 @@ POSITION is the position in BUFFER where the candidate heading begins."
               ;; Node matches all tokens
               (setq matched-words-with-context
                     (cl-loop for line in (map 'list 'car matching-lines-in-node)
-                             append (cl-loop for token in input
+                             append (cl-loop with end
+                                             for token in input
                                              for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
                                                                           (eval token)
                                                                           (repeat 0 ,helm-org-rifle-context-characters not-newline)))
-                                             for m = (string-match re line end)
-
-                                             for end = (match-end 1)
-                                             when m
-                                             collect (match-string-no-properties 0 line))))
+                                             for match = (string-match re line end)
+                                             if match
+                                             do (setq end (match-end 0))
+                                             and collect (match-string-no-properties 0 line)
+                                             else do (setq end nil))))
 
               ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
               (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path

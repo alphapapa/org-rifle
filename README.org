@@ -49,23 +49,17 @@ I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edi
 
 None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
-Well, okay, I just found a small one...
-
-*** Weirdness with hyphenated words
-
-When searching for multiple words, if one of them is hyphenated, and it's on a different line in the matching Org entry than the non-hyphenated word, it seems to cause an =args-out-of-range= error.  And it depends on the order of the words too.  Very weird.  Will have to step through the matching code...  At least it's a minor bug.
-
 ** Ideas
+
+*** UNDERWAY Search files in directory or in a list
+
+It would be easy to rifle through Org files in a directory or in a list of files, even if they aren't already open.
 
 *** TODO Substring matching
 
 Currently matches are made against word, punctuation, or symbol boundaries--not substrings.  For most cases, this is probably the best default: if someone were searching for "Sol", referring to the sun, he probably wouldn't want to match "solution" or "solvent" or "soliloquy".  But if someone were trying to dig up a note he made a while back about apple pie, did he write about "an apple pie" or "some apple pies"?  Dessert hangs in the balance!
 
 So this should be a configurable default, and calling =helm-org-rifle= with a prefix arg should put it into substring mode.  Maybe there could even be a toggle within the Helm session.
-
-*** TODO Search files in directory or in a list
-
-It would be easy to rifle through Org files in a directory or in a list of files, even if they aren't already open.
 
 *** TODO Add key map
 
