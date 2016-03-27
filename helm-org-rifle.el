@@ -97,6 +97,19 @@ to be a major bottleneck."
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-re-begin-part
+  "\\(\\_<\\|[[:punct:]]\\)"
+  "Regexp matched immediately before each search term.
+\(Customize at your peril (but it's okay to experiment here,
+because you can always revert your changes).)"
+  :group 'helm-org-rifle :type 'regexp)
+
+(defcustom helm-org-rifle-re-end-part
+  "\\(\\_>\\|[[:punct:]]\\)"
+  "Regexp matched immediately after each search term.
+\(What, didn't you read the last warning?  Oh, nevermind.)"
+  :group 'helm-org-rifle :type 'regexp)
+
 (defun helm-org-rifle ()
   "This is my rifle.  There are many like it, but this one is mine.
 
@@ -188,7 +201,9 @@ POSITION is the position in BUFFER where the candidate heading begins."
   (let* ((input (split-string input " " t))
          (match-all-tokens-re (when input
                                 (mapconcat (lambda (m)
-                                             (concat "\\(\\_<" (regexp-quote m) "\\_>\\)"))
+                                             (concat helm-org-rifle-re-begin-part
+                                                     (regexp-quote m)
+                                                     helm-org-rifle-re-end-part))
                                            input
                                            "\\|")))
          ;; TODO: Turn off case folding if input contains mixed case
@@ -220,7 +235,10 @@ POSITION is the position in BUFFER where the candidate heading begins."
             (setq matching-positions-in-node
                   (cl-loop for token in input
                            append (cl-loop initially (goto-char node-beg)
-                                           while (search-forward-regexp (concat "\\_<" token "\\_>") node-end t)
+                                           while (search-forward-regexp (concat helm-org-rifle-re-begin-part
+                                                                                token
+                                                                                helm-org-rifle-re-end-part)
+                                                                        node-end t)
                                            collect (line-beginning-position)
                                            do (end-of-line))
                            into result

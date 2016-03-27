@@ -516,3 +516,160 @@ org-raise-scripts                                             18          7.807e
 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "test.org emacs")
 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "inbox.org emacs")
 #+END_SRC
+
+** Matching symbol parts
+
+#+BEGIN_SRC elisp
+;; This should return the "Target heading" heading too
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "face")
+
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "face helm")
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "testtemp.org") "face helm")
+#+END_SRC
+
+This does not work:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\_<" token "\\_>") target))
+#+END_SRC
+
+#+RESULTS:
+
+Which is strange, because =\\_<= is supposed to be the symbol-boundary character...
+
+This works but isn't what we want:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match token target))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\b" token "\\b") target))
+#+END_SRC
+
+This may do it:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\W" token "\\W") target))
+#+END_SRC
+
+It matches =face= okay, but not =helm= because of the quote.
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "helm"))
+    (string-match (concat "\\(\\W\\|\\_<\\)" token "\\(\\W\\|\\_>\\)") target))
+#+END_SRC
+
+Wow, that "'helm-selection" really doesn't want to be matched...
+
+This might do it...
+
+#+BEGIN_SRC elisp
+(string-match "\\(\\B\\|\\W\\)face" "(face-remap-set-base 'helm-selection")
+#+END_SRC
+
+Seems to work... now for the real test...
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "selection"))
+    (string-match (concat "\\(\\B\\|\\W\\)" token "\\(\\W\\|\\B\\)") target))
+#+END_SRC
+
+I think it works!  Let's try it for real...
+
+Buuuuut it doesn't match "selection".  Wow.
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (tokens '("face" "helm" "blah" "selection" "base")))
+    (cl-loop for token in tokens
+             when (string-match (concat "\\(\\B\\|\\W\\|\\_<\\|[[:punct:]]\\)" token "\\(\\B\\|\\W\\|\\_>\\|[[:punct:]]\\)") target)
+             collect token))
+#+END_SRC
+
+Ok, this seems to match for "face", "helm", and "selection" and "base" but not "blah".
+
+Okay, this seems to work:
+
+#+BEGIN_SRC elisp
+(defcustom helm-org-rifle-re-begin-part
+  "\\(\\B\\|\\W\\|\\_<\\|[[:punct:]]\\)"
+  "Argh"
+  :group 'helm-org-rifle :type 'regexp)
+
+(defcustom helm-org-rifle-re-end-part
+  "\\(\\B\\|\\W\\|\\_>\\|[[:punct:]]\\)"
+  "argh"
+  :group 'helm-org-rifle :type 'regexp)
+
+;; Then do:
+(concat helm-org-rifle-re-begin-part token helm-org-rifle-re-end-part)
+#+END_SRC
+
+But it feels like it's matching slower now, so I guess I need to experiment with different ones...
+
+#+NAME: symtest
+#+BEGIN_SRC elisp :exports code
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (tokens '("face" "helm" "blah" "selection" "base")))
+    (cl-loop for token in tokens
+             when (string-match (concat helm-org-rifle-re-begin-part token helm-org-rifle-re-end-part) target)
+             collect token))
+#+END_SRC
+
+Let's try a simpler one:
+
+#+BEGIN_SRC elisp :results none
+(setq helm-org-rifle-re-begin-part
+  "\\(\\B\\|\\_<\\|[[:punct:]]\\)")
+
+(setq helm-org-rifle-re-end-part
+  "\\(\\B\\|\\_>\\|[[:punct:]]\\)")
+#+END_SRC
+
+#+CALL: symtest[]()
+
+#+RESULTS:
+| face | helm | selection | base |
+
+Ok, that works.  Now for another:
+
+#+BEGIN_SRC elisp :results none
+(setq helm-org-rifle-re-begin-part
+  "\\(\\_<\\|[[:punct:]]\\)")
+
+(setq helm-org-rifle-re-end-part
+  "\\(\\_>\\|[[:punct:]]\\)")
+#+END_SRC
+
+#+CALL: symtest[]()
+
+#+RESULTS:
+| face | helm | selection | base |
+
+Ok, that seems to work too.  Kind of makes sense: symbol boundaries or punctuation (which apparently doesn't count as a symbol-boundary...for some values of syntax table...)
+
+Ok, this seems to work and seems to be decently fast.  Let's commit it and try it out for a while.
+
+*** Target heading
+
+Searching for just the first word should find this, but it doesn't; only searching for =face-remap-set-base= does.
+
+#+BEGIN_SRC elisp
+  :after-init-hook (lambda ()
+                     (with-current-buffer helm-buffer
+                       (face-remap-set-base 'helm-selection
+                                            :underline 'unspecified
+                                            :weight 'unspecified
+                                            :background (face-attribute 'helm-selection :background))))
+#+END_SRC
