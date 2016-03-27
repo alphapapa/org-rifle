@@ -159,13 +159,7 @@ One source is returned for each open Org buffer."
                                                   (switch-to-buffer (helm-attr 'buffer))
                                                   (goto-char (car candidate))
                                                   (org-show-entry))
-                                   "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer)
-                          :after-init-hook (lambda ()
-                                             (with-current-buffer helm-buffer
-                                               (face-remap-set-base 'helm-selection
-                                                                    :underline 'unspecified
-                                                                    :weight 'unspecified
-                                                                    :background "black"))))
+                                   "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer))
            do (helm-attrset 'buffer buffer source)
            collect source))
 
