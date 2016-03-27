@@ -74,6 +74,9 @@
 (require 'helm)
 (require 's)
 
+(defconst helm-org-rifle-fontify-buffer-name " *helm-org-rifle-fontify*"
+  "The name of the invisible buffer used to fontify `org-mode' strings.")
+
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
   :group 'helm
@@ -140,11 +143,16 @@ peace!"
       (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
                                            (car (window-prev-buffers)))))))
 
+(defun helm-org-rifle-buffer-invisible-p (buffer)
+  "Return non-nil if BUFFER is invisible.
+That is, if its name starts with a space."
+  (s-starts-with? " " (buffer-name buffer)))
+
 (defun helm-org-rifle-get-sources ()
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
   (setq helm-org-rifle-result-count 0)
-  (cl-loop for buffer in (org-buffer-list nil t)
+  (cl-loop for buffer in (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))
            for source = (helm-build-sync-source (buffer-name buffer)
                           :candidates (lambda ()
                                         (when (s-present? helm-pattern)
@@ -270,9 +278,9 @@ because it creates a new temporary buffer and runs `org-mode' for
 every string it fontifies.  This function reuses a single
 invisible buffer and only runs `org-mode' when the buffer is
 created."
-  (let ((buffer (get-buffer " *helm-org-rifle-fontify*")))
+  (let ((buffer (get-buffer helm-org-rifle-fontify-buffer-name)))
     (unless buffer
-      (setq buffer (get-buffer-create " *helm-org-rifle-fontify*"))
+      (setq buffer (get-buffer-create helm-org-rifle-fontify-buffer-name))
       (with-current-buffer buffer
         (org-mode)))
     (with-current-buffer buffer
