@@ -6,11 +6,18 @@
 (defcustom helm-org-quicksearch-context-words 10
   "The number of words around matched words to include results.")
 
+(defcustom helm-org-quicksearch-fontify-headings t
+  "Fontify Org headings.
+
+For large result sets, this may be slow, although it doesn't seem
+to be the bottleneck.")
+
 (defcustom helm-org-quicksearch-show-path nil
   "Show the whole heading path instead of just the node's heading.")
 
 (defun helm-org-quicksearch-get-sources ()
-  "Return list of sources configured for helm-org-quicksearch, one for each open Org buffer."
+  "Return list of sources configured for helm-org-quicksearch,
+one for each open Org buffer."
   (setq helm-org-quicksearch-result-count 0)
   (cl-loop for buffer in (org-buffer-list nil t)
            for source = (helm-build-sync-source (buffer-name buffer)
@@ -129,16 +136,22 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                              for m = (string-match re line end)
                                              for end = (match-end 1)
                                              when m
-                                             collect (concat "..." (match-string-no-properties 0 line) "..."))))
+                                             collect (match-string-no-properties 0 line))))
 
               ;; Returning list in format: (string-joining-heading-and-lines-by-newlines node-beg)
-              (push (list (s-join "\n" (append (list (if (and helm-org-quicksearch-show-path
-                                                              path)
-                                                         (org-format-outline-path (append path (list heading)))
-                                                       (org-fontify-like-in-org-mode (s-join " " (list
-                                                                                                  (s-pad-left (nth 0 components) "*" "")
-                                                                                                  (nth 4 components))))))
-                                               matched-words-with-context))
+              (push (list (s-join "\n" (list (if (and helm-org-quicksearch-show-path
+                                                      path)
+                                                 (if helm-org-quicksearch-fontify-headings
+                                                     (org-format-outline-path (append path (list heading)))
+                                                   (s-join "/" (append path (list heading))))
+                                               (if helm-org-quicksearch-fontify-headings
+                                                   (org-fontify-like-in-org-mode (s-join " " (list
+                                                                                              (s-pad-left (nth 0 components) "*" "")
+                                                                                              (nth 4 components))))
+                                                 (s-join " " (list
+                                                              (s-pad-left (nth 0 components) "*" "")
+                                                              (nth 4 components)))))
+                                             (s-join "..." matched-words-with-context)))
                           node-beg)
                     results))
             ;; Go to end of node
@@ -158,6 +171,17 @@ POSITION is the position in BUFFER where the candidate heading begins."
 
 (let ((helm-candidate-separator " ")
       (helm-org-quicksearch-show-path t))
+  (helm :sources (helm-org-quicksearch-get-sources)))
+
+;;;;; Without fontification
+
+(let ((helm-candidate-separator " ")
+      (helm-org-quicksearch-fontify-headings nil))
+  (helm :sources (helm-org-quicksearch-get-sources)))
+
+(let ((helm-candidate-separator " ")
+      (helm-org-quicksearch-show-path t)
+      (helm-org-quicksearch-fontify-headings nil))
   (helm :sources (helm-org-quicksearch-get-sources)))
 
 ;;;; Get list of candidates for "test.org" buffer
