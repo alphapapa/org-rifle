@@ -151,7 +151,6 @@ That is, if its name starts with a space."
 (defun helm-org-rifle-get-sources ()
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
-  (setq helm-org-rifle-result-count 0)
   (cl-loop for buffer in (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))
            for source = (helm-build-sync-source (buffer-name buffer)
                           :candidates (lambda ()
