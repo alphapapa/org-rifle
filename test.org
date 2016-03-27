@@ -95,6 +95,7 @@ These come in handy while coding.
   (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs"))
 
 (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs")
+(helm-org-rifle-get-candidates-in-buffer (get-buffer "main.org") "emacs")
 
 (helm-org-rifle-get-candidates-in-buffer (get-buffer "main.org") "tires")
 
