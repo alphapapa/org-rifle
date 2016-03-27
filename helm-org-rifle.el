@@ -210,6 +210,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                              (save-excursion
                                (outline-next-heading)
                                (point))))
+                 (buffer-name (buffer-name buffer))
                  matching-positions-in-node
                  matching-lines-in-node
                  matched-words-with-context)
@@ -238,10 +239,10 @@ POSITION is the position in BUFFER where the candidate heading begins."
 
             ;; Verify all tokens are contained in each matching node
             (when (cl-loop for token in input
-                           ;; Include the heading in the check, even
-                           ;; though it's not included in the list of
-                           ;; matching lines
-                           always (cl-loop for m in (append (list heading) (map 'list 'car matching-lines-in-node))
+                           ;; Include the buffer name and heading in
+                           ;; the check, even though they're not
+                           ;; included in the list of matching lines
+                           always (cl-loop for m in (append (list buffer-name heading) (map 'list 'car matching-lines-in-node))
                                            thereis (s-contains? token m t)))
               ;; Node matches all tokens
               (setq matched-words-with-context

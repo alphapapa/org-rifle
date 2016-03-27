@@ -510,3 +510,9 @@ org-font-lock-add-tag-faces                                   18          9.402.
 org-raise-scripts                                             18          7.807e-06     4.337...e-07
 #+end_example
 
+** buffer-name-matching
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "test.org emacs")
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "inbox.org emacs")
+#+END_SRC

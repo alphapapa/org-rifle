@@ -30,6 +30,8 @@ Then you can customize the =helm-org-rifle= group if you like.
 
 Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through, with results grouped by buffer.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
 
+You can also type the name of an open Org buffer (usually the filename), and only results from that buffer will be displayed.
+
 * Credits
 
 + This package is based on =org-search-goto= (specifically, =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]], but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]]. It's a really great package, and the only thing that could make it better is to make it work with Helm.  To avoid confusion, this package has a completely different name.
