@@ -10,10 +10,12 @@ Entries are fontified by default to match the appearance of an Org buffer, and o
 
 ** Screenshots
 
-With =helm-org-rifle-show-path= set to =nil=:
-[[screenshot-nopath.png]]
+An animation is worth...a million words?
+
+[[screencast.gif]]
 
 With =helm-org-rifle-show-path= set to =t=:
+
 [[screenshot-path.png]]
 
 * Installation
