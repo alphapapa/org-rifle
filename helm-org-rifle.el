@@ -28,7 +28,8 @@
 
 ;;; Installation
 
-;; Require the package in your init file:
+;; Install the Helm and "s" (aka "s.el") packages.  Then require this
+;; package in your init file:
 
 ;; (require 'helm-org-rifle)
 
@@ -44,12 +45,13 @@
 ;;; Credits:
 
 ;; This package is based on =org-search-goto= (specifically,
-;; =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]],
-;; but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]].
-
-;; It's a really great package, and the only thing that could make it
-;; better is to make it work with Helm.  To avoid confusion, this package
-;; has a completely different name.
+;; =org-search-goto-ml=).  Its unofficial-official home is
+;; [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on
+;; EmacsWiki]], but I've mirrored it
+;; [[https://github.com/alphapapa/org-search-goto][on GitHub]].  It's
+;; a really great package, and the only thing that could make it
+;; better is to make it work with Helm.  To avoid confusion, this
+;; package has a completely different name.
 
 ;;; License:
 
