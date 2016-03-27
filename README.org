@@ -61,6 +61,10 @@ Currently matches are made against word, punctuation, or symbol boundaries--not 
 
 So this should be a configurable default, and calling =helm-org-rifle= with a prefix arg should put it into substring mode.  Maybe there could even be a toggle within the Helm session.
 
+*** TODO Separate command to search current buffer
+
+It would be handy to be able to search the just current buffer in the same way.
+
 *** TODO Add key map
 
 Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
