@@ -36,6 +36,8 @@ I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edi
 
 The major bug now is that immediately after typing, results in the Helm buffer are duplicated several times over, which is very strange.  But after inserting a trailing space, they disappear.  And after removing the trailing space, the duplicates do not return.  I'm not sure if it's a bug in this package or in Helm.  It might have something to do with the way we're using multiple sources, one-per-buffer.
 
+However, I'm sure it can be fixed somehow.  And in the meantime, this is still very useful.
+
 ** Ideas
 
 *** TODO Add key map
