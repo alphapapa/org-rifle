@@ -10,7 +10,7 @@ Entries are fontified by default to match the appearance of an Org buffer, and o
 
 * Installation
 
-Install the Helm and "s" (aka "s.el") packages.  Then require this package in your init file:
+Install [[https://github.com/emacs-helm/helm][Helm]] and [[https://github.com/magnars/s.el][s]].  Then require this package in your init file:
 
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)
