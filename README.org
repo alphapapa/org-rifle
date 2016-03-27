@@ -44,6 +44,10 @@ However, I'm sure it can be fixed somehow.  And in the meantime, this is still v
 
 Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
 
+*** TODO Further profiling
+
+=helm-org-rifle-get-candidates-in-buffer= can probably be optimized more with =elp=.  This might also help with figuring out the duplicate-candidates bug.
+
 *** TODO Match limit
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.
