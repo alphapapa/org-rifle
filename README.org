@@ -63,6 +63,10 @@ Currently matches are made against word, punctuation, or symbol boundaries--not 
 
 So this should be a configurable default, and calling =helm-org-rifle= with a prefix arg should put it into substring mode.  Maybe there could even be a toggle within the Helm session.
 
+*** TODO Search files in directory or in a list
+
+It would be easy to rifle through Org files in a directory or in a list of files, even if they aren't already open.
+
 *** TODO Add key map
 
 Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
