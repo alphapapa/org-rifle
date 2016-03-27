@@ -1,10 +1,29 @@
 
-;;; Code:
+;;; Commentary:
 
-;; BUG: The major bug now is that immediately after typing, results in
-;; the Helm buffer are duplicated strangely.  But after inserting a
-;; trailing space, they disappear.  And after removing the trailing
-;; space, the duplicates do not return.
+;;;; History
+
+;; This package is based on =org-search-goto= (specifically,
+;; =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]],
+;; but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]].
+
+;; It's a really great package, and the only thing that could make it
+;; better is to make it work with Helm.  To avoid confusion, this package
+;; has a completely different name.
+
+;;;; Bugs
+
+;;;;; TODO Initially duplicated results
+
+;; The major bug now is that immediately after typing, results in the
+;; Helm buffer are duplicated several times over, which is very strange.
+;; But after inserting a trailing space, they disappear.  And after
+;; removing the trailing space, the duplicates do not return.  I'm not
+;; sure if it's a bug in this package or in Helm.  It might have
+;; something to do with the way we're using multiple sources,
+;; one-per-buffer.
+
+;;; Code:
 
 (defcustom helm-org-rifle-context-words 10
   "The number of words around matched words to include results.")
