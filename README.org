@@ -1,37 +1,57 @@
+* helm-org-rifle.el
+
+This is my rifle.  There are many like it, but this one is mine.  My rifle is my best friend. It is my life.  I must master it as I must master my life.
+
+What does my rifle do?  It searches rapidly through my Org files, quickly bringing me the information I need to defeat the enemy.
+
+This package is a continuation of the fantastic [[https://github.com/alphapapa/org-search-goto][=org-search-goto=/=org-search-goto-ml=]] packages, now with Helm support. It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context to make it easy to acquire your target.
+
+Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
+
+* Installation
+
+Install the Helm and "s" (aka "s.el") packages.  Then require this package in your init file:
+
+#+BEGIN_SRC elisp
+(require 'helm-org-rifle)
+#+END_SRC
+
+Then you can customize the =helm-org-rifle= group if you like.
+
+* Usage
+
+Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
+
+* Credits:
+
+This package is based on =org-search-goto= (specifically, =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]], but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]]. It's a really great package, and the only thing that could make it better is to make it work with Helm.  To avoid confusion, this package has a completely different name.
+
 * Development
 
 ** Bugs
 
 *** TODO Initially duplicated results
 
-The major bug now is that immediately after typing, results in the
-Helm buffer are duplicated several times over, which is very strange.
-But after inserting a trailing space, they disappear.  And after
-removing the trailing space, the duplicates do not return.  I'm not
-sure if it's a bug in this package or in Helm.  It might have
-something to do with the way we're using multiple sources,
-one-per-buffer.
+The major bug now is that immediately after typing, results in the Helm buffer are duplicated several times over, which is very strange.  But after inserting a trailing space, they disappear.  And after removing the trailing space, the duplicates do not return.  I'm not sure if it's a bug in this package or in Helm.  It might have something to do with the way we're using multiple sources, one-per-buffer.
 
 ** Ideas
 
 *** TODO Add key map
 
-Using a custom key map will allow binding
-=helm-org-rifle-show-in-indirect-buffer= to a key.
+Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
 
 *** TODO Match limit
 
-=org-search-goto= had a match limit.  I removed it to simplify things,
-but it might still be useful, depending on how big one's org files
-are.
+=org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.
 
 *** MAYBE Optionally include TODO keyword and/or tags
 
-It could be handy to be able to match against the TODO keyword and
-tags.  Would make it more complicated, but probably not too hard, and
-maybe worth it.
+It could be handy to be able to match against the TODO keyword and tags.  Would make it more complicated, but probably not too hard, and maybe worth it.
 
 *** MAYBE Negation
 
-It would be handy to be able to use Helm-style =!word= negation
-patterns.
+It would be handy to be able to use Helm-style =!word= negation patterns.
+
+* License:
+
+GPLv3
