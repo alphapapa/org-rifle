@@ -1,6 +1,8 @@
 
 ;;; Code:
 
+;; BUG: The major bug now is that immediately after typing, results in the Helm buffer are duplicated strangely.  But after inserting a trailing space, they disappear.  And after removing the trailing space, the duplicates do not return.
+
 (defcustom helm-org-quicksearch-context-words 10
   "The number of words around matched words to include results.")
 
