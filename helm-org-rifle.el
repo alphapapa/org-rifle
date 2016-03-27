@@ -39,8 +39,8 @@
 
 ;;; Code:
 
-(defcustom helm-org-rifle-context-words 10
-  "The number of words around matched words to include results.")
+(defcustom helm-org-rifle-context-characters 25
+  "How many characters around each matched term to display.")
 
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
@@ -193,9 +193,9 @@ POSITION is the position in BUFFER where the candidate heading begins."
               (setq matched-words-with-context
                     (cl-loop for line in (map 'list 'car matching-lines-in-node)
                              append (cl-loop for token in input
-                                             for re = (rx-to-string '(and (repeat 0 25 not-newline)
+                                             for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
                                                                           (eval token)
-                                                                          (repeat 0 25 not-newline)))
+                                                                          (repeat 0 ,helm-org-rifle-context-characters not-newline)))
                                              for m = (string-match re line end)
 
                                              for end = (match-end 1)
