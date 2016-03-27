@@ -1,0 +1,37 @@
+* Development
+
+** Bugs
+
+*** TODO Initially duplicated results
+
+The major bug now is that immediately after typing, results in the
+Helm buffer are duplicated several times over, which is very strange.
+But after inserting a trailing space, they disappear.  And after
+removing the trailing space, the duplicates do not return.  I'm not
+sure if it's a bug in this package or in Helm.  It might have
+something to do with the way we're using multiple sources,
+one-per-buffer.
+
+** Ideas
+
+*** TODO Add key map
+
+Using a custom key map will allow binding
+=helm-org-rifle-show-in-indirect-buffer= to a key.
+
+*** TODO Match limit
+
+=org-search-goto= had a match limit.  I removed it to simplify things,
+but it might still be useful, depending on how big one's org files
+are.
+
+*** MAYBE Optionally include TODO keyword and/or tags
+
+It could be handy to be able to match against the TODO keyword and
+tags.  Would make it more complicated, but probably not too hard, and
+maybe worth it.
+
+*** MAYBE Negation
+
+It would be handy to be able to use Helm-style =!word= negation
+patterns.

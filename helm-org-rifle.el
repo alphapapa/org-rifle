@@ -26,7 +26,22 @@
 ;; buffer, and optionally the entire path can be displayed for each
 ;; entry, rather than just its own heading.
 
-;;; Credits
+;;; Installation
+
+;; Require the package in your init file:
+
+;; (require 'helm-org-rifle)
+
+;; Then you can customize the `helm-org-rifle' group if you like.
+
+;;; Usage
+
+;; Run the command `helm-org-rifle', type some words, and all current
+;; `org-mode' buffers will be rifled through.  Hit "RET" to show the
+;; selected entry.  You can also show the entry in an indirect buffer
+;; by selecting that action from the Helm actions list.
+
+;;; Credits:
 
 ;; This package is based on =org-search-goto= (specifically,
 ;; =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]],
@@ -36,37 +51,26 @@
 ;; better is to make it work with Helm.  To avoid confusion, this package
 ;; has a completely different name.
 
-;;; Development
+;;; License:
 
-;;;; Bugs
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;;;;; TODO Initially duplicated results
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;; The major bug now is that immediately after typing, results in the
-;; Helm buffer are duplicated several times over, which is very strange.
-;; But after inserting a trailing space, they disappear.  And after
-;; removing the trailing space, the duplicates do not return.  I'm not
-;; sure if it's a bug in this package or in Helm.  It might have
-;; something to do with the way we're using multiple sources,
-;; one-per-buffer.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;;; Ideas
+;;; Code:
 
-;;;;; TODO Match limit
-
-;; =org-search-goto= had a match limit.  I removed it to simplify things,
-;; but it might still be useful, depending on how big one's org files
-;; are.
-
-;;;;; MAYBE Optionally include TODO keyword and/or tags
-
-;; It could be handy to be able to match against the TODO keyword and
-;; tags.  Would make it more complicated, but probably not too hard, and
-;; maybe worth it.
 (require 'helm)
 (require 's)
 
-;;; Code:
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
   :group 'helm
