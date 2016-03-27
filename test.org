@@ -673,3 +673,17 @@ Searching for just the first word should find this, but it doesn't; only searchi
                                             :weight 'unspecified
                                             :background (face-attribute 'helm-selection :background))))
 #+END_SRC
+
+** Substring matching
+
+Does searching for "solution" match this subheading?
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "solution")
+#+END_SRC
+
+...No, it does not.  That will probably need to be an option, customizable and/or with a prefix arg.
+
+*** Test entry
+
+Solutions
