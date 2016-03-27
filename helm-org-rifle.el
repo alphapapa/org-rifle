@@ -123,6 +123,7 @@ peace!"
     (helm :sources (helm-org-rifle-get-sources))))
 
 (defun helm-org-rifle-show-in-indirect-buffer (candidate)
+  "Show CANDIDATE subtree in an indirect buffer."
   (let ((buffer (helm-attr 'buffer))
         (pos (car candidate))
         (original-buffer (current-buffer)))
@@ -137,8 +138,8 @@ peace!"
                                            (car (window-prev-buffers)))))))
 
 (defun helm-org-rifle-get-sources ()
-  "Return list of sources configured for helm-org-rifle,
-one for each open Org buffer."
+  "Return list of sources configured for helm-org-rifle.
+One source is returned for each open Org buffer."
   (setq helm-org-rifle-result-count 0)
   (cl-loop for buffer in (org-buffer-list nil t)
            for source = (helm-build-sync-source (buffer-name buffer)
@@ -166,9 +167,10 @@ one for each open Org buffer."
            collect source))
 
 (defun helm-org-rifle-get-candidates-in-buffer (buffer input)
-  "Return candidates in BUFFER for INPUT string.
+  "Return candidates in BUFFER for INPUT.
 
-Candidates are returned in this format: (STRING . POSITION)
+INPUT is a string.  Candidates are returned in this
+format: (STRING .  POSITION)
 
 STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading begins."
