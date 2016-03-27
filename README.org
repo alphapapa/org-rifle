@@ -52,6 +52,10 @@ However, I'm sure it can be fixed somehow.  And in the meantime, this is still v
 
 Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
 
+*** TODO Collapse overlapping context strings
+
+Right now, if more than one term appears in the same range, parts of that range will show up more than once in the context.  Not a big deal, but should be fixable.
+
 *** TODO Further profiling
 
 =helm-org-rifle-get-candidates-in-buffer= can probably be optimized more with =elp=.  This might also help with figuring out the duplicate-candidates bug.
