@@ -146,27 +146,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                            thereis (s-contains? token m t)))
               ;; Node matches all tokens
 
-              ;; Reduce matching lines to matched word with context
-              ;; (setq matched-words-with-context
-              ;;       (cl-loop for line in (map 'list 'car matching-lines-in-node)
-              ;;                append (cl-loop for token in input
-              ;;                                for re = (rx-to-string
-              ;;                                          `(and (repeat 0 ,helm-org-rifle-context-words
-              ;;                                                        (and (1+ (not space))
-              ;;                                                             (or (1+ space)
-              ;;                                                                 word-boundary)))
-              ;;                                                (group (eval token))
-              ;;                                                (repeat 0 ,helm-org-rifle-context-words
-              ;;                                                        (and (or word-boundary
-              ;;                                                                 (1+ space))
-              ;;                                                             (1+ (not space))))))
 
-              ;; This one line uses about 95% of the runtime of this function
-              ;;                                for m = (string-match re line end)
-
-              ;;                                for end = (match-end 1)
-              ;;                                when m
-              ;;                                collect (match-string-no-properties 0 line))))
 
               ;; Attempt at a faster version
               (setq matched-words-with-context
@@ -229,84 +209,150 @@ created."
 
 ;;;; Open Helm session on current org buffers
 
-(let ((helm-candidate-separator " "))
-  (helm :sources (helm-org-rifle-get-sources)))
+;; #+BEGIN_SRC elisp
+;; (let ((helm-candidate-separator " "))
+;;   (helm :sources (helm-org-rifle-get-sources)))
 
-(let ((helm-candidate-separator " ")
-      (helm-org-rifle-show-path t))
-  (helm :sources (helm-org-rifle-get-sources)))
+;; (let ((helm-candidate-separator " ")
+;;       (helm-org-rifle-show-path t))
+;;   (helm :sources (helm-org-rifle-get-sources)))
+;; #+END_SRC
 
 ;;;;; Without fontification
 
-(let ((helm-candidate-separator " ")
-      (helm-org-rifle-fontify-headings nil))
-  (helm :sources (helm-org-rifle-get-sources)))
+;; #+BEGIN_SRC elisp
+;; (let ((helm-candidate-separator " ")
+;;       (helm-org-rifle-fontify-headings nil))
+;;   (helm :sources (helm-org-rifle-get-sources)))
 
-(let ((helm-candidate-separator " ")
-      (helm-org-rifle-show-path t)
-      (helm-org-rifle-fontify-headings nil))
-  (helm :sources (helm-org-rifle-get-sources)))
+;; (let ((helm-candidate-separator " ")
+;;       (helm-org-rifle-show-path t)
+;;       (helm-org-rifle-fontify-headings nil))
+;;   (helm :sources (helm-org-rifle-get-sources)))
+;; #+END_SRC
 
 ;;;; Get list of candidates for "test.org" buffer
 
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr blueberry")
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green")
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue")
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr")
+;; #+BEGIN_SRC elisp
+;; (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr blueberry")
+;; (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green")
+;; (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue")
+;; (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr")
 
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "helm food")
+;; (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "helm food")
 
-(let ((helm-candidate-separator " ")
-      (helm-org-rifle-show-path t))
-  (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue"))
+;; (let ((helm-candidate-separator " ")
+;;       (helm-org-rifle-show-path t))
+;;   (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue"))
+;; #+END_SRC
 
 ;;;;; Other buffers
 
-(let ((helm-org-rifle-fontify-headings nil))
-  (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs"))
+;; #+BEGIN_SRC elisp
+;; (let ((helm-org-rifle-fontify-headings nil))
+;;   (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs"))
 
-(helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs")
-
+;; (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs")
+;; #+END_SRC
 
 ;;;; Context-splitting
 
-(let* ((num-context-words 2)
-       (needle "needle")
-       (haystack "one two three needle four five six")
-       (hay (s-split needle haystack))
-       (left-hay (s-split-words (car hay)))
-       (right-hay (s-split-words (nth 1 hay))))
-  (concat "..."
-          (s-join " " (subseq left-hay (- num-context-words)))
-          " " needle " "
-          (s-join " " (subseq right-hay 0 num-context-words))
-          "..."))
+;; Prototype code, keeping for future reference.
 
-;; Multiple needles
-(let* ( (needles '("needle" "pin"))
-        (haystack "one two three \" needle not pin four five six seven eight pin nine ten eleven twelve"))
-  (cl-loop for needle in needles
-           append (cl-loop for re = (rx-to-string `(and (repeat 1 ,helm-org-rifle-context-words (and (1+ (not space))
-                                                                                                     (or (1+ space)
-                                                                                                         word-boundary)))
-                                                        (group (eval needle))
-                                                        (repeat 1 ,helm-org-rifle-context-words (and (or word-boundary
-                                                                                                         (1+ space))
-                                                                                                     (1+ (not space))))))
-                           for m = (string-match re haystack end)
-                           for end = (match-end 1)
-                           while m
-                           collect (concat "..." (match-string-no-properties 0 haystack) "..."))))
+;; #+BEGIN_SRC elisp
+;; (let* ((num-context-words 2)
+;;        (needle "needle")
+;;        (haystack "one two three needle four five six")
+;;        (hay (s-split needle haystack))
+;;        (left-hay (s-split-words (car hay)))
+;;        (right-hay (s-split-words (nth 1 hay))))
+;;   (concat "..."
+;;           (s-join " " (subseq left-hay (- num-context-words)))
+;;           " " needle " "
+;;           (s-join " " (subseq right-hay 0 num-context-words))
+;;           "..."))
+
+;; ;; Multiple needles
+;; (let* ( (needles '("needle" "pin"))
+;;         (haystack "one two three \" needle not pin four five six seven eight pin nine ten eleven twelve"))
+;;   (cl-loop for needle in needles
+;;            append (cl-loop for re = (rx-to-string `(and (repeat 1 ,helm-org-rifle-context-words (and (1+ (not space))
+;;                                                                                                      (or (1+ space)
+;;                                                                                                          word-boundary)))
+;;                                                         (group (eval needle))
+;;                                                         (repeat 1 ,helm-org-rifle-context-words (and (or word-boundary
+;;                                                                                                          (1+ space))
+;;                                                                                                      (1+ (not space))))))
+;;                            for m = (string-match re haystack end)
+;;                            for end = (match-end 1)
+;;                            while m
+;;                            collect (concat "..." (match-string-no-properties 0 haystack) "..."))))
+;; #+END_SRC
+
+;;;;; Slow code that splits on word boundaries
+
+;; This code splits on word boundaries, but it's very slow.  Profiling it
+;; showed the vast majority of the time was in =string-match=.  I'm
+;; guessing the regexp is too complicated or unoptimized.
+
+;; #+BEGIN_SRC elisp
+;;   ;; Reduce matching lines to matched word with context
+;;   (setq matched-words-with-context
+;;         (cl-loop for line in (map 'list 'car matching-lines-in-node)
+;;                  append (cl-loop for token in input
+;;                                  for re = (rx-to-string
+;;                                            `(and (repeat 0 ,helm-org-rifle-context-words
+;;                                                          (and (1+ (not space))
+;;                                                               (or (1+ space)
+;;                                                                   word-boundary)))
+;;                                                  (group (eval token))
+;;                                                  (repeat 0 ,helm-org-rifle-context-words
+;;                                                          (and (or word-boundary
+;;                                                                   (1+ space))
+;;                                                               (1+ (not space))))))
+
+;;                                  This one line uses about 95% of the runtime of this function
+;;                                  for m = (string-match re line end)
+
+;;                                  for end = (match-end 1)
+;;                                  when m
+;;                                  collect (match-string-no-properties 0 line))))
+;; #+END_SRC
+
+;;;;; Faster version that cuts off mid-word
+
+;; This version is much, much faster, but instead of matching on word
+;; boundaries, it just matches so-many characters before and after the
+;; token.  It's not quite as nice, but the speedup is worth it, and it
+;; seems good enough.
+
+;; This is the version currently in-use.
+
+;; #+BEGIN_SRC elisp
+;; (setq matched-words-with-context
+;;                     (cl-loop for line in (map 'list 'car matching-lines-in-node)
+;;                              append (cl-loop for token in input
+;;                                              for re = (rx-to-string '(and (repeat 0 25 not-newline)
+;;                                                                           (eval token)
+;;                                                                           (repeat 0 25 not-newline)))
+;;                                              for m = (string-match re line end)
+
+;;                                              for end = (match-end 1)
+;;                                              when m
+;;                                              collect (match-string-no-properties 0 line))))
+;; #+END_SRC
 
 ;;;; Org headings
 
-;; Build string for fontifying
-(components (org-heading-components))
-(level (nth 0 components))
-(plain-heading (s-join " " (list
-                            (s-pad-left level  "*" "")
-                            (nth 4 components))))
-;; Note: org-fontify-like-in-org-mode uses temporary buffers that load
-;; org-mode and therefore org-mode-hook.  This could be a performance
-;; issue.
-(fontified-heading (org-fontify-like-in-org-mode plain-heading))
+;; #+BEGIN_SRC elisp
+;;   ;; Build string for fontifying
+;;   (components (org-heading-components))
+;;   (level (nth 0 components))
+;;   (plain-heading (s-join " " (list
+;;                               (s-pad-left level  "*" "")
+;;                               (nth 4 components))))
+;;   ;; Note: org-fontify-like-in-org-mode uses temporary buffers that load
+;;   ;; org-mode and therefore org-mode-hook.  This could be a performance
+;;   ;; issue.
+;;   (fontified-heading (org-fontify-like-in-org-mode plain-heading))
+;; #+END_SRC
