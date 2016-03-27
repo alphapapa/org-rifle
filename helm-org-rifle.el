@@ -65,18 +65,25 @@
 ;; maybe worth it.
 
 ;;; Code:
+(defgroup helm-org-rifle nil
+  "Settings for `helm-org-rifle'."
+  :group 'helm
+  :link '(url-link "http://github.com/alphapapa/helm-org-rifle"))
 
 (defcustom helm-org-rifle-context-characters 25
-  "How many characters around each matched term to display.")
+  "How many characters around each matched term to display."
+  :group 'helm-org-rifle :type 'integer)
 
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
 
 For large result sets this may be slow, although it doesn't seem
-to be a major bottleneck.")
+to be a major bottleneck."
+  :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-show-path nil
-  "Show the whole heading path instead of just the entry's heading.")
+  "Show the whole heading path instead of just the entry's heading."
+  :group 'helm-org-rifle :type 'boolean)
 
 (defun helm-org-rifle ()
   "This is my rifle. There are many like it, but this one is mine.
