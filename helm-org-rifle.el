@@ -157,7 +157,14 @@ One source is returned for each open Org buffer."
                                         (when (s-present? helm-pattern)
                                           (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
                           :match 'identity
-                          :delayed 0.5
+                          ;; Setting :delayed to a number causes
+                          ;; strange behavior, duplicated results,
+                          ;; causes the :candidates function to be
+                          ;; called nearly once for every character
+                          ;; entered, even though it is delayed for
+                          ;; right amount of time.  But setting it to
+                          ;; t works fine, and...fast...
+                          :delayed t
                           :multiline t
                           :volatile t
                           :action (helm-make-actions
