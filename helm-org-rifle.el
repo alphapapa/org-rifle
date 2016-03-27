@@ -196,7 +196,8 @@ POSITION is the position in BUFFER where the candidate heading begins."
                              (save-match-data
                                (outline-previous-heading))))
                  (components (org-heading-components))
-                 (path (org-get-outline-path))
+                 (path (when helm-org-rifle-show-path
+                         (org-get-outline-path)))
                  (heading (nth 4 components))
                  (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
                              (save-excursion
