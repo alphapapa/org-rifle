@@ -28,6 +28,8 @@ This package is based on =org-search-goto= (specifically, =org-search-goto-ml=).
 
 * Development
 
+I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edit source code and use Emacs, check it out!
+
 ** Bugs
 
 *** TODO Initially duplicated results
