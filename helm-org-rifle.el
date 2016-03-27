@@ -63,6 +63,8 @@
 ;; It could be handy to be able to match against the TODO keyword and
 ;; tags.  Would make it more complicated, but probably not too hard, and
 ;; maybe worth it.
+(require 'helm)
+(require 's)
 
 ;;; Code:
 (defgroup helm-org-rifle nil
