@@ -187,7 +187,13 @@ POSITION is the position in BUFFER where the candidate heading begins."
     results))
 
 (defun helm-org-rifle-fontify-like-in-org-mode (s &optional odd-levels)
-  "Fontify string S like in Org-mode."
+  "Fontify string S like in Org-mode.
+
+`org-fontify-like-in-org-mode' is a very, very slow function
+because it creates a new temporary buffer and runs `org-mode' for
+every string it fontifies.  This function reuses a single
+invisible buffer and only runs `org-mode' when the buffer is
+created."
   (let ((buffer (get-buffer " *helm-org-rifle-fontify*")))
     (unless buffer
       (setq buffer (get-buffer-create " *helm-org-rifle-fontify*"))
