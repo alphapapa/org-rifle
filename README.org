@@ -73,7 +73,7 @@ Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffe
 
 Right now, if more than one term appears in the same range, parts of that range will show up more than once in the context.  Not a big deal, but should be fixable.
 
-*** TODO Further profiling
+*** MAYBE Further profiling
 
 =helm-org-rifle-get-candidates-in-buffer= might be able to be optimized more with =elp=.  But the "low-hanging fruit" is probably gone, and performance seems good.
 
