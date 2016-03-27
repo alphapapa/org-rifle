@@ -8,6 +8,14 @@ This package is a continuation of the fantastic [[https://github.com/alphapapa/o
 
 Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
 
+** Screenshots
+
+With =helm-org-rifle-show-path= set to =nil=:
+[[screenshot-nopath.png]]
+
+With =helm-org-rifle-show-path= set to =t=:
+[[screenshot-path.png]]
+
 * Installation
 
 Install [[https://github.com/emacs-helm/helm][Helm]] and [[https://github.com/magnars/s.el][s]].  Then require this package in your init file:
