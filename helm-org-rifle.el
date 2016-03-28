@@ -83,6 +83,8 @@
 
 ;;; Code:
 
+(provide 'helm-org-rifle)
+
 (require 'helm)
 (require 's)
 
