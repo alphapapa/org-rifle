@@ -86,9 +86,9 @@ Right now, if more than one term appears in the same range, parts of that range 
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
 
-*** MAYBE Optionally include TODO keyword and/or tags
+*** MAYBE Optionally include tags
 
-It could be handy to be able to match against the TODO keyword and tags.  Would make it more complicated, but probably not too hard, and maybe worth it.
+It could be handy to be able to match against tags.
 
 *** MAYBE Negation
 
