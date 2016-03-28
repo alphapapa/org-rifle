@@ -93,6 +93,10 @@ For large result sets this may be slow, although it doesn't seem
 to be a major bottleneck."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-show-todo-keywords t
+  "Show Org todo keywords."
+  :group 'helm-org-rifle :type 'boolean)
+
 (defcustom helm-org-rifle-show-path nil
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
@@ -220,7 +224,9 @@ POSITION is the position in BUFFER where the candidate heading begins."
                  (components (org-heading-components))
                  (path (when helm-org-rifle-show-path
                          (org-get-outline-path)))
-                 (heading (nth 4 components))
+                 (heading (if helm-org-rifle-show-todo-keywords
+                              (s-join " " (list (nth 2 components) (nth 3 components) (nth 4 components)))
+                            (nth 4 components)))
                  (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
                              (save-excursion
                                (outline-next-heading)
@@ -283,12 +289,13 @@ POSITION is the position in BUFFER where the candidate heading begins."
                                                      (org-format-outline-path (append path (list heading)))
                                                    (s-join "/" (append path (list heading))))
                                                (if helm-org-rifle-fontify-headings
-                                                   (helm-org-rifle-fontify-like-in-org-mode (s-join " " (list
-                                                                                                         (s-pad-left (nth 0 components) "*" "")
-                                                                                                         (nth 4 components))))
+                                                   (helm-org-rifle-fontify-like-in-org-mode
+                                                    (s-join " " (list
+                                                                 (s-pad-left (nth 0 components) "*" "")
+                                                                 heading)))
                                                  (s-join " " (list
                                                               (s-pad-left (nth 0 components) "*" "")
-                                                              (nth 4 components)))))
+                                                              heading))))
                                              (s-join "..." matched-words-with-context)))
                           node-beg)
                     results))
