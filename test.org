@@ -781,3 +781,164 @@ Baby elephant
 
 It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
 
+** DONE Match and show tags
+CLOSED: [2016-03-28 Mon 17:30]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-03-28 Mon 17:30]
+:END:
+
+This should show both this heading and the target:
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "charade"))
+#+END_SRC
+
+#+RESULTS:
+| *** Target heading for tags test :charade:                                                            | 34684 |
+| ** TODO Match and show tags buffer (current-buffer) "charade"))...buffer (current-buffer) "charade")) | 34242 |
+
+This should show only this heading:
+
+#+BEGIN_SRC elisp :results value
+  (let ((helm-org-rifle-show-tags nil))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "charade"))
+#+END_SRC
+
+#+RESULTS:
+| ** TODO Match and show tags buffer (current-buffer) "charade"))...t heading for tags test :charade: ...buffer (current-buffer) "charade"))...buffer (current-buf...buffer (current-buffer) "charade")) | 34242 |
+
+*** Target heading for tags test :charade: 
+
+Yarr.
+
+*** Target heading 2
+
+This should also match for the content: :charade: 
+
+*** Fontify tags correctly
+
+Tags are being fontified just like the rest of the heading text, instead of like tags.
+
+#+BEGIN_SRC elisp
+  (helm-org-rifle-fontify-like-in-org-mode (s-join " " (list "*"
+                                                             "Heading"
+                                                             ":tag1:tag2:")))
+#+END_SRC
+
+#+RESULTS:
+:  * Heading :tag1:tag2:
+
+Seems like there needs to be whitespace after the tag string to make it appear in the =org-tag= face.
+
+#+BEGIN_SRC elisp
+  (helm-org-rifle-fontify-like-in-org-mode (s-join " " (list "*"
+                                                             "Heading"
+                                                             ":tag1:tag2: ")))
+#+END_SRC
+
+#+RESULTS:
+: * Heading :tag1:tag2:
+
+*** Match with colons
+
+Surrounding tags with colons in the input doesn't seem to work:
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":charade:"))
+#+END_SRC
+
+#+RESULTS:
+
+It's because the colons in the tag string are being matched by the =:punct:= in the regexp's first part, eating the colon so it doesn't match the one in the input string.  I'm not sure how to fix that.  I guess I could make the matching regexp a series of =prefix-input-suffix= groups, and adjust the prefix and suffix for inputs that should match tags...seems messy but I guess it would work.
+
+#+BEGIN_SRC txt
+\(\_<\|[[:punct:]]\)\( \)\(\_>\|[[:punct:]]\)
+
+"(_<|[[:punct:]])(:tag1:)(_>|[[:punct:]])"
+#+END_SRC
+
+#+BEGIN_SRC elisp
+(string-match "^:[[:word:]@:]+:$" ":charade:tag2:")
+(string-match "a" "ba")
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (let* ((input (split-string input " " t))
+         ;; Double colons in tag strings in input so they can match
+         (input (mapcar (lambda (s)
+                          (if (string-match helm-org-rifle-tags-re s)
+                              (replace-regexp-in-string ":" "::" s)
+                            s))
+                        input))
+         (match-all-tokens-re (mapconcat (lambda (token)
+                                           (if (string-match helm-org-rifle-tags-re token)
+                                               ;; Remove punct class from prefix and suffix so it can match tag strings
+                                               (concat "\\_<" (regexp-quote token) "\\_>")
+                                             ;; Not a tag; use normal prefix/suffix
+                                             (concat helm-org-rifle-re-begin-part
+                                                     (regexp-quote token)
+                                                     helm-org-rifle-re-end-part)))))
+         ;; TODO: Turn off case folding if input contains mixed case
+         (case-fold-search t)
+         results))
+#+END_SRC
+
+*** Match headings with multiple tags
+
+Now it matches headings with one tag, but not more than one.
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:"))
+#+END_SRC
+
+Maybe this will help, from =org.el=
+
+#+BEGIN_SRC elisp
+(org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (let ((helm-org-rifle-show-tags t)
+        (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
+    (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:"))  
+#+END_SRC
+
+#+RESULTS:
+| ****   Target heading with multiple tags :gunn:moon: \n                                                            | 38717 |
+| ***   Match headings with multiple tags  \nbuffer (current-buffer) ":gunn:"))...buffer (current-buffer) ":gunn:")) | 38106 |
+
+Yeah, using that regexp from =org-complex-heading-regexp-format= in =org.el= seems to work.  Whew.
+
+But this is the more correct one I think:
+
+[[file:~/tmp/src/org-mode/lisp/org.el::(let%20((tag-re%20(concat%20org-outline-regexp-bol][re in org.el]]:
+
+#+BEGIN_SRC elisp
+  (let ((tag-re (concat org-outline-regexp-bol
+                        "\\(?:.*?[ \t]\\)?"
+                        (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")))
+        (targets (list ":yes:" "no")))
+    (mapcar (it (when (string-match tag-re it)
+                  (match-string 0 it))) targets))
+#+END_SRC
+
+#+RESULTS:
+| :yes: | nil |
+
+And this more minimal one seems to work too:
+
+#+BEGIN_SRC elisp
+  (let ((tag-re (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$"))
+        (targets (list ":yes:" "no")))
+    (mapcar (it (when (string-match tag-re it)
+                  (match-string 0 it))) targets))
+#+END_SRC
+
+#+RESULTS:
+| :yes: | nil |
+
+**** Target heading with multiple tags :gunn:moon: 
+
