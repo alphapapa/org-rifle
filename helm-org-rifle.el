@@ -366,4 +366,6 @@ created."
         (font-lock-fontify-buffer)
         (buffer-string)))))
 
+(provide 'helm-org-rifle)
+
 ;;; helm-org-rifle.el ends here
