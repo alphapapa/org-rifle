@@ -224,8 +224,13 @@ POSITION is the position in BUFFER where the candidate heading begins."
                  (components (org-heading-components))
                  (path (when helm-org-rifle-show-path
                          (org-get-outline-path)))
+                 (priority (when (nth 3 components)
+                             ;; TODO: Is there a better way to do this?  The
+                             ;; s-join leaves an extra space when there's no
+                             ;; priority.
+                             (concat "[#" (char-to-string (nth 3 components)) "]")))
                  (heading (if helm-org-rifle-show-todo-keywords
-                              (s-join " " (list (nth 2 components) (nth 3 components) (nth 4 components)))
+                              (s-join " " (list (nth 2 components) priority (nth 4 components)))
                             (nth 4 components)))
                  (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
                              (save-excursion
