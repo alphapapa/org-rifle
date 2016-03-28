@@ -49,6 +49,31 @@ helm :)
 
 These come in handy while coding.
 
+** Profiling
+
+#+BEGIN_SRC elisp
+(defmacro it (&rest body)
+  `(lambda (it)
+     ,@body))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (defmacro profile-rifle (&rest body)
+    `(let (output)
+       (dolist (p '("helm-" "org-" "string-" "s-"))
+         (elp-instrument-package p))
+       ,@body
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
+
 ** Open Helm session on current org buffers
 
 #+BEGIN_SRC elisp
