@@ -776,3 +776,8 @@ Headings with priorities should be correctly displayed in results.
 *** [#B] Priority target heading
 
 Baby elephant
+
+** MAYBE Match only headings
+
+It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
+
