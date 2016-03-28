@@ -89,6 +89,9 @@
 (defconst helm-org-rifle-fontify-buffer-name " *helm-org-rifle-fontify*"
   "The name of the invisible buffer used to fontify `org-mode' strings.")
 
+(defconst helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+  "Regexp used to match Org tag strings.  From org.el.")
+
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
   :group 'helm
@@ -111,6 +114,10 @@ to be a major bottleneck."
 
 (defcustom helm-org-rifle-show-path nil
   "Show the whole heading path instead of just the entry's heading."
+  :group 'helm-org-rifle :type 'boolean)
+
+(defcustom helm-org-rifle-show-tags nil
+  "Show and match against Org tags."
   :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-re-begin-part
@@ -206,6 +213,18 @@ One source is returned for each open Org buffer."
            do (helm-attrset 'buffer buffer source)
            collect source))
 
+(defun helm-org-rifle-prep-token (token)
+  "Apply regexp prefix and suffix for token."
+  (if (string-match helm-org-rifle-tags-re token)
+      ;; Tag
+      (concat (concat "\\(" helm-org-rifle-tags-re "\\| \\)")
+              (regexp-quote token)
+              (concat "\\(" helm-org-rifle-tags-re "\\| \\|$\\)"))
+    ;; Not a tag; use normal prefix/suffix
+    (concat helm-org-rifle-re-begin-part
+            (regexp-quote token)
+            helm-org-rifle-re-end-part)))
+
 (defun helm-org-rifle-get-candidates-in-buffer (buffer input)
   "Return candidates in BUFFER for INPUT.
 
@@ -215,13 +234,7 @@ format: (STRING .  POSITION)
 STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading begins."
   (let* ((input (split-string input " " t))
-         (tokens-group-re (when input
-                            (concat "\\("
-                                    (mapconcat (lambda (token)
-                                                 (regexp-quote token))
-                                               input "\\|")
-                                    "\\)")))
-         (match-all-tokens-re (concat helm-org-rifle-re-begin-part tokens-group-re helm-org-rifle-re-end-part))
+         (match-all-tokens-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
@@ -241,6 +254,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
                              ;; s-join leaves an extra space when there's no
                              ;; priority.
                              (concat "[#" (char-to-string (nth 3 components)) "]")))
+                 (tags (nth 5 components))
                  (heading (if helm-org-rifle-show-todo-keywords
                               (s-join " " (list (nth 2 components) priority (nth 4 components)))
                             (nth 4 components)))
@@ -258,10 +272,7 @@ POSITION is the position in BUFFER where the candidate heading begins."
             (setq matching-positions-in-node
                   (cl-loop for token in input
                            append (cl-loop initially (goto-char node-beg)
-                                           while (search-forward-regexp (concat helm-org-rifle-re-begin-part
-                                                                                (regexp-quote token)
-                                                                                helm-org-rifle-re-end-part)
-                                                                        node-end t)
+                                           while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
                                            collect (line-beginning-position)
                                            do (end-of-line))
                            into result
@@ -283,7 +294,10 @@ POSITION is the position in BUFFER where the candidate heading begins."
                            ;; Include the buffer name and heading in
                            ;; the check, even though they're not
                            ;; included in the list of matching lines
-                           always (cl-loop for m in (append (list buffer-name heading) (map 'list 'car matching-lines-in-node))
+                           always (cl-loop for m in (append (delq nil (list buffer-name
+                                                                            heading
+                                                                            (when helm-org-rifle-show-tags tags)))
+                                                            (map 'list 'car matching-lines-in-node))
                                            thereis (s-contains? token m t)))
               ;; Node matches all tokens
               (setq matched-words-with-context
@@ -303,16 +317,27 @@ POSITION is the position in BUFFER where the candidate heading begins."
               (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
                                                       path)
                                                  (if helm-org-rifle-fontify-headings
-                                                     (org-format-outline-path (append path (list heading)))
-                                                   (s-join "/" (append path (list heading))))
+                                                     (org-format-outline-path (append path
+                                                                                      (list heading)
+                                                                                      (when helm-org-rifle-show-tags
+                                                                                        (concat tags " "))))
+                                                   ;; Not fontifying
+                                                   (s-join "/" (append path
+                                                                       (list heading)
+                                                                       (when helm-org-rifle-show-tags
+                                                                         tags))))
+                                               ;; No path or not showing path
                                                (if helm-org-rifle-fontify-headings
                                                    (helm-org-rifle-fontify-like-in-org-mode
-                                                    (s-join " " (list
-                                                                 (s-pad-left (nth 0 components) "*" "")
-                                                                 heading)))
-                                                 (s-join " " (list
-                                                              (s-pad-left (nth 0 components) "*" "")
-                                                              heading))))
+                                                    (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                                      heading
+                                                                      (when helm-org-rifle-show-tags
+                                                                        (concat tags " ")))))
+                                                 ;; Not fontifying
+                                                 (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                                   heading
+                                                                   (when helm-org-rifle-show-tags
+                                                                     tags)))))
                                              (s-join "..." matched-words-with-context)))
                           node-beg)
                     results))
