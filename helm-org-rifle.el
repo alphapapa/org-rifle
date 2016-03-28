@@ -234,6 +234,11 @@ format: (STRING .  POSITION)
 STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading begins."
   (let* ((input (split-string input " " t))
+         (negations (delq nil (mapcar (lambda (token)
+                                        (when (string-match "^!" token)
+                                          (setq input (remove token input))
+                                          (s-chop-prefix "!" token)))
+                                      input)))
          (match-all-tokens-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
@@ -290,15 +295,17 @@ POSITION is the position in BUFFER where the candidate heading begins."
                            collect `(,string . (,buffer ,pos))))
 
             ;; Verify all tokens are contained in each matching node
-            (when (cl-loop for token in input
-                           ;; Include the buffer name and heading in
-                           ;; the check, even though they're not
-                           ;; included in the list of matching lines
-                           always (cl-loop for m in (append (delq nil (list buffer-name
-                                                                            heading
-                                                                            (when helm-org-rifle-show-tags tags)))
-                                                            (map 'list 'car matching-lines-in-node))
-                                           thereis (s-contains? token m t)))
+            (when (cl-loop with targets = (append (delq nil (list buffer-name
+                                                                  heading
+                                                                  (when helm-org-rifle-show-tags tags)))
+                                                  (map 'list 'car matching-lines-in-node))
+                           for negation in negations
+                           never (cl-loop for target in targets
+                                          thereis (s-contains? negation target t))
+                           for token in input
+                           always (and (cl-loop for target in targets
+                                                thereis (s-contains? token target t))))
+
               ;; Node matches all tokens
               (setq matched-words-with-context
                     (cl-loop for line in (map 'list 'car matching-lines-in-node)

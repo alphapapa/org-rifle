@@ -40,6 +40,7 @@ Run the command =helm-org-rifle=, type some words, and all current =org-mode= bu
 + Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
 + Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
 + Show headings with certain tags by searching for, e.g. =:tag1:=.
++ Exclude results with a =!=, e.g. =pepperoni !anchovies=.
 + Show entries in an indirect buffer by selecting that action from the Helm actions list.
 
 * Credits
@@ -87,7 +88,7 @@ Right now, if more than one term appears in the same range, parts of that range 
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
 
-*** MAYBE Negation
+*** DONE Negation
 
 It would be handy to be able to use Helm-style =!word= negation patterns.
 

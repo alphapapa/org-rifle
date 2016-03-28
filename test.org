@@ -942,3 +942,42 @@ And this more minimal one seems to work too:
 
 **** Target heading with multiple tags :gunn:moon: 
 
+** DONE Negation
+CLOSED: [2016-03-28 Mon 18:03]
+:LOGBOOK:
+- State "DONE"       from "UNDERWAY"   [2016-03-28 Mon 18:03]
+- State "UNDERWAY"   from ""           [2016-03-28 Mon 17:30]
+:END:
+
+Emacs regexps don't support negation or lookahead, so we'll have to do it in stages.
+
+1. Find negation patterns and move them to a separate list.
+2. Test each match against negations and remove any that match.
+
+*** Find negation patterns
+
+#+BEGIN_SRC elisp
+  (let* ((input (split-string "summertime !difficult easy" " " t))
+         (negations (delq nil (mapcar (lambda (token)
+                                        (when (string-match "^!" token)
+                                          (setq input (remove token input))
+                                          (s-chop-prefix "!" token)))
+                                      input))))
+    (list input negations))
+#+END_SRC
+
+#+RESULTS:
+| summertime | easy |
+| difficult  |      |
+
+*** Test negation
+
+#+BEGIN_SRC elisp
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "target !winter"))
+#+END_SRC
+
+*** Target positive: summertime easy
+
+
+*** Target negative: summertime difficult
