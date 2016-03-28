@@ -203,7 +203,7 @@ This is the version currently in-use.
   (fontified-heading (org-fontify-like-in-org-mode plain-heading))
 #+END_SRC
 
-** elp profiling
+** MAYBE elp profiling
 
 #+BEGIN_SRC elisp
 (setq helm-org-rifle-show-path nil)
@@ -510,14 +510,14 @@ org-font-lock-add-tag-faces                                   18          9.402.
 org-raise-scripts                                             18          7.807e-06     4.337...e-07
 #+end_example
 
-** buffer-name-matching
+** DONE buffer-name-matching
 
 #+BEGIN_SRC elisp
 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "test.org emacs")
 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "inbox.org emacs")
 #+END_SRC
 
-** Matching symbol parts
+** DONE Matching symbol parts
 
 #+BEGIN_SRC elisp
 ;; This should return the "Target heading" heading too
@@ -674,7 +674,7 @@ Searching for just the first word should find this, but it doesn't; only searchi
                                             :background (face-attribute 'helm-selection :background))))
 #+END_SRC
 
-** Substring matching
+** TODO Substring matching
 
 Does searching for "solution" match this subheading?
 
@@ -688,7 +688,7 @@ Does searching for "solution" match this subheading?
 
 Solutions
 
-** Order-sensitive matching
+** DONE Order-sensitive matching
 
 We want order to be irrelevant.  So searching for "bravo alpha" should match the following subheading...
 
@@ -714,7 +714,7 @@ And it does.  Except...
 
 alpha bravo
 
-** Hyphenated words cause order-sensitive matching?
+** DONE Hyphenated words cause order-sensitive matching?
 
 #+BEGIN_SRC elisp
 ;; This works fine
@@ -743,3 +743,11 @@ The =ivy-regex-ignore-order= setting in [[http://oremacs.com/swiper/#completion-
 
 alpha bravo charlie-delta
 argh org-mode blah
+
+** DONE Priority
+
+Headings with priorities should be correctly displayed in results.
+
+*** [#B] Priority target heading
+
+Baby elephant
