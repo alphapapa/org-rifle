@@ -43,16 +43,28 @@
 ;; the entry in an indirect buffer by selecting that action from the
 ;; Helm actions list.
 
+;;; Tips
+
+;; + Show results from certain buffers by typing the name of the
+;;   buffer (usually the filename).
+;; + Show headings with certain todo keywords by typing the keyword,
+;;   e.g. TODO or DONE.
+;; + Show headings with certain priorities by typing, e.g. #A or
+;;   [#A].
+;; + Show entries in an indirect buffer by selecting that action from
+;;   the Helm actions list.
+
 ;;; Credits:
 
-;; This package is based on =org-search-goto= (specifically,
-;; =org-search-goto-ml=).  Its unofficial-official home is
-;; [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on
-;; EmacsWiki]], but I've mirrored it
-;; [[https://github.com/alphapapa/org-search-goto][on GitHub]].  It's
-;; a really great package, and the only thing that could make it
-;; better is to make it work with Helm.  To avoid confusion, this
-;; package has a completely different name.
+;; This package is based on org-search-goto (specifically,
+;; org-search-goto-ml).  Its unofficial-official home is on
+;; EmacsWiki[1] but I've mirrored it on GitHub[2].  It's a really
+;; great package, and the only thing that could make it better is to
+;; make it work with Helm.  To avoid confusion, this package has a
+;; completely different name.
+;;
+;;  [1] https://www.emacswiki.org/emacs/org-search-goto-ml.el
+;;  [2] https://github.com/alphapapa/org-search-goto
 
 ;;; License:
 

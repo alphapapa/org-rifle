@@ -32,9 +32,14 @@ Then you can customize the =helm-org-rifle= group if you like.
 
 * Usage
 
-Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through, with results grouped by buffer.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
+Run the command =helm-org-rifle=, type some words, and all current =org-mode= buffers will be rifled through, with results grouped by buffer.  Hit =RET= to show the selected entry.  
 
-You can also type the name of an open Org buffer (usually the filename), and only results from that buffer will be displayed.
+** Tips
+
++ Show results from certain buffers by typing the name of the buffer (usually the filename).
++ Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
++ Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
++ Show entries in an indirect buffer by selecting that action from the Helm actions list.
 
 * Credits
 
