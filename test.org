@@ -1127,6 +1127,10 @@ It seems awkward that all of the results disappear when a bare =!= is entered.  
 
 Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
 
+** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
+
+Could be good for testing e.g. negation, to make sure I don't break it.
+
 * Test heading top-level
 
 This file is for testing helm-org-rifle.
