@@ -147,6 +147,7 @@ because you can always revert your changes).)"
 
 ;;;; Functions
 
+;;;###autoload
 (defun helm-org-rifle ()
   "This is my rifle.  There are many like it, but this one is mine.
 
@@ -178,6 +179,7 @@ peace!"
   (let ((helm-candidate-separator " "))
     (helm :sources (helm-org-rifle-get-sources))))
 
+;;;###autoload
 (defun helm-org-rifle-current-buffer ()
   "Rifle through the current buffer."
   (interactive)
@@ -228,7 +230,6 @@ That is, if its name starts with a space."
                   :volatile t
                   :action (helm-make-actions
                            "Show entry" (lambda (candidate)
-                                          (setq helm-org-rifle-result-count 0)
                                           (switch-to-buffer (helm-attr 'buffer))
                                           (goto-char (car candidate))
                                           (org-show-entry))
