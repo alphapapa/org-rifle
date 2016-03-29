@@ -88,7 +88,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'helm)
 (require 'org)
 (require 's)
@@ -360,14 +359,14 @@ begins."
               (when (cl-loop with targets = (append (delq nil (list buffer-name
                                                                     heading
                                                                     (when helm-org-rifle-show-tags tags)))
-                                                    (cl-map 'list 'car matching-lines-in-node))
+                                                    (mapcar 'car matching-lines-in-node))
                              for token in input
                              always (cl-loop for target in targets
                                              thereis (s-contains? token target t)))
 
                 ;; Node matches all tokens
                 (setq matched-words-with-context
-                      (cl-loop for line in (cl-map 'list 'car matching-lines-in-node)
+                      (cl-loop for line in (mapcar 'car matching-lines-in-node)
                                append (cl-loop with end
                                                for token in input
                                                for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
