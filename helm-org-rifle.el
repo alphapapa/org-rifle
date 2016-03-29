@@ -88,6 +88,7 @@
 ;;; Code:
 
 (require 'helm)
+(require 'org)
 (require 's)
 
 ;;;; Vars
