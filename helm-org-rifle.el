@@ -116,7 +116,7 @@ to be a major bottleneck."
   :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-show-todo-keywords t
-  "Show Org todo keywords."
+  "Show Org and match against todo keywords."
   :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-show-path nil
