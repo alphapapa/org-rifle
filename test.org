@@ -62,11 +62,12 @@ These come in handy while coding.
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (defmacro profile-rifle (&rest body)
+  (defmacro profile-rifle (times &rest body)
     `(let (output)
-       (dolist (p '("helm-" "org-" "string-" "s-"))
+       (dolist (p '("helm-" "org-" "string-" "s-" "buffer-" "append" "delq" "map" "list" "car" "save-" "outline-" "delete-dups" "sort" "line-" "nth" "concat" "char-to-string" "rx-" "goto-" "when" "search-"))
          (elp-instrument-package p))
-       ,@body
+       (dotimes (x ,times)
+         ,@body)
        (elp-results)
        (elp-restore-all)
        (point-min)
@@ -239,7 +240,7 @@ This is the version currently in-use.
 (setq helm-org-rifle-show-path t)
 #+END_SRC
 
-*** Testing with helm
+*** Testing with helm: before negation support                  :read_only:
 #+BEGIN_SRC elisp
 (setq argh-how-many-buffers 0)
 (message "This many buffers: %s" argh-how-many-buffers)
@@ -1083,3 +1084,68 @@ notacatbutadog
 **** Target negative 2
 
 cat
+
+*** Profile with/without negation
+
+**** Without negation
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          2.707185944   0.2707185944
+org-heading-components                                        1670        0.4622022819  0.0002767678
+s-contains?                                                   6800        0.2288276119  3.365...e-05
+buffer-substring-no-properties                                5270        0.1843129670  3.497...e-05
+goto-char                                                     6660        0.1839791669  2.762...e-05
+org-back-to-heading                                           1670        0.1826040410  0.0001093437
+outline-back-to-heading                                       1670        0.1771684809  0.0001060889
+search-forward-regexp                                         3320        0.160160969   4.824...e-05
+outline-next-heading                                          1670        0.1304057709  7.808...e-05
+outline-previous-heading                                      1670        0.0787214109  4.713...e-05
+line-beginning-position                                       3510        0.0644287379  1.835...e-05
+line-end-position                                             1660        0.0570988770  3.439...e-05
+helm-org-rifle-prep-token                                     3340        0.0269152300  8.058...e-06
+helm-org-rifle-fontify-like-in-org-mode                       40          0.0229983300  0.0005749582
+string-match                                                  10300       0.0133238849  1.293...e-06
+org-at-heading-p                                              1660        0.0131253569  7.906...e-06
+outline-on-heading-p                                          3330        0.0113802549  3.417...e-06
+map                                                           1690        0.0078921430  4.669...e-06
+s-join                                                        1790        0.0078085580  4.362...e-06
+mapcar                                                        1738        0.0055163129  3.173...e-06
+#+end_example
+
+
+
+**** With negation
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !mail"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          3.091637074   0.3091637074
+org-heading-components                                        1670        0.4687531710  0.0002806905
+buffer-substring-no-properties                                7070        0.2041990190  2.888...e-05
+goto-char                                                     6800        0.1843262129  2.710...e-05
+map                                                           1680        0.1841657830  0.0001096224
+org-back-to-heading                                           1670        0.1832357559  0.0001097220
+mapcar                                                        1728        0.1819894680  0.0001053179
+car                                                           17102       0.1810326969  1.058...e-05
+s-join                                                        1790        0.1791070739  0.0001000598
+outline-back-to-heading                                       1670        0.1777289460  0.0001064245
+mapconcat                                                     1820        0.1752004220  9.626...e-05
+search-forward-regexp                                         3470        0.1643956769  4.737...e-05
+outline-next-heading                                          1670        0.1309705520  7.842...e-05
+line-beginning-position                                       5300        0.1271316750  2.398...e-05
+line-end-position                                             3460        0.117448273   3.394...e-05
+outline-previous-heading                                      1670        0.0792564969  4.745...e-05
+s-contains?                                                   6740        0.0599737680  8.898...e-06
+helm-org-rifle-prep-token                                     3490        0.0288021979  8.252...e-06
+helm-org-rifle-fontify-like-in-org-mode                       40          0.0239840029  0.0005996000
+string-match                                                  12220       0.0191793460  1.569...e-06
+#+end_example
+
