@@ -86,6 +86,8 @@
 (require 'helm)
 (require 's)
 
+;;;; Vars
+
 (defconst helm-org-rifle-fontify-buffer-name " *helm-org-rifle-fontify*"
   "The name of the invisible buffer used to fontify `org-mode' strings.")
 
@@ -132,6 +134,8 @@ because you can always revert your changes).)"
   "Regexp matched immediately after each search term.
 \(What, didn't you read the last warning?  Oh, nevermind.)"
   :group 'helm-org-rifle :type 'regexp)
+
+;;;; Functions
 
 (defun helm-org-rifle ()
   "This is my rifle.  There are many like it, but this one is mine.
