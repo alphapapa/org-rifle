@@ -237,8 +237,10 @@ POSITION is the position in BUFFER where the candidate heading begins."
          (negations (delq nil (mapcar (lambda (token)
                                         (when (string-match "^!" token)
                                           (setq input (remove token input))
-                                          (s-chop-prefix "!" token)))
+                                          (regexp-quote (s-chop-prefix "!" token))))
                                       input)))
+         (all-tokens (append input negations))
+         (negations (mapcar (lambda (token) (concat "\\b" token "\\b")) negations))
          (match-all-tokens-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
@@ -248,108 +250,113 @@ POSITION is the position in BUFFER where the candidate heading begins."
         (goto-char (point-min))
         (while (re-search-forward match-all-tokens-re nil t)
           ;; Get matching lines in node
-          (let* ((node-beg (save-excursion
-                             (save-match-data
-                               (outline-previous-heading))))
-                 (components (org-heading-components))
-                 (path (when helm-org-rifle-show-path
-                         (org-get-outline-path)))
-                 (priority (when (nth 3 components)
-                             ;; TODO: Is there a better way to do this?  The
-                             ;; s-join leaves an extra space when there's no
-                             ;; priority.
-                             (concat "[#" (char-to-string (nth 3 components)) "]")))
-                 (tags (nth 5 components))
-                 (heading (if helm-org-rifle-show-todo-keywords
-                              (s-join " " (list (nth 2 components) priority (nth 4 components)))
-                            (nth 4 components)))
-                 (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
-                             (save-excursion
-                               (outline-next-heading)
-                               (point))))
-                 (buffer-name (buffer-name buffer))
-                 matching-positions-in-node
-                 matching-lines-in-node
-                 matched-words-with-context)
+          (catch 'negated
+            (let* ((node-beg (save-excursion
+                               (save-match-data
+                                 (outline-previous-heading))))
+                   (components (org-heading-components))
+                   (path (when helm-org-rifle-show-path
+                           (org-get-outline-path)))
+                   (priority (when (nth 3 components)
+                               ;; TODO: Is there a better way to do this?  The
+                               ;; s-join leaves an extra space when there's no
+                               ;; priority.
+                               (concat "[#" (char-to-string (nth 3 components)) "]")))
+                   (tags (nth 5 components))
+                   (heading (if helm-org-rifle-show-todo-keywords
+                                (s-join " " (list (nth 2 components) priority (nth 4 components)))
+                              (nth 4 components)))
+                   (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
+                               (save-excursion
+                                 (outline-next-heading)
+                                 (point))))
+                   (buffer-name (buffer-name buffer))
+                   matching-positions-in-node
+                   matching-lines-in-node
+                   matched-words-with-context)
 
-            ;; Get list of beginning-of-line positions for
-            ;; lines in node that match any token
-            (setq matching-positions-in-node
-                  (cl-loop for token in input
-                           append (cl-loop initially (goto-char node-beg)
-                                           while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
-                                           collect (line-beginning-position)
-                                           do (end-of-line))
-                           into result
-                           finally return (sort (delete-dups result) '<)))
+              ;; Get list of beginning-of-line positions for
+              ;; lines in node that match any token
+              (setq matching-positions-in-node
+                    (or (cl-loop for token in all-tokens
+                                 do (goto-char node-beg)
+                                 while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
+                                 when negations
+                                 unless (cl-loop for negation in negations
+                                                 never (s-matches? negation
+                                                                   (buffer-substring-no-properties (line-beginning-position)
+                                                                                                   (line-end-position))))
+                                 return nil
+                                 collect (line-beginning-position) into result
+                                 do (end-of-line)
+                                 finally return (sort (delete-dups result) '<))
+                        ;; Negation found; skip node
+                        (throw 'negated (goto-char node-end))))
 
-            ;; Get list of line-strings containing any token
-            (setq matching-lines-in-node
-                  (cl-loop for pos in matching-positions-in-node
-                           do (goto-char pos)
-                           ;; Get text of each matching line
-                           for string = (buffer-substring-no-properties (line-beginning-position)
-                                                                        (line-end-position))
-                           unless (org-at-heading-p) ; Leave headings out of list of matched lines
-                           ;; (DISPLAY . REAL) format for Helm
-                           collect `(,string . (,buffer ,pos))))
+              ;; Get list of line-strings containing any token
+              (setq matching-lines-in-node
+                    (cl-loop for pos in matching-positions-in-node
+                             do (goto-char pos)
+                             ;; Get text of each matching line
+                             for string = (buffer-substring-no-properties (line-beginning-position)
+                                                                          (line-end-position))
+                             unless (org-at-heading-p) ; Leave headings out of list of matched lines
+                             ;; (DISPLAY . REAL) format for Helm
+                             collect `(,string . (,buffer ,pos))))
 
-            ;; Verify all tokens are contained in each matching node
-            (when (cl-loop with targets = (append (delq nil (list buffer-name
-                                                                  heading
-                                                                  (when helm-org-rifle-show-tags tags)))
-                                                  (map 'list 'car matching-lines-in-node))
-                           for negation in negations
-                           never (cl-loop for target in targets
-                                          thereis (s-contains? negation target t))
-                           for token in input
-                           always (and (cl-loop for target in targets
-                                                thereis (s-contains? token target t))))
+              ;; Verify all tokens are contained in each matching node
+              (when (cl-loop with targets = (append (delq nil (list buffer-name
+                                                                    heading
+                                                                    (when helm-org-rifle-show-tags tags)))
+                                                    (map 'list 'car matching-lines-in-node))
+                             for token in input
+                             always (and (cl-loop for target in targets
+                                                  thereis (s-contains? token target t))))
 
-              ;; Node matches all tokens
-              (setq matched-words-with-context
-                    (cl-loop for line in (map 'list 'car matching-lines-in-node)
-                             append (cl-loop with end
-                                             for token in input
-                                             for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
-                                                                          (eval token)
-                                                                          (repeat 0 ,helm-org-rifle-context-characters not-newline)))
-                                             for match = (string-match re line end)
-                                             if match
-                                             do (setq end (match-end 0))
-                                             and collect (match-string-no-properties 0 line)
-                                             else do (setq end nil))))
+                ;; Node matches all tokens
+                (setq matched-words-with-context
+                      (cl-loop for line in (map 'list 'car matching-lines-in-node)
+                               append (cl-loop with end
+                                               for token in input
+                                               for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                                                            (eval token)
+                                                                            (repeat 0 ,helm-org-rifle-context-characters not-newline)))
+                                               for match = (string-match re line end)
+                                               if match
+                                               do (setq end (match-end 0))
+                                               and collect (match-string-no-properties 0 line)
+                                               else do (setq end nil))))
 
-              ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
-              (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
-                                                      path)
+                ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
+                (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
+                                                        path)
+                                                   (if helm-org-rifle-fontify-headings
+                                                       (org-format-outline-path (append path
+                                                                                        (list heading)
+                                                                                        (when helm-org-rifle-show-tags
+                                                                                          (concat tags " "))))
+                                                     ;; Not fontifying
+                                                     (s-join "/" (append path
+                                                                         (list heading)
+                                                                         (when helm-org-rifle-show-tags
+                                                                           tags))))
+                                                 ;; No path or not showing path
                                                  (if helm-org-rifle-fontify-headings
-                                                     (org-format-outline-path (append path
-                                                                                      (list heading)
-                                                                                      (when helm-org-rifle-show-tags
-                                                                                        (concat tags " "))))
+                                                     (helm-org-rifle-fontify-like-in-org-mode
+                                                      (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                                        heading
+                                                                        (when helm-org-rifle-show-tags
+                                                                          (concat tags " ")))))
                                                    ;; Not fontifying
-                                                   (s-join "/" (append path
-                                                                       (list heading)
-                                                                       (when helm-org-rifle-show-tags
-                                                                         tags))))
-                                               ;; No path or not showing path
-                                               (if helm-org-rifle-fontify-headings
-                                                   (helm-org-rifle-fontify-like-in-org-mode
-                                                    (s-join " " (list (s-pad-left (nth 0 components) "*" "")
-                                                                      heading
-                                                                      (when helm-org-rifle-show-tags
-                                                                        (concat tags " ")))))
-                                                 ;; Not fontifying
-                                                 (s-join " " (list (s-pad-left (nth 0 components) "*" "")
-                                                                   heading
-                                                                   (when helm-org-rifle-show-tags
-                                                                     tags)))))
-                                             (s-join "..." matched-words-with-context)))
-                          node-beg)
-                    results))
-            ;; Go to end of node
-            (goto-char node-end)))))
+                                                   (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                                     heading
+                                                                     (when helm-org-rifle-show-tags
+                                                                       tags)))))
+                                               (s-join "..." matched-words-with-context)))
+                            node-beg)
+                      results))
+              ;; Go to end of node
+              (goto-char node-end))))))
     ;; Return results
     results))
 
