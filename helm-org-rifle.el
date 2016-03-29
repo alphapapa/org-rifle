@@ -102,7 +102,7 @@
 
 (defvar helm-org-rifle-map
   (let ((new-map (copy-keymap helm-map)))
-    (define-key new-map (kbd "<C-return>") 'helm-org-rifle-show-in-indirect-buffer-map-action)
+    (define-key new-map (kbd "<C-return>") 'helm-org-rifle-show-entry-in-indirect-buffer-map-action)
     new-map)
   "Keymap for `helm-org-rifle'.")
 
@@ -121,6 +121,13 @@
 For large result sets this may be slow, although it doesn't seem
 to be a major bottleneck."
   :group 'helm-org-rifle :type 'boolean)
+
+(defcustom helm-org-rifle-show-entry-function 'helm-org-rifle-show-entry-in-real-buffer
+  "Default function to use to show selected entries."
+  :group 'helm-org-rifle
+  :type '(radio (function :tag "Show entries in real buffers." helm-org-rifle-show-entry-in-real-buffer :value)
+                (function :tag "Show entries in indirect buffers." helm-org-rifle-show-entry-in-indirect-buffer)
+                (function :tag "Custom function")))
 
 (defcustom helm-org-rifle-show-todo-keywords t
   "Show Org and match against todo keywords."
@@ -188,8 +195,18 @@ peace!"
   (let ((helm-candidate-separator " "))
     (helm :sources (helm-org-rifle-get-source (current-buffer)))))
 
-(defun helm-org-rifle-show-in-indirect-buffer (candidate)
-  "Show CANDIDATE subtree in an indirect buffer."
+(defun helm-org-rifle-show-entry (candidate)
+  "Show CANDIDATE using the default function."
+  (funcall helm-org-rifle-show-entry-function candidate))
+
+(defun helm-org-rifle-show-entry-in-real-buffer (candidate)
+  "Show CANDIDATE in its real buffer."
+  (switch-to-buffer (helm-attr 'buffer))
+  (goto-char (car candidate))
+  (org-show-entry))
+
+(defun helm-org-rifle-show-entry-in-indirect-buffer (candidate)
+  "Show CANDIDATE in an indirect buffer."
   (let ((buffer (helm-attr 'buffer))
         (pos (car candidate))
         (original-buffer (current-buffer)))
@@ -202,11 +219,11 @@ peace!"
       ;; so it won't be selected when the indirect buffer is killed.
       (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
                                            (car (window-prev-buffers)))))))
-(defun helm-org-rifle-show-in-indirect-buffer-map-action ()
-  "Exit Helm buffer and call `helm-org-rifle-show-in-indirect-buffer' with selected candidate."
+(defun helm-org-rifle-show-entry-in-indirect-buffer-map-action ()
+  "Exit Helm buffer and call `helm-org-rifle-show-entry-in-indirect-buffer' with selected candidate."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-rifle-show-in-indirect-buffer)))
+    (helm-exit-and-execute-action 'helm-org-rifle-show-entry-in-indirect-buffer)))
 
 (defun helm-org-rifle-buffer-invisible-p (buffer)
   "Return non-nil if BUFFER is invisible.
@@ -231,11 +248,9 @@ That is, if its name starts with a space."
                   :multiline t
                   :volatile t
                   :action (helm-make-actions
-                           "Show entry" (lambda (candidate)
-                                          (switch-to-buffer (helm-attr 'buffer))
-                                          (goto-char (car candidate))
-                                          (org-show-entry))
-                           "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer)
+                           "Show entry" 'helm-org-rifle-show-entry
+                           "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
+                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
                   :keymap helm-org-rifle-map)))
     (helm-attrset 'buffer buffer source)
     source))
