@@ -675,6 +675,16 @@ Does searching for "solution" match this subheading?
 
 Solutions
 
+*** TODO [#A] Weird heading-only, second-word substring matching
+
+[[https://www.reddit.com/r/emacs/comments/4c4fpo/helmorgrifle_rifle_through_your_org_files/d1hdoop][From /u/washy9999]]:
+
+#+BEGIN_QUOTE
+incidentally, on the matter of searching for substrings... if i enter a single word to search for i get a results list. if i then start entering a second word helm filters the results for each character that i enter. so, i get substring searches for words after the first! (this is for headings...it gets more complicated if i do searches that return topic content.)
+#+END_QUOTE
+
+Hm, this is strange.  I'll have to check on it.
+
 ** DONE Order-sensitive matching
 
 We want order to be irrelevant.  So searching for "bravo alpha" should match the following subheading...
