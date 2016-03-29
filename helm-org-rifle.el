@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
-;; Package-Requires: ((emacs "24.4") (helm "1.9.3") (s "1.11.0"))
+;; Package-Requires: ((emacs "24.4") (helm "1.9.3") (org "8.2.4") (s "1.11.0"))
 ;; Keywords: hypermedia, outlines
 
 ;;; Commentary:
