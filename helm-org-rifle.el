@@ -242,7 +242,7 @@ That is, if its name starts with a space."
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
   (mapcar 'helm-org-rifle-get-source
-          (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))))
+          (cl-remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))))
 
 (defun helm-org-rifle-prep-token (token)
   "Apply regexp prefix and suffix for TOKEN."
