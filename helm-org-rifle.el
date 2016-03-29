@@ -37,20 +37,25 @@
 
 ;;; Usage
 
-;; Run the command `helm-org-rifle', type some words, and all current
-;; `org-mode' buffers will be rifled through, with results grouped by
-;; buffer.  Hit "RET" to show the selected entry.  You can also show
-;; the entry in an indirect buffer by selecting that action from the
-;; Helm actions list.
+;; Run one of the rifle commands, type some words, and results will be
+;; displayed, grouped by buffer.  Hit "RET" to show the selected
+;; entry.  You can also show the entry in an indirect buffer by
+;; selecting that action from the Helm actions list.
+
+;; Commands:
+;; + `helm-org-rifle': Shows results from all open Org buffers
+;; + `helm-org-rifle-current-buffer': Shows results from current buffer
 
 ;;; Tips
 
 ;; + Show results from certain buffers by typing the name of the
 ;;   buffer (usually the filename).
 ;; + Show headings with certain todo keywords by typing the keyword,
-;;   e.g. TODO or DONE.
-;; + Show headings with certain priorities by typing, e.g. #A or
-;;   [#A].
+;;   e.g. =TODO= or =DONE=.
+;; + Show headings with certain priorities by typing, e.g. =#A= or
+;;   =[#A]=.
+;; + Show headings with certain tags by searching for, e.g. =:tag1:=.
+;; + Exclude results with a =!=, e.g. =pepperoni !anchovies=.
 ;; + Show entries in an indirect buffer by selecting that action from
 ;;   the Helm actions list.
 
@@ -168,6 +173,12 @@ peace!"
   (let ((helm-candidate-separator " "))
     (helm :sources (helm-org-rifle-get-sources))))
 
+(defun helm-org-rifle-current-buffer ()
+  "Rifle through the current buffer."
+  (interactive)
+  (let ((helm-candidate-separator " "))
+    (helm :sources (helm-org-rifle-get-source (current-buffer)))))
+
 (defun helm-org-rifle-show-in-indirect-buffer (candidate)
   "Show CANDIDATE subtree in an indirect buffer."
   (let ((buffer (helm-attr 'buffer))
@@ -188,34 +199,38 @@ peace!"
 That is, if its name starts with a space."
   (s-starts-with? " " (buffer-name buffer)))
 
+(defun helm-org-rifle-get-source (buffer)
+  "Get a rifle buffer for BUFFER."
+  (let ((source (helm-build-sync-source (buffer-name buffer)
+                  :candidates (lambda ()
+                                (when (s-present? helm-pattern)
+                                  (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
+                  :match 'identity
+                  ;; Setting :delayed to a number causes
+                  ;; strange behavior, duplicated results,
+                  ;; causes the :candidates function to be
+                  ;; called nearly once for every character
+                  ;; entered, even though it is delayed for
+                  ;; right amount of time.  But setting it to
+                  ;; t works fine, and...fast...
+                  :delayed t
+                  :multiline t
+                  :volatile t
+                  :action (helm-make-actions
+                           "Show entry" (lambda (candidate)
+                                          (setq helm-org-rifle-result-count 0)
+                                          (switch-to-buffer (helm-attr 'buffer))
+                                          (goto-char (car candidate))
+                                          (org-show-entry))
+                           "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer))))
+    (helm-attrset 'buffer buffer source)
+    source))
+
 (defun helm-org-rifle-get-sources ()
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
-  (cl-loop for buffer in (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))
-           for source = (helm-build-sync-source (buffer-name buffer)
-                          :candidates (lambda ()
-                                        (when (s-present? helm-pattern)
-                                          (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
-                          :match 'identity
-                          ;; Setting :delayed to a number causes
-                          ;; strange behavior, duplicated results,
-                          ;; causes the :candidates function to be
-                          ;; called nearly once for every character
-                          ;; entered, even though it is delayed for
-                          ;; right amount of time.  But setting it to
-                          ;; t works fine, and...fast...
-                          :delayed t
-                          :multiline t
-                          :volatile t
-                          :action (helm-make-actions
-                                   "Show entry" (lambda (candidate)
-                                                  (setq helm-org-rifle-result-count 0)
-                                                  (switch-to-buffer (helm-attr 'buffer))
-                                                  (goto-char (car candidate))
-                                                  (org-show-entry))
-                                   "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer))
-           do (helm-attrset 'buffer buffer source)
-           collect source))
+  (mapcar 'helm-org-rifle-get-source
+          (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))))
 
 (defun helm-org-rifle-prep-token (token)
   "Apply regexp prefix and suffix for token."
