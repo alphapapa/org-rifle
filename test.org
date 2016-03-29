@@ -1106,6 +1106,17 @@ helm-org-rifle-fontify-like-in-org-mode                       40          0.0239
 string-match                                                  12220       0.0191793460  1.569...e-06
 #+end_example
 
+*** DONE Avoid clearing results when bare "!" is entered
+
+It seems awkward that all of the results disappear when a bare =!= is entered.  Even if you type quickly, they all disappear and then reappear.  Should be possible to fix this...
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !")
+(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !org")
+#+END_SRC
+
+Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
+
 * Test heading top-level
 
 This file is for testing helm-org-rifle.

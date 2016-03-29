@@ -288,7 +288,7 @@ begins."
          (negations (delq nil (mapcar (lambda (token)
                                         (when (string-match "^!" token)
                                           (setq input (remove token input))
-                                          (regexp-quote (s-chop-prefix "!" token))))
+                                          (s-presence (regexp-quote (s-chop-prefix "!" token)))))
                                       input)))
          (all-tokens (append input negations))
          (negations (mapcar (lambda (token) (concat "\\b" token "\\b")) negations))
