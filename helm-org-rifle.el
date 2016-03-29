@@ -333,11 +333,11 @@ begins."
                                  do (goto-char node-beg)
                                  while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
                                  when negations
-                                     when (cl-loop for negation in negations
-                                                   thereis (s-matches? negation
-                                                                       (buffer-substring-no-properties (line-beginning-position)
-                                                                                                       (line-end-position))))
-                                     return nil
+                                 when (cl-loop for negation in negations
+                                               thereis (s-matches? negation
+                                                                   (buffer-substring-no-properties (line-beginning-position)
+                                                                                                   (line-end-position))))
+                                 return nil
                                  collect (line-beginning-position) into result
                                  do (end-of-line)
                                  finally return (sort (delete-dups result) '<))
