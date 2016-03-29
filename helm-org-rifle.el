@@ -362,8 +362,8 @@ begins."
                                                                     (when helm-org-rifle-show-tags tags)))
                                                     (cl-map 'list 'car matching-lines-in-node))
                              for token in input
-                             always (and (cl-loop for target in targets
-                                                  thereis (s-contains? token target t))))
+                             always (cl-loop for target in targets
+                                             thereis (s-contains? token target t)))
 
                 ;; Node matches all tokens
                 (setq matched-words-with-context
