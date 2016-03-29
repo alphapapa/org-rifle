@@ -102,7 +102,7 @@
   (let ((new-map (copy-keymap helm-map)))
     (define-key new-map (kbd "<C-return>") 'helm-org-rifle-show-in-indirect-buffer-map-action)
     new-map)
-  "Keymap for `helm-org-rifle'")
+  "Keymap for `helm-org-rifle'.")
 
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
@@ -244,7 +244,7 @@ One source is returned for each open Org buffer."
           (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))))
 
 (defun helm-org-rifle-prep-token (token)
-  "Apply regexp prefix and suffix for token."
+  "Apply regexp prefix and suffix for TOKEN."
   (if (string-match helm-org-rifle-tags-re token)
       ;; Tag
       (concat (concat "\\(" helm-org-rifle-tags-re "\\| \\)")
@@ -261,8 +261,11 @@ One source is returned for each open Org buffer."
 INPUT is a string.  Candidates are returned in this
 format: (STRING .  POSITION)
 
-STRING begins with a fontified Org heading and optionally includes further matching parts separated by newlines.
-POSITION is the position in BUFFER where the candidate heading begins."
+STRING begins with a fontified Org heading and optionally
+includes further matching parts separated by newlines.
+
+POSITION is the position in BUFFER where the candidate heading
+begins."
   (let* ((input (split-string input " " t))
          (negations (delq nil (mapcar (lambda (token)
                                         (when (string-match "^!" token)
