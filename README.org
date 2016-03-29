@@ -92,10 +92,6 @@ It would be nice to have a regexp mode...maybe.
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
 
-*** DONE Negation
-
-It would be handy to be able to use Helm-style =!word= negation patterns.
-
 * License
 
 GPLv3

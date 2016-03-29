@@ -1,55 +1,10 @@
-* Test heading top-level
-
-This file is for testing helm-org-rifle.
-
-#+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates "pomegr blueberry")
-(helm-org-rifle-get-candidates "top-level")
-#+END_SRC
-
-** Heading A: blueberry
-
-Keywords: pomegranate boisenberry
-
-** Heading B: pomegranate boisenberry
-
-** Heading C: pomegranate
-
-** Heading D: boisenberry
-
-** Heading E
-
-pomegranate
-
-** Heading F green
-
-boisenberry
-
-** Heading G
-red orange yellow green blue indigo violet
-black black black black blue black black
-
-*** Heading G.1
-
-green beans and blueberry
-
-** Heading H: Helm 
-
-What is it with all this food?
-
-*** Heading H.1
-
-Emacs
-
-** Heading I: emacs
-
-helm :)
-
-* Test code for eval'ing
+* Code
 
 These come in handy while coding.
 
 ** Profiling
+
+Why aren't macros like these in some default package?  Sure beats having to type ~(mapcar (lambda (it) (...it...)) list)~ over and over.
 
 #+BEGIN_SRC elisp
   (defmacro it (&rest body)
@@ -60,6 +15,8 @@ These come in handy while coding.
                ,@body)
              ,seq))
 #+END_SRC
+
+This makes it easy to profile code:
 
 #+BEGIN_SRC elisp
   (defmacro profile-rifle (times &rest body)
@@ -1148,4 +1105,51 @@ helm-org-rifle-prep-token                                     3490        0.0288
 helm-org-rifle-fontify-like-in-org-mode                       40          0.0239840029  0.0005996000
 string-match                                                  12220       0.0191793460  1.569...e-06
 #+end_example
+
+* Test heading top-level
+
+This file is for testing helm-org-rifle.
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates "pomegr blueberry")
+(helm-org-rifle-get-candidates "top-level")
+#+END_SRC
+
+** Heading A: blueberry
+
+Keywords: pomegranate boisenberry
+
+** Heading B: pomegranate boisenberry
+
+** Heading C: pomegranate
+
+** Heading D: boisenberry
+
+** Heading E
+
+pomegranate
+
+** Heading F green
+
+boisenberry
+
+** Heading G
+red orange yellow green blue indigo violet
+black black black black blue black black
+
+*** Heading G.1
+
+green beans and blueberry
+
+** Heading H: Helm
+
+What is it with all this food?
+
+*** Heading H.1
+
+Emacs
+
+** Heading I: emacs
+
+helm :)
 
