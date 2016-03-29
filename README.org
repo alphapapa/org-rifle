@@ -32,7 +32,7 @@ Then you can customize the =helm-org-rifle= group if you like.
 
 * Usage
 
-Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry.  You can also show the entry in an indirect buffer by selecting that action from the Helm actions list.
+Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
 *Commands:*
 + =helm-org-rifle=: Shows results from all open Org buffers
@@ -71,10 +71,6 @@ It would be easy to rifle through Org files in a directory or in a list of files
 Currently matches are made against word, punctuation, or symbol boundaries--not substrings.  For most cases, this is probably the best default: if someone were searching for "Sol", referring to the sun, he probably wouldn't want to match "solution" or "solvent" or "soliloquy".  But if someone were trying to dig up a note he made a while back about apple pie, did he write about "an apple pie" or "some apple pies"?  Dessert hangs in the balance!
 
 So this should be a configurable default, and calling =helm-org-rifle= with a prefix arg should put it into substring mode.  Maybe there could even be a toggle within the Helm session.
-
-*** TODO Add key map
-
-Using a custom key map will allow binding =helm-org-rifle-show-in-indirect-buffer= to a key.
 
 *** TODO Collapse overlapping context strings
 

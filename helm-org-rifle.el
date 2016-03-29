@@ -39,8 +39,7 @@
 
 ;; Run one of the rifle commands, type some words, and results will be
 ;; displayed, grouped by buffer.  Hit "RET" to show the selected
-;; entry.  You can also show the entry in an indirect buffer by
-;; selecting that action from the Helm actions list.
+;; entry, or <C-return> to show it in an indirect buffer.
 
 ;; Commands:
 ;; + `helm-org-rifle': Shows results from all open Org buffers
@@ -98,6 +97,12 @@
 
 (defconst helm-org-rifle-tags-re (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
   "Regexp used to match Org tag strings.  From org.el.")
+
+(defvar helm-org-rifle-map
+  (let ((new-map (copy-keymap helm-map)))
+    (define-key new-map (kbd "<C-return>") 'helm-org-rifle-show-in-indirect-buffer-map-action)
+    new-map)
+  "Keymap for `helm-org-rifle'")
 
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
@@ -193,6 +198,11 @@ peace!"
       ;; so it won't be selected when the indirect buffer is killed.
       (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
                                            (car (window-prev-buffers)))))))
+(defun helm-org-rifle-show-in-indirect-buffer-map-action ()
+  "Exit Helm buffer and call `helm-org-rifle-show-in-indirect-buffer' with selected candidate."
+  (interactive)
+  (with-helm-alive-p
+    (helm-exit-and-execute-action 'helm-org-rifle-show-in-indirect-buffer)))
 
 (defun helm-org-rifle-buffer-invisible-p (buffer)
   "Return non-nil if BUFFER is invisible.
@@ -222,7 +232,8 @@ That is, if its name starts with a space."
                                           (switch-to-buffer (helm-attr 'buffer))
                                           (goto-char (car candidate))
                                           (org-show-entry))
-                           "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer))))
+                           "Show entry in indirect buffer" 'helm-org-rifle-show-in-indirect-buffer)
+                  :keymap helm-org-rifle-map)))
     (helm-attrset 'buffer buffer source)
     source))
 
