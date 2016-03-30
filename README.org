@@ -24,7 +24,7 @@ With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is sh
 
 * Installation
 
-Install [[https://github.com/emacs-helm/helm][Helm]] and [[https://github.com/magnars/s.el][s]].  Then require this package in your init file:
+Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magnars/dash.el][dash.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
 
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)

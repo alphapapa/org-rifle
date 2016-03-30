@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "24.4") (helm "1.9.3") (s "1.10.0"))
+;; Package-Requires: ((emacs "24.4") (dash "2.12") (helm "1.9.3") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
 ;;; Commentary:
@@ -29,7 +29,7 @@
 
 ;;; Installation
 
-;; Install the Helm and "s" (aka "s.el") packages.  Then require this
+;; Install the Helm, dash.el, and s.el packages.  Then require this
 ;; package in your init file:
 
 ;; (require 'helm-org-rifle)
@@ -88,6 +88,7 @@
 
 ;;; Code:
 
+(require 'dash)
 (require 'helm)
 (require 'org)
 (require 's)
@@ -225,10 +226,10 @@ peace!"
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-org-rifle-show-entry-in-indirect-buffer)))
 
-(defun helm-org-rifle-buffer-invisible-p (buffer)
-  "Return non-nil if BUFFER is invisible.
-That is, if its name starts with a space."
-  (s-starts-with? " " (buffer-name buffer)))
+(defun helm-org-rifle-buffer-visible-p (buffer)
+  "Return non-nil if BUFFER is visible.
+That is, if its name does not start with a space."
+  (not (s-starts-with? " " (buffer-name buffer))))
 
 (defun helm-org-rifle-get-source (buffer)
   "Get a rifle buffer for BUFFER."
@@ -259,7 +260,7 @@ That is, if its name starts with a space."
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
   (mapcar 'helm-org-rifle-get-source
-          (cl-remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t))))
+          (-select 'helm-org-rifle-buffer-visible-p (org-buffer-list nil t))))
 
 (defun helm-org-rifle-prep-token (token)
   "Apply regexp prefix and suffix for TOKEN."
@@ -285,13 +286,13 @@ includes further matching parts separated by newlines.
 POSITION is the position in BUFFER where the candidate heading
 begins."
   (let* ((input (split-string input " " t))
-         (negations (delq nil (mapcar (lambda (token)
-                                        (when (string-match "^!" token)
-                                          (setq input (remove token input))
-                                          (s-presence (regexp-quote (s-chop-prefix "!" token)))))
-                                      input)))
+         (negations (-keep (lambda (token)
+                             (when (string-match "^!" token)
+                               (setq input (remove token input))
+                               (s-presence (regexp-quote (s-chop-prefix "!" token)))))
+                           input))
          (all-tokens (append input negations))
-         (negations (mapcar (lambda (token) (concat "\\b" token "\\b")) negations))
+         (negations (--map (concat "\\b" it "\\b") negations))
          (match-all-tokens-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
@@ -358,7 +359,7 @@ begins."
                              collect `(,string . (,buffer ,pos))))
 
               ;; Verify all tokens are contained in each matching node
-              (when (cl-loop with targets = (append (delq nil (list buffer-name
+              (when (cl-loop with targets = (append (-non-nil (list buffer-name
                                                                     heading
                                                                     (when helm-org-rifle-show-tags tags)))
                                                     (mapcar 'car matching-lines-in-node))
@@ -396,12 +397,12 @@ begins."
                                                  ;; No path or not showing path
                                                  (if helm-org-rifle-fontify-headings
                                                      (helm-org-rifle-fontify-like-in-org-mode
-                                                      (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                      (s-join " " (list (s-repeat (nth 0 components) "*")
                                                                         heading
                                                                         (when helm-org-rifle-show-tags
                                                                           (concat tags " ")))))
                                                    ;; Not fontifying
-                                                   (s-join " " (list (s-pad-left (nth 0 components) "*" "")
+                                                   (s-join " " (list (s-repeat (nth 0 components) "*")
                                                                      heading
                                                                      (when helm-org-rifle-show-tags
                                                                        tags)))))
