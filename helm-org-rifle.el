@@ -277,7 +277,7 @@ One source is returned for each open Org buffer."
   "Return candidates in BUFFER for INPUT.
 
 INPUT is a string.  Candidates are returned in this
-format: (STRING .  POSITION)
+format: (STRING . POSITION)
 
 STRING begins with a fontified Org heading and optionally
 includes further matching parts separated by newlines.
