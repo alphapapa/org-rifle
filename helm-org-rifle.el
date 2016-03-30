@@ -299,6 +299,8 @@ begins."
     (with-current-buffer buffer
       (save-excursion
         (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-heading))
         (while (re-search-forward match-all-tokens-re nil t)
           ;; Get matching lines in node
           (catch 'negated
