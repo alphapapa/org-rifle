@@ -131,7 +131,7 @@ to be a major bottleneck."
                 (function :tag "Custom function")))
 
 (defcustom helm-org-rifle-show-todo-keywords t
-  "Show Org and match against todo keywords."
+  "Show and match against Org todo keywords."
   :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-show-path nil
