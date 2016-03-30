@@ -1,4 +1,4 @@
-* helm-org-rifle.el
+* helm-org-rifle
 
 [[https://melpa.org/#/helm-org-rifle][file:https://melpa.org/packages/helm-org-rifle-badge.svg]] [[https://stable.melpa.org/#/helm-org-rifle][file:https://stable.melpa.org/packages/helm-org-rifle-badge.svg]]
 
