@@ -1131,6 +1131,12 @@ Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for t
 
 Could be good for testing e.g. negation, to make sure I don't break it.
 
+* Plans
+
+** TODO Support new Helm with input-idle-delay
+
+Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.
+
 * Test heading top-level
 
 This file is for testing helm-org-rifle.
@@ -1177,4 +1183,3 @@ Emacs
 ** Heading I: emacs
 
 helm :)
-
