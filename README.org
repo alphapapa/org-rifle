@@ -54,6 +54,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 ** 1.1-pre
 
 + Use =dash.el= for some things.
++ Set =helm-input-idle-delay= to prevent flickering as the user types, customizable through =helm-org-rifle-input-idle-delay=.
 
 ** 1.0.1
 

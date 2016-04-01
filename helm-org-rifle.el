@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
 ;; Version: 1.1-pre
-;; Package-Requires: ((emacs "24.4") (dash "2.12") (helm "1.9.3") (s "1.10.0"))
+;; Package-Requires: ((emacs "24.4") (dash "2.12") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
 ;;; Commentary:
@@ -123,6 +123,15 @@ For large result sets this may be slow, although it doesn't seem
 to be a major bottleneck."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-input-idle-delay 0.05
+  "How long to wait to find results after the user stops typing, in seconds.
+This helps prevent flickering in the Helm buffer, because the
+default value for `helm-idle-input-delay' is 0.01, which runs the
+search immediately after each keystroke.  You can adjust this to
+get results more quickly (shorter delay) or further reduce
+flickering (longer delay)."
+  :group 'helm-org-rifle :type 'float)
+
 (defcustom helm-org-rifle-show-entry-function 'helm-org-rifle-show-entry-in-real-buffer
   "Default function to use to show selected entries."
   :group 'helm-org-rifle
@@ -231,9 +240,14 @@ peace!"
 That is, if its name does not start with a space."
   (not (s-starts-with? " " (buffer-name buffer))))
 
+(defcustom helm-org-rifle-after-init-hook '(helm-org-rifle-set-input-idle-delay)
+  "`:after-init-hook' for the Helm buffer."
+  :group 'helm-org-rifle :type 'hook)
+
 (defun helm-org-rifle-get-source (buffer)
   "Get a rifle buffer for BUFFER."
   (let ((source (helm-build-sync-source (buffer-name buffer)
+                  :after-init-hook helm-org-rifle-after-init-hook
                   :candidates (lambda ()
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
@@ -245,7 +259,6 @@ That is, if its name does not start with a space."
                   ;; entered, even though it is delayed for
                   ;; right amount of time.  But setting it to
                   ;; t works fine, and...fast...
-                  :delayed t
                   :multiline t
                   :volatile t
                   :action (helm-make-actions
@@ -433,6 +446,11 @@ created."
       (let ((org-odd-levels-only odd-levels))
         (font-lock-fontify-buffer)
         (buffer-string)))))
+
+(defun helm-org-rifle-set-input-idle-delay ()
+  "Set `helm-input-idle-delay' in Helm buffer."
+  (with-helm-buffer
+    (setq-local helm-input-idle-delay helm-org-rifle-input-idle-delay)))
 
 (provide 'helm-org-rifle)
 
