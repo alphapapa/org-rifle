@@ -51,6 +51,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog
 
+** 1.1-pre
+
++ Use =dash.el= for some things.
+
 ** 1.0.1
 
 + Handle Org in-buffer settings (#5).  Thanks to @jonmoore.
