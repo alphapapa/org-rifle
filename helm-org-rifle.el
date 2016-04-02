@@ -286,13 +286,6 @@ That is, if its name does not start with a space."
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
                   :match 'identity
-                  ;; Setting :delayed to a number causes
-                  ;; strange behavior, duplicated results,
-                  ;; causes the :candidates function to be
-                  ;; called nearly once for every character
-                  ;; entered, even though it is delayed for
-                  ;; right amount of time.  But setting it to
-                  ;; t works fine, and...fast...
                   :multiline t
                   :volatile t
                   :action (helm-make-actions
