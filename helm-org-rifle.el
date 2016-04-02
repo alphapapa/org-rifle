@@ -151,14 +151,14 @@ flickering (longer delay)."
   "Show and match against Org tags."
   :group 'helm-org-rifle :type 'boolean)
 
-(defcustom helm-org-rifle-re-begin-part
+(defcustom helm-org-rifle-re-prefix
   "\\(\\_<\\|[[:punct:]]\\)"
   "Regexp matched immediately before each search term.
 \(Customize at your peril (but it's okay to experiment here,
 because you can always revert your changes).)"
   :group 'helm-org-rifle :type 'regexp)
 
-(defcustom helm-org-rifle-re-end-part
+(defcustom helm-org-rifle-re-suffix
   "\\(\\_>\\|[[:punct:]]\\)"
   "Regexp matched immediately after each search term.
 \(What, didn't you read the last warning?  Oh, nevermind.)"
@@ -283,9 +283,9 @@ One source is returned for each open Org buffer."
               (regexp-quote token)
               (concat "\\(" helm-org-rifle-tags-re "\\| \\|$\\)"))
     ;; Not a tag; use normal prefix/suffix
-    (concat helm-org-rifle-re-begin-part
+    (concat helm-org-rifle-re-prefix
             (regexp-quote token)
-            helm-org-rifle-re-end-part)))
+            helm-org-rifle-re-suffix)))
 
 (defun helm-org-rifle-get-candidates-in-buffer (buffer input)
   "Return candidates in BUFFER for INPUT.
@@ -306,7 +306,10 @@ begins."
                            input))
          (negations-re (when negations
                          (rx-to-string `(seq bow (or ,@negations) eow) t)))
-         (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
+         (positive-re (s-wrap (rx-to-string `(and (or ,@input)) t)
+                              helm-org-rifle-re-prefix
+                              helm-org-rifle-re-suffix))
+         (positive-re-list (--map (helm-org-rifle-prep-token it) input))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
@@ -374,9 +377,9 @@ begins."
                                                                     heading
                                                                     (when helm-org-rifle-show-tags tags)))
                                                     (mapcar 'car matching-lines-in-node))
-                             for token in input
+                             for re in positive-re-list
                              always (cl-loop for target in targets
-                                             thereis (s-contains? token target t)))
+                                             thereis (s-matches? re target)))
 
                 ;; Node matches all tokens
                 (setq matched-words-with-context
