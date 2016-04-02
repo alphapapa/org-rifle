@@ -24,13 +24,17 @@ With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is sh
 
 * Installation
 
+** MELPA
+
+If you installed from MELPA, your rifle is ready.  Just run one of the [[*Usage][commands]] below.
+
+** Manual
+
 Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magnars/dash.el][dash.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
 
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)
 #+END_SRC
-
-Then you can customize the =helm-org-rifle= group if you like.
 
 * Usage
 
@@ -47,7 +51,8 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 + Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
 + Show headings with certain tags by searching for, e.g. =:tag1:=.
 + Exclude results with a =!=, e.g. =pepperoni !anchovies=.
-+ Show entries in an indirect buffer by selecting that action from the Helm actions list.
++ Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
++ You can customize the =helm-org-rifle= group if you like.
 
 * Changelog
 
@@ -55,6 +60,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 + Restore context display.  This was accidentally broken when adding the negation feature, before the tagging of 1.0.0, so it's like a new feature.
 + Turn on the =show-tags= feature and remove the option to disable it.  It fixes a bug, and I don't think anyone would want to turn it off anyway.  It was off by default before, which might mean that users who didn't turn it on were getting incorrect results by default.  Oops.
++ Bind =<C-return>= to open entries in indirect buffers with =org-tree-to-indirect-buffer=.  This is super-duper handy, and seems to be an under-appreciated Org feature.  Try indirect buffers, today!
 + Add option to customize the ellipses and use comment face by default.
 + Use =dash.el= for some things.
 + Set =helm-input-idle-delay= to prevent flickering as the user types, customizable through =helm-org-rifle-input-idle-delay=.

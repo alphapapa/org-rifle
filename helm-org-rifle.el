@@ -29,12 +29,17 @@
 
 ;;; Installation
 
+;;;; MELPA
+
+;; If you installed from MELPA, your rifle is ready.  Just run one of
+;; the commands below.
+
+;;;; Manual
+
 ;; Install the Helm, dash.el, and s.el packages.  Then require this
 ;; package in your init file:
 
 ;; (require 'helm-org-rifle)
-
-;; Then you can customize the `helm-org-rifle' group if you like.
 
 ;;; Usage
 
@@ -57,7 +62,8 @@
 ;; + Show headings with certain tags by searching for, e.g. =:tag1:=.
 ;; + Exclude results with a =!=, e.g. =pepperoni !anchovies=.
 ;; + Show entries in an indirect buffer by selecting that action from
-;;   the Helm actions list.
+;;   the Helm actions list, or by pressing =<C-return>=.
+;; + You can customize the =helm-org-rifle= group if you like.
 
 ;;; Credits:
 
