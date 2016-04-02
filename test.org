@@ -175,6 +175,91 @@ This is the version currently in-use.
                                              collect (match-string-no-properties 0 line))))
 #+END_SRC
 
+*** TODO Fix it
+:LOGBOOK:
+- State "TODO"       from "TODO"       [2016-04-01 Fri 19:03]
+:END:
+
+[2016-04-01 Fri 19:03] Somehow I broke it.  Now to fix it...
+
+I don't understand why this loop isn't working like I want it to:
+
+#+BEGIN_SRC elisp
+  (cl-loop with end
+           for line in (mapcar 'car matching-lines-in-node)
+           for token in input
+           for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                        (eval token)
+                                        (repeat 0 ,helm-org-rifle-context-characters not-newline)))
+           for match = (string-match re line end)
+           for end = (match-end 0)
+           when match
+           collect (match-string-no-properties 0 line))
+#+END_SRC
+
+From what I can tell from the manual, it should do what I want.  Let's try this:
+
+#+BEGIN_SRC elisp
+  (cl-loop for line in '("1" "2" "3")
+           for word in '("a" "b" "c")
+           collect (list (format "Line:%s Word:%s" line word)))
+#+END_SRC
+
+#+RESULTS:
+| Line:1 Word:a |
+| Line:2 Word:b |
+| Line:3 Word:c |
+
+Well that does /not/ behave like Python list-comps.  So let's try nested:
+
+#+BEGIN_SRC elisp
+  (cl-loop for line in '("1" "2" "3")
+           collect (cl-loop for word in '("a" "b" "c")
+                            collect (format "Line:%s Word:%s" line word)))
+#+END_SRC
+
+#+RESULTS:
+| Line:1 Word:a | Line:1 Word:b | Line:1 Word:c |
+| Line:2 Word:a | Line:2 Word:b | Line:2 Word:c |
+| Line:3 Word:a | Line:3 Word:b | Line:3 Word:c |
+
+There.  So this loop should work:
+
+#+BEGIN_SRC elisp
+  (cl-loop with end
+           for line in (mapcar 'car matching-lines-in-node)
+for end = nil
+           collect (cl-loop for token in input
+                            for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                                         (eval token)
+                                                         (repeat 0 ,helm-org-rifle-context-characters not-newline)))
+                            for match = (string-match re line end)
+                            for end = (match-end 0)
+                            when match
+                            collect (match-string-no-properties 0 line)))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "emacs org-mode")
+#+END_SRC
+
+Hm...not quite.  Well, this is the code from just before the commit that broke it:
+
+#+BEGIN_SRC elisp
+  (setq matched-words-with-context
+        (cl-loop for line in (map 'list 'car matching-lines-in-node)
+                 append (cl-loop with end
+                                 for token in input
+                                 for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                                              (eval token)
+                                                              (repeat 0 ,helm-org-rifle-context-characters not-newline)))
+                                 for match = (string-match re line end)
+                                 if match
+                                 do (setq end (match-end 0))
+                                 and collect (match-string-no-properties 0 line)
+  
+#+END_SRC
+
 ** Org headings
 
 #+BEGIN_SRC elisp

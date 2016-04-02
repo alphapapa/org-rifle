@@ -342,23 +342,23 @@ begins."
                    matching-lines-in-node
                    matched-words-with-context)
 
-              ;; Get list of beginning-of-line positions for
-              ;; lines in node that match any token
+              ;; Check negations
+              (when (and negations
+                         (cl-loop for negation in negations
+                                  do (goto-char node-beg)
+                                  thereis (search-forward-regexp negation node-end t)))
+                (throw 'negated (goto-char node-end)))
+
+              ;; Get beginning-of-line positions for lines in node
+              ;; that match any token
               (setq matching-positions-in-node
-                    (or (cl-loop for token in all-tokens
-                                 do (goto-char node-beg)
-                                 while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
-                                 when negations
-                                 when (cl-loop for negation in negations
-                                               thereis (s-matches? negation
-                                                                   (buffer-substring-no-properties (line-beginning-position)
-                                                                                                   (line-end-position))))
-                                 return nil
-                                 collect (line-beginning-position) into result
-                                 do (end-of-line)
-                                 finally return (sort (delete-dups result) '<))
-                        ;; Negation found; skip node
-                        (throw 'negated (goto-char node-end))))
+                    (cl-loop for token in all-tokens
+                             append (cl-loop initially (goto-char node-beg)
+                                             while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
+                                             collect (line-beginning-position)
+                                             do (end-of-line))
+                             into result
+                             finally return (sort (delete-dups result) '<)))
 
               ;; Get list of line-strings containing any token
               (setq matching-lines-in-node
@@ -391,8 +391,8 @@ begins."
                                                for match = (string-match re line end)
                                                if match
                                                do (setq end (match-end 0))
-                                               and collect (match-string-no-properties 0 line)
-                                               else do (setq end nil))))
+                                               and collect (match-string-no-properties 0 line)))
+                      )
 
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
                 (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
