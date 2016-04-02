@@ -5,6 +5,7 @@
  - [[#plans][Plans]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
      - [[#match-tags-separately][Match tags separately]]
+     - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
      - [[#substring-matching][Substring matching]]
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
@@ -766,6 +767,11 @@ e.g search agenda files, or files in a directory.  Maybe write a =with-unopened-
 ** TODO Match tags separately
 
 This would probably make it simpler and faster.  Rather than trying to match a tags token across the entire node, it could just be matched against the tags string.  Could probably do away with the complex and confusing tags regexp matching and simplify the prep-token function.
+
+** TODO Case-sensitive if caps are present
+
+It would be easy to disable case-folding if caps are present in the search string.
+
 ** TODO Substring matching
 
 Does searching for "solution" match this subheading?
