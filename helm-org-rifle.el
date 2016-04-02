@@ -317,6 +317,8 @@ begins."
                          (rx-to-string `(seq bow (or ,@negations) eow) t)))
          (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          (positive-re-list (--map (helm-org-rifle-prep-token it) input))
+         (context-re (s-wrap (s-join "\\|" input)
+                             (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)) t)))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
@@ -392,12 +394,8 @@ begins."
                 (setq matched-words-with-context
                       (cl-loop for line in (mapcar 'car matching-lines-in-node)
                                append (cl-loop with end
-                                               for token in input
-                                               for re = (rx-to-string `(and (repeat 0 ,helm-org-rifle-context-characters not-newline)
-                                                                            (eval token)
-                                                                            (repeat 0 ,helm-org-rifle-context-characters not-newline)))
-                                               for match = (string-match re line end)
-                                               if match
+                                               for match = (string-match context-re line end)
+                                               while match
                                                do (setq end (match-end 0))
                                                and collect (s-trim (match-string-no-properties 0 line)))))
 

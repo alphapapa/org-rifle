@@ -175,8 +175,11 @@ This is the version currently in-use.
                                              collect (match-string-no-properties 0 line))))
 #+END_SRC
 
-*** TODO Fix it
+*** DONE Fix it
+CLOSED: [2016-04-01 Fri 22:55]
 :LOGBOOK:
+- State "DONE"       from "TODO"       [2016-04-01 Fri 22:55] \\
+  Okay, it works now.  Here's hoping I don't break it again.
 - State "TODO"       from "TODO"       [2016-04-01 Fri 19:03]
 :END:
 
@@ -260,6 +263,91 @@ Hm...not quite.  Well, this is the code from just before the commit that broke i
   
 #+END_SRC
 
+**** Profile with fix
+
+#+BEGIN_SRC elisp 
+(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !mail"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          5.8943273229  0.5894327322
+search-forward-regexp                                         8600        0.6587784959  7.660...e-05
+org-heading-components                                        1950        0.4991581810  0.0002559785
+s-matches?                                                    12470       0.2917804840  2.339...e-05
+mapconcat                                                     3960        0.2702167040  6.823...e-05
+helm-org-rifle-fontify-like-in-org-mode                       190         0.2635406889  0.0013870562
+goto-char                                                     8610        0.2543786740  2.954...e-05
+rx-form                                                       9980        0.2420250770  2.425...e-05
+org-back-to-heading                                           1950        0.2031512759  0.0001041801
+outline-back-to-heading                                       1950        0.1968846809  0.0001009665
+s-join                                                        2520        0.1756191310  6.969...e-05
+string-match                                                  15810       0.1671791649  1.057...e-05
+org-do-latex-and-related                                      190         0.1668239079  0.0008780205
+org-string-nw-p                                               190         0.1662417530  0.0008749565
+outline-next-heading                                          1960        0.1556081469  7.939...e-05
+line-beginning-position                                       9630        0.1470939420  1.527...e-05
+line-end-position                                             4720        0.1437326400  3.045...e-05
+rx-to-string                                                  1430        0.1409834220  9.858...e-05
+rx-and                                                        1430        0.1234839939  8.635...e-05
+outline-previous-heading                                      1950        0.0872664470  4.475...e-05
+#+end_example
+
+Hm, that seems nearly twice as slow as before, compared to [[id:413c432f-6c8a-4f41-bbd4-486d859fe571][this]].  Let's try without negation:
+
+#+BEGIN_SRC elisp 
+(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          6.000442529   0.6000442529
+rx-form                                                       9940        0.7762075249  7.808...e-05
+search-forward-regexp                                         6740        0.6341296550  9.408...e-05
+org-heading-components                                        1950        0.5162909810  0.0002647646
+rx-to-string                                                  1420        0.4960243830  0.0003493129
+rx-and                                                        1420        0.3026813919  0.0002131559
+mapconcat                                                     3950        0.2855619800  7.229...e-05
+goto-char                                                     8700        0.2558434080  2.940...e-05
+org-back-to-heading                                           1950        0.2032723169  0.0001042422
+outline-back-to-heading                                       1950        0.1968941550  0.0001009713
+car                                                           27602       0.1839865229  6.665...e-06
+string-match                                                  15930       0.1689102720  1.060...e-05
+outline-next-heading                                          1960        0.1560765069  7.963...e-05
+line-beginning-position                                       9770        0.1480645649  1.515...e-05
+line-end-position                                             4790        0.1447068689  3.021...e-05
+s-matches?                                                    12640       0.1309880819  1.036...e-05
+helm-org-rifle-fontify-like-in-org-mode                       190         0.1011150069  0.0005321842
+outline-previous-heading                                      1950        0.0869701169  4.460...e-05
+rx-repeat                                                     2840        0.0425908090  1.499...e-05
+buffer-substring-no-properties                                8940        0.0324401760  3.628...e-06
+#+end_example
+
+Okay, that's bad.  But something is obviously wrong, because it's calling =rx-form= and =search-forward-regexp= way too many times.  Let's see...
+
+The problem is that the =positive-re= is matching anywhere, not just at word boundaries, so it's matching way too many nodes.  Well, that is /a/ problem; I don't know if it explains the entire slowdown.
+
+For example, this matches =overwhelming= because of the =helm= in the middle:
+
+#+BEGIN_SRC elisp
+"\\(\\(?:[ 	]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?\\| \\)emacs\\(\\(?:[ 	]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?\\| \\|$\\)\\|\\(\\(?:[ 	]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?\\| \\)helm\\(\\(?:[ 	]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?\\| \\|$\\)"
+#+END_SRC
+
+Okay, the problem now is that I changed =helm-org-rifle-tags-re= to fix tag matching, but that same regexp is used in =helm-org-rifle-prep-token=, and now that function is matching any token as a tag and giving the wrong result.
+
+I do not understand /why/ it's doing that, because that regexp is only supposed to match /tags/...
+
+Okay, the other regexp that I kept commented out appears to match actual tags, as in it's useful for testing whether a string /is/ a tag:
+
+#+BEGIN_SRC elisp
+(org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
+#+END_SRC
+
+While this one appears to match tags in a document, potentially in a list of tags:
+
+#+BEGIN_SRC elisp
+(org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+#+END_SRC
 ** Org headings
 
 #+BEGIN_SRC elisp
@@ -1171,31 +1259,34 @@ cat
 
 #+RESULTS:
 #+begin_example txt
-helm-org-rifle-get-candidates-in-buffer                       10          2.707185944   0.2707185944
-org-heading-components                                        1670        0.4622022819  0.0002767678
-s-contains?                                                   6800        0.2288276119  3.365...e-05
-buffer-substring-no-properties                                5270        0.1843129670  3.497...e-05
-goto-char                                                     6660        0.1839791669  2.762...e-05
-org-back-to-heading                                           1670        0.1826040410  0.0001093437
-outline-back-to-heading                                       1670        0.1771684809  0.0001060889
-search-forward-regexp                                         3320        0.160160969   4.824...e-05
-outline-next-heading                                          1670        0.1304057709  7.808...e-05
-outline-previous-heading                                      1670        0.0787214109  4.713...e-05
-line-beginning-position                                       3510        0.0644287379  1.835...e-05
-line-end-position                                             1660        0.0570988770  3.439...e-05
-helm-org-rifle-prep-token                                     3340        0.0269152300  8.058...e-06
-helm-org-rifle-fontify-like-in-org-mode                       40          0.0229983300  0.0005749582
-string-match                                                  10300       0.0133238849  1.293...e-06
-org-at-heading-p                                              1660        0.0131253569  7.906...e-06
-outline-on-heading-p                                          3330        0.0113802549  3.417...e-06
-map                                                           1690        0.0078921430  4.669...e-06
-s-join                                                        1790        0.0078085580  4.362...e-06
-mapcar                                                        1738        0.0055163129  3.173...e-06
+helm-org-rifle-get-candidates-in-buffer                       10          3.235407224   0.3235407224
+helm-org-rifle-fontify-like-in-org-mode                       190         0.2769140019  0.0014574421
+search-forward-regexp                                         6200        0.2009897400  3.241...e-05
+s-trim                                                        1010        0.1904610850  0.0001885753
+list                                                          12100       0.1821364389  1.505...e-05
+org-heading-components                                        1870        0.1671018449  8.935...e-05
+string-match                                                  16180       0.1160860350  7.174...e-06
+s-matches?                                                    12070       0.1107983010  9.179...e-06
+goto-char                                                     8080        0.1070224040  1.324...e-05
+org-back-to-heading                                           1870        0.0810653320  4.335...e-05
+outline-back-to-heading                                       1870        0.074943486   4.007...e-05
+outline-next-heading                                          1880        0.0706112739  3.755...e-05
+line-beginning-position                                       8850        0.0682064099  7.706...e-06
+line-end-position                                             4330        0.0654849579  1.512...e-05
+outline-previous-heading                                      1870        0.0330589739  1.767...e-05
+org-at-heading-p                                              4330        0.0245622469  5.672...e-06
+mapcar                                                        2098        0.0162556369  7.748...e-06
+outline-on-heading-p                                          6200        0.0155953619  2.515...e-06
+buffer-substring-no-properties                                8340        0.0153873280  1.845...e-06
+s-join                                                        2450        0.0115120109  4.698...e-06
 #+end_example
 
 
 
 **** With negation
+:PROPERTIES:
+:ID:       413c432f-6c8a-4f41-bbd4-486d859fe571
+:END:
 
 #+BEGIN_SRC elisp :results value
   (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !mail"))
