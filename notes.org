@@ -802,6 +802,10 @@ incidentally, on the matter of searching for substrings... if i enter a single w
 
 Hm, this is strange.  I'll have to check on it.
 
+*** TODO Broken again
+
+Now it's /doing/ substring matching again.  I specifically tested this earlier and it was working correctly, not matching substrings.  Now it's doing it again.  What.
+
 ** MAYBE Use grep to find matching lines
 
 It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
