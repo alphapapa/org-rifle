@@ -389,7 +389,7 @@ begins."
                                                for match = (string-match re line end)
                                                if match
                                                do (setq end (match-end 0))
-                                               and collect (match-string-no-properties 0 line))))
+                                               and collect (s-trim (match-string-no-properties 0 line)))))
 
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
                 (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
