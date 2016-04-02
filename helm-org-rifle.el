@@ -156,10 +156,6 @@ flickering (longer delay)."
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
 
-(defcustom helm-org-rifle-show-tags nil
-  "Show and match against Org tags."
-  :group 'helm-org-rifle :type 'boolean)
-
 (defcustom helm-org-rifle-re-prefix
   "\\(\\_<\\|[[:punct:]]\\)"
   "Regexp matched immediately before each search term.
@@ -384,7 +380,7 @@ begins."
               ;; Verify all tokens are contained in each matching node
               (when (cl-loop with targets = (append (-non-nil (list buffer-name
                                                                     heading
-                                                                    (when helm-org-rifle-show-tags tags)))
+                                                                    tags))
                                                     (mapcar 'car matching-lines-in-node))
                              for re in positive-re-list
                              always (cl-loop for target in targets
@@ -405,25 +401,21 @@ begins."
                                                    (if helm-org-rifle-fontify-headings
                                                        (org-format-outline-path (append path
                                                                                         (list heading)
-                                                                                        (when helm-org-rifle-show-tags
-                                                                                          (concat tags " "))))
+                                                                                        (concat tags " ")))
                                                      ;; Not fontifying
                                                      (s-join "/" (append path
                                                                          (list heading)
-                                                                         (when helm-org-rifle-show-tags
-                                                                           tags))))
+                                                                         tags)))
                                                  ;; No path or not showing path
                                                  (if helm-org-rifle-fontify-headings
                                                      (helm-org-rifle-fontify-like-in-org-mode
                                                       (s-join " " (list (s-repeat (nth 0 components) "*")
                                                                         heading
-                                                                        (when helm-org-rifle-show-tags
-                                                                          (concat tags " ")))))
+                                                                        (concat tags " "))))
                                                    ;; Not fontifying
                                                    (s-join " " (list (s-repeat (nth 0 components) "*")
                                                                      heading
-                                                                     (when helm-org-rifle-show-tags
-                                                                       tags)))))
+                                                                     tags))))
                                                (s-join "..." matched-words-with-context)))
                             node-beg)
                       results))
