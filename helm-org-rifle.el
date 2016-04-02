@@ -125,19 +125,34 @@
   "How many characters around each matched term to display."
   :group 'helm-org-rifle :type 'integer)
 
-(defcustom helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
-  "Face for ellipses between match context strings."
-  :group 'helm-org-rifle :type 'face
-  :set (lambda (symbol value)
-         (set-default symbol value)
-         (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
-                                                                  'face value))))
+;; Well this isn't working...
+
+;; (defun helm-org-rifle-set-ellipsis-string (string)
+;;   (set-default helm-org-rifle-ellipsis-string (propertize string 'face helm-org-rifle-ellipsis-face)))
+
+;; (defun helm-org-rifle-set-ellipsis-face (face)
+;;   (set-default helm-org-rifle-ellipsis-face face)
+;;   (helm-org-rifle-set-ellipsis-string (helm-org-rifle-ellipsis-string)) )
 
 (defcustom helm-org-rifle-ellipsis-string "..."
   "Shown between match context strings."
   :group 'helm-org-rifle :type 'string
-  :set (lambda (symbol value)
-         (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face))))
+
+  ;; And this causes an error because the face isn't defined yet.  Yet if I evaluate each defcustom individually, they work.
+  ;; :set (lambda (symbol value)
+  ;;        (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face)))
+  )
+
+(defcustom helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
+  "Face for ellipses between match context strings."
+  :group 'helm-org-rifle :type 'face
+
+  ;; This causes an error when the file is loaded because `helm-org-rifle-ellipsis-string' isn't set yet.  But...it's a lambda...
+  ;; :set (lambda (symbol value)
+  ;;        (set-default symbol value)
+  ;;        (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
+  ;;                                                                 'face value)))
+  )
 
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
