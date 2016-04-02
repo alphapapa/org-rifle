@@ -1,3 +1,24 @@
+* Contents :TOC:
+ - [[#code][Code]]
+     - [[#profiling][Profiling]]
+     - [[#open-helm-session-on-current-org-buffers][Open Helm session on current org buffers]]
+     - [[#get-list-of-candidates-for-testorg-buffer][Get list of candidates for "test.org" buffer]]
+     - [[#context-splitting][Context-splitting]]
+     - [[#underway-elp-profiling][UNDERWAY elp profiling]]
+     - [[#buffer-name-matching][buffer-name-matching]]
+     - [[#matching-symbol-parts][Matching symbol parts]]
+     - [[#order-sensitive-matching][Order-sensitive matching]]
+     - [[#hyphenated-words-cause-order-sensitive-matching][Hyphenated words cause order-sensitive matching?]]
+     - [[#priority][Priority]]
+     - [[#match-and-show-tags][Match and show tags]]
+     - [[#negation][Negation]]
+ - [[#plans][Plans]]
+     - [[#match-tags-separately][Match tags separately]]
+     - [[#substring-matching][Substring matching]]
+     - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
+     - [[#maybe-match-only-headings][MAYBE Match only headings]]
+     - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
+
 * Code
 
 These come in handy while coding.
@@ -1733,7 +1754,6 @@ It seems awkward that all of the results disappear when a bare =!= is entered.  
 #+END_SRC
 
 Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
-
 * Plans
 
 ** TODO Match tags separately
