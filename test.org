@@ -794,6 +794,8 @@ Wait, if I do that, it might mess up the tags matching that took so long to fix.
 
 I wonder if I should separate out the tags matching.  I already have it getting a list of tags in a separate string.  If I removed tags-matching tokens from the input and matched them separately, maybe it would let me use a simpler regexp for everything else and avoid the prep function.  I should probably make another branch to test that idea...sigh.  And I don't even know if that would improve performance.  I'd have to first separate out the tags matching, then verify that it works properly, and then simplify the main =positive-re= regexp, and then see if it is faster.
 
+I think I'm going to stop here.  It seems to work properly right now: context-matching, tag-matching, avoids substring matches, and negation works.  And it seems fast enough, even if it is slower than before.  Maybe there is some combination of these changes that makes everything work at about the same speed as before, but I think trying to figure it out is too complicated with this big candidates-getting function.  I think it would be better to settle on this code that works correctly, and then go back to the =next-gen= branch and try to improve that, which is structured in a simpler way.
+
 ** Org headings
 
 #+BEGIN_SRC elisp
