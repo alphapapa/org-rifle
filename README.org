@@ -53,6 +53,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.1-pre
 
++ Restore context display.  This was accidentally broken when adding the negation feature, before the tagging of 1.0.0, so it's like a new feature.
 + Use =dash.el= for some things.
 + Set =helm-input-idle-delay= to prevent flickering as the user types, customizable through =helm-org-rifle-input-idle-delay=.
 
