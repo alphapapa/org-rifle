@@ -797,22 +797,8 @@ I wonder if I should separate out the tags matching.  I already have it getting 
 I think I'm going to stop here.  It seems to work properly right now: context-matching, tag-matching, avoids substring matches, and negation works.  And it seems fast enough, even if it is slower than before.  Maybe there is some combination of these changes that makes everything work at about the same speed as before, but I think trying to figure it out is too complicated with this big candidates-getting function.  I think it would be better to settle on this code that works correctly, and then go back to the =next-gen= branch and try to improve that, which is structured in a simpler way.
 
 [2016-04-02 Sat 02:21] I decided to test in the MELPA sandbox before merging with master and pushing, and it's a good thing I did, because I discovered another weird bug: if the =show-tags= setting is off, the results are way off.  Probably a simpleish logic error in the code somewhere...but I think at this point I should just remove that setting.  As it is it's off by default, and I wonder how many people have gotten bad results because of it and decided that this package is no good.  I doubt anyone would want it off anyway, and it doesn't seem to hurt performance.  So let's just remove that so it's consistent...
-** Org headings
+** UNDERWAY elp profiling
 
-#+BEGIN_SRC elisp
-  ;; Build string for fontifying
-  (components (org-heading-components))
-  (level (nth 0 components))
-  (plain-heading (s-join " " (list
-                              (s-pad-left level  "*" "")
-                              (nth 4 components))))
-  ;; Note: org-fontify-like-in-org-mode uses temporary buffers that load
-  ;; org-mode and therefore org-mode-hook.  This could be a performance
-  ;; issue.
-  (fontified-heading (org-fontify-like-in-org-mode plain-heading))
-#+END_SRC
-
-** MAYBE elp profiling
 
 #+BEGIN_SRC elisp
 (setq helm-org-rifle-show-path nil)
@@ -1283,30 +1269,6 @@ Searching for just the first word should find this, but it doesn't; only searchi
                                             :background (face-attribute 'helm-selection :background))))
 #+END_SRC
 
-** TODO Substring matching
-
-Does searching for "solution" match this subheading?
-
-#+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "solution")
-#+END_SRC
-
-...No, it does not.  That will probably need to be an option, customizable and/or with a prefix arg.
-
-*** Test entry
-
-Solutions
-
-*** TODO [#A] Weird heading-only, second-word substring matching
-
-[[https://www.reddit.com/r/emacs/comments/4c4fpo/helmorgrifle_rifle_through_your_org_files/d1hdoop][From /u/washy9999]]:
-
-#+BEGIN_QUOTE
-incidentally, on the matter of searching for substrings... if i enter a single word to search for i get a results list. if i then start entering a second word helm filters the results for each character that i enter. so, i get substring searches for words after the first! (this is for headings...it gets more complicated if i do searches that return topic content.)
-#+END_QUOTE
-
-Hm, this is strange.  I'll have to check on it.
-
 ** DONE Order-sensitive matching
 
 We want order to be irrelevant.  So searching for "bravo alpha" should match the following subheading...
@@ -1370,10 +1332,6 @@ Headings with priorities should be correctly displayed in results.
 *** [#B] Priority target heading
 
 Baby elephant
-
-** MAYBE Match only headings
-
-It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
 
 ** DONE Match and show tags
 CLOSED: [2016-03-28 Mon 19:34]
@@ -1776,59 +1734,45 @@ It seems awkward that all of the results disappear when a bare =!= is entered.  
 
 Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
 
-** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
-
-Could be good for testing e.g. negation, to make sure I don't break it.
-
 * Plans
+
+** TODO Match tags separately
+
+This would probably make it simpler and faster.  Rather than trying to match a tags token across the entire node, it could just be matched against the tags string.  Could probably do away with the complex and confusing tags regexp matching and simplify the prep-token function.
+
+** TODO Substring matching
+
+Does searching for "solution" match this subheading?
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "solution")
+#+END_SRC
+
+...No, it does not.  That will probably need to be an option, customizable and/or with a prefix arg.
+
+*** Test entry
+
+Solutions
+
+*** TODO [#A] Weird heading-only, second-word substring matching
+
+[[https://www.reddit.com/r/emacs/comments/4c4fpo/helmorgrifle_rifle_through_your_org_files/d1hdoop][From /u/washy9999]]:
+
+#+BEGIN_QUOTE
+incidentally, on the matter of searching for substrings... if i enter a single word to search for i get a results list. if i then start entering a second word helm filters the results for each character that i enter. so, i get substring searches for words after the first! (this is for headings...it gets more complicated if i do searches that return topic content.)
+#+END_QUOTE
+
+Hm, this is strange.  I'll have to check on it.
 
 ** DONE Support new Helm with input-idle-delay
 
 Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.  This will be available in Helm 1.9.4 or commits after [2016-04-01 Fri].
 
-* Test heading top-level
+** MAYBE Match only headings
 
-This file is for testing helm-org-rifle.
+It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
 
-#+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates "pomegr blueberry")
-(helm-org-rifle-get-candidates "top-level")
-#+END_SRC
+** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
 
-** Heading A: blueberry
+Could be good for testing e.g. negation, to make sure I don't break it.
 
-Keywords: pomegranate boisenberry
-
-** Heading B: pomegranate boisenberry
-
-** Heading C: pomegranate
-
-** Heading D: boisenberry
-
-** Heading E
-
-pomegranate
-
-** Heading F green
-
-boisenberry
-
-** Heading G
-red orange yellow green blue indigo violet
-black black black black blue black black
-
-*** Heading G.1
-
-green beans and blueberry
-
-** Heading H: Helm
-
-What is it with all this food?
-
-*** Heading H.1
-
-Emacs
-
-** Heading I: emacs
-
-helm :)
