@@ -1774,7 +1774,12 @@ Does searching for "solution" match this subheading?
 
 Solutions
 
-*** TODO [#A] Weird heading-only, second-word substring matching
+*** DONE [#A] Weird heading-only, second-word substring matching
+CLOSED: [2016-04-02 Sat 04:48]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-04-02 Sat 04:48] \\
+  This seems to be fixed now.
+:END:
 
 [[https://www.reddit.com/r/emacs/comments/4c4fpo/helmorgrifle_rifle_through_your_org_files/d1hdoop][From /u/washy9999]]:
 
