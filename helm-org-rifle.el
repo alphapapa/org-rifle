@@ -359,13 +359,13 @@ begins."
 
               ;; Check negations
               (when (and negations
-                         (search-forward-regexp negations-re node-end t))
+                         (re-search-forward negations-re node-end t))
                 (throw 'negated (goto-char node-end)))
 
               ;; Get beginning-of-line positions for matching lines in node
               (setq matching-positions-in-node
                     (cl-loop initially (goto-char node-beg)
-                             while (search-forward-regexp positive-re node-end t)
+                             while (re-search-forward positive-re node-end t)
                              collect (line-beginning-position) into result
                              do (end-of-line)
                              finally return (sort (delete-dups result) '<)))
