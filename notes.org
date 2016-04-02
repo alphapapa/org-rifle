@@ -11,6 +11,8 @@
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
+ - [[#checklists][Checklists]]
+     - [[#stable-release][Stable release]]
 
 * Code
 
@@ -821,3 +823,31 @@ Could be good for testing e.g. negation, to make sure I don't break it.
 
 Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.  This will be available in Helm 1.9.4 or commits after [2016-04-01 Fri].
 
+* Checklists
+
+** Stable release
+
+Hmm, that seems like a long list.  But I want stable releases to actually be stable.
+
++ [ ] Try to get someone else to test it
++ [ ] Set =Version:= header
++ [ ] Update changelog
++ [ ] Test in clean MELPA sandbox
+    - [ ] Update test checklist from changelog for new features
+    - [ ] Install
+    - [ ] ~require~
+    - [ ] Test functionality:
+        + [ ] Positive terms
+        + [ ] Negation
+        + [ ] TODO keywords
+        + [ ] Priorities
+        + [ ] Tags
+            - [ ] Positive
+            - [ ] Negative
+            - [ ] Multiple tags
+            - [ ] Multiple tags in a single string (=:tag1:tag2:=)
+                + [ ] Positive
+                + [ ] Negative
+        + [ ] Context
+        + [ ] Ellipses
++ [ ] Tag, sign, and push tag
