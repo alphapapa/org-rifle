@@ -7,6 +7,7 @@
      - [[#match-tags-separately][Match tags separately]]
      - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
      - [[#substring-matching][Substring matching]]
+     - [[#maybe-use-grep-to-find-matching-lines][MAYBE Use grep to find matching lines]]
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
@@ -801,10 +802,13 @@ incidentally, on the matter of searching for substrings... if i enter a single w
 
 Hm, this is strange.  I'll have to check on it.
 
+** MAYBE Use grep to find matching lines
+
+It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
+
 ** MAYBE Match only headings
 
 It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
-
 ** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
 
 Could be good for testing e.g. negation, to make sure I don't break it.
