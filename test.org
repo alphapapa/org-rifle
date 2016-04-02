@@ -36,6 +36,9 @@ This makes it easy to profile code:
        output))
 #+END_SRC
 
+#+RESULTS:
+: profile-rifle
+
 ** Open Helm session on current org buffers
 
 #+BEGIN_SRC elisp
@@ -266,7 +269,7 @@ Hm...not quite.  Well, this is the code from just before the commit that broke i
 **** Profile with fix
 
 #+BEGIN_SRC elisp 
-(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !mail"))
+(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !mail"))
 #+END_SRC
 
 #+RESULTS:
@@ -296,7 +299,7 @@ outline-previous-heading                                      1950        0.0872
 Hm, that seems nearly twice as slow as before, compared to [[id:413c432f-6c8a-4f41-bbd4-486d859fe571][this]].  Let's try without negation:
 
 #+BEGIN_SRC elisp 
-(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm"))
+(profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
 #+END_SRC
 
 #+RESULTS:
@@ -348,6 +351,81 @@ While this one appears to match tags in a document, potentially in a list of tag
 #+BEGIN_SRC elisp
 (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
 #+END_SRC
+
+Okay, I fixed it, I had an =if match= instead of a =while match= in the =matched-words-with-context= loop.
+
+Now to profile and compare with the pre-fix-context version:
+
+*Pre-context-fixed version:* master @ 5c30f38
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 50 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       50          17.799054759  0.3559810951
+org-heading-components                                        9350        2.6933843979  0.0002880625
+helm-org-rifle-fontify-like-in-org-mode                       950         1.7538910299  0.0018462010
+org-back-to-heading                                           11250       1.3298633500  0.0001182100
+outline-back-to-heading                                       11250       1.1494924389  0.0001021771
+goto-char                                                     37300       1.0525728939  2.821...e-05
+search-forward-regexp                                         18600       0.9430047979  5.069...e-05
+outline-next-heading                                          11300       0.7735385280  6.845...e-05
+s-contains?                                                   50600       0.7211126610  1.425...e-05
+rx-form                                                       1400        0.4769376879  0.0003406697
+outline-previous-heading                                      9350        0.4475351999  4.786...e-05
+line-beginning-position                                       20450       0.3628916579  1.774...e-05
+line-end-position                                             10250       0.3234668489  3.155...e-05
+list                                                          36850       0.3109050100  8.437...e-06
+org-indent-refresh-maybe                                      1900        0.3052489690  0.0001606573
+helm-org-rifle-prep-token                                     18700       0.3021837809  1.615...e-05
+string-match                                                  71250       0.2578011050  3.618...e-06
+buffer-substring-no-properties                                29350       0.2555603400  8.707...e-06
+org-indent-add-properties                                     1900        0.2475959590  0.0001303136
+org-at-heading-p                                              11200       0.2333956789  2.083...e-05
+#+end_example
+
+*Context-fixed version:* 2b5b12a
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 50 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       50          28.748935016  0.5749787003
+search-forward-regexp                                         33700       3.2623649319  9.680...e-05
+org-heading-components                                        9750        2.4923882399  0.0002556295
+helm-org-rifle-fontify-like-in-org-mode                       950         1.9004250499  0.0020004474
+goto-char                                                     43500       1.5172595929  3.487...e-05
+s-matches?                                                    63200       1.3970165480  2.210...e-05
+org-back-to-heading                                           11650       1.3835048189  0.0001187557
+outline-back-to-heading                                       11650       1.3488680939  0.0001157826
+outline-next-heading                                          11700       0.8288543339  7.084...e-05
+line-beginning-position                                       48850       0.7972754510  1.632...e-05
+line-end-position                                             24900       0.7767868229  3.119...e-05
+string-match                                                  83750       0.6722922219  8.027...e-06
+mapcar                                                        10778       0.5059252250  4.694...e-05
+outline-previous-heading                                      9750        0.4670275909  4.790...e-05
+org-at-heading-p                                              25850       0.4494715110  1.738...e-05
+car                                                           130862      0.3298968730  2.520...e-06
+org-indent-refresh-maybe                                      1900        0.3058012260  0.0001609480
+org-indent-add-properties                                     1900        0.2488298529  0.0001309630
+outline-on-heading-p                                          37500       0.2456449769  6.550...e-06
+s-trim                                                        5050        0.2146568449  4.250...e-05
+#+end_example
+
+[2016-04-02 Sat 00:14] Well, that's definitely worse, although it's still probably fast enough, because the elp instrumentation makes it a lot slower.
+
+I'm also noticing that when I eval the buffer of the old version, and then the new one, and back and forth, it's giving different results than when I start a new Emacs session before eval'ing each buffer.  The content-fixed version is still slower, but it's annoying that they are somehow interfering with each other...
+
+Oh, I know what it probably is: =defvar= not changing already-defined vars.  Gah, I wish there were a "developer mode" that would automatically treat =defvar= as =setq=!  That might also be causing different results to be returned.
+
+And on that note, notice that the old version is running =org-heading-components= 9350 times and the new one 9750 times (divided by 50 runs, of course).  That means the newer one is returning more results.  That's /probably/ a good thing--better than returning fewer results--but it's still an annoying discrepancy.
+
+Well, anyway, it seems that the new version is working properly, even if it is a bit slower.  I can probably optimize it some from here by profiling it some more.  And it's probably still fast enough anyway.  I'm going to commit these test results and go from there.
+
 ** Org headings
 
 #+BEGIN_SRC elisp
@@ -673,18 +751,18 @@ org-raise-scripts                                             18          7.807e
 ** DONE buffer-name-matching
 
 #+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "test.org emacs")
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "inbox.org emacs")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "test.org emacs")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "test.org") "inbox.org emacs")
 #+END_SRC
 
 ** DONE Matching symbol parts
 
 #+BEGIN_SRC elisp
 ;; This should return the "Target heading" heading too
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "test.org") "face")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "test.org") "face")
 
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "face helm")
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "testtemp.org") "face helm")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "face helm")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "testtemp.org") "face helm")
 #+END_SRC
 
 This does not work:
@@ -1103,7 +1181,7 @@ And this more minimal one seems to work too:
   (let ((helm-org-rifle-show-tags t)
         (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
     (--map (substring-no-properties (car it))
-           (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org")
+           (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org")
                                                     ":website: Emacs")))
 #+END_SRC
 
@@ -1254,31 +1332,31 @@ cat
 **** Without negation
 
 #+BEGIN_SRC elisp :results value
-  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm"))
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
 #+END_SRC
 
 #+RESULTS:
 #+begin_example txt
-helm-org-rifle-get-candidates-in-buffer                       10          3.235407224   0.3235407224
-helm-org-rifle-fontify-like-in-org-mode                       190         0.2769140019  0.0014574421
-search-forward-regexp                                         6200        0.2009897400  3.241...e-05
-s-trim                                                        1010        0.1904610850  0.0001885753
-list                                                          12100       0.1821364389  1.505...e-05
-org-heading-components                                        1870        0.1671018449  8.935...e-05
-string-match                                                  16180       0.1160860350  7.174...e-06
-s-matches?                                                    12070       0.1107983010  9.179...e-06
-goto-char                                                     8080        0.1070224040  1.324...e-05
-org-back-to-heading                                           1870        0.0810653320  4.335...e-05
-outline-back-to-heading                                       1870        0.074943486   4.007...e-05
-outline-next-heading                                          1880        0.0706112739  3.755...e-05
-line-beginning-position                                       8850        0.0682064099  7.706...e-06
-line-end-position                                             4330        0.0654849579  1.512...e-05
-outline-previous-heading                                      1870        0.0330589739  1.767...e-05
-org-at-heading-p                                              4330        0.0245622469  5.672...e-06
-mapcar                                                        2098        0.0162556369  7.748...e-06
-outline-on-heading-p                                          6200        0.0155953619  2.515...e-06
-buffer-substring-no-properties                                8340        0.0153873280  1.845...e-06
-s-join                                                        2450        0.0115120109  4.698...e-06
+helm-org-rifle-get-candidates-in-buffer                       10          3.090195806   0.3090195806
+org-heading-components                                        1870        0.3476501630  0.0001859091
+s-matches?                                                    12070       0.2892685670  2.396...e-05
+helm-org-rifle-fontify-like-in-org-mode                       190         0.2818512350  0.0014834275
+line-beginning-position                                       8850        0.2493933970  2.818...e-05
+search-forward-regexp                                         6200        0.2002201670  3.229...e-05
+org-do-latex-and-related                                      190         0.183021584   0.0009632714
+string-match                                                  16180       0.1157849300  7.156...e-06
+goto-char                                                     8080        0.1073119259  1.328...e-05
+org-back-to-heading                                           1870        0.0820826830  4.389...e-05
+outline-back-to-heading                                       1870        0.0757641679  4.051...e-05
+outline-next-heading                                          1880        0.07128534    3.791...e-05
+line-end-position                                             4330        0.0655929360  1.514...e-05
+outline-previous-heading                                      1870        0.0335165519  1.792...e-05
+org-at-heading-p                                              4330        0.0254124080  5.868...e-06
+buffer-substring-no-properties                                8340        0.0160720620  1.927...e-06
+outline-on-heading-p                                          6200        0.0159791459  2.577...e-06
+mapcar                                                        2098        0.0149361860  7.119...e-06
+s-trim                                                        1010        0.0134555670  1.332...e-05
+s-join                                                        2450        0.0121108709  4.943...e-06
 #+end_example
 
 
@@ -1289,7 +1367,7 @@ s-join                                                        2450        0.0115
 :END:
 
 #+BEGIN_SRC elisp :results value
-  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !mail"))
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !mail"))
 #+END_SRC
 
 #+RESULTS:
@@ -1321,8 +1399,8 @@ string-match                                                  12220       0.0191
 It seems awkward that all of the results disappear when a bare =!= is entered.  Even if you type quickly, they all disappear and then reappear.  Should be possible to fix this...
 
 #+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !")
-(helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org") "emacs helm !org")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !org")
 #+END_SRC
 
 Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
