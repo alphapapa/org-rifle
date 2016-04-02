@@ -1,0 +1,740 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /home/me/src/helm-org-rifle/notes.org
+
+
+* DONE Matching symbol parts
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+#+BEGIN_SRC elisp
+;; This should return the "Target heading" heading too
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "test.org") "face")
+
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "face helm")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "testtemp.org") "face helm")
+#+END_SRC
+
+This does not work:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\_<" token "\\_>") target))
+#+END_SRC
+
+#+RESULTS:
+
+Which is strange, because =\\_<= is supposed to be the symbol-boundary character...
+
+This works but isn't what we want:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match token target))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\b" token "\\b") target))
+#+END_SRC
+
+This may do it:
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "face"))
+    (string-match (concat "\\W" token "\\W") target))
+#+END_SRC
+
+It matches =face= okay, but not =helm= because of the quote.
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "helm"))
+    (string-match (concat "\\(\\W\\|\\_<\\)" token "\\(\\W\\|\\_>\\)") target))
+#+END_SRC
+
+Wow, that "'helm-selection" really doesn't want to be matched...
+
+This might do it...
+
+#+BEGIN_SRC elisp
+(string-match "\\(\\B\\|\\W\\)face" "(face-remap-set-base 'helm-selection")
+#+END_SRC
+
+Seems to work... now for the real test...
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (token "selection"))
+    (string-match (concat "\\(\\B\\|\\W\\)" token "\\(\\W\\|\\B\\)") target))
+#+END_SRC
+
+I think it works!  Let's try it for real...
+
+Buuuuut it doesn't match "selection".  Wow.
+
+#+BEGIN_SRC elisp
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (tokens '("face" "helm" "blah" "selection" "base")))
+    (cl-loop for token in tokens
+             when (string-match (concat "\\(\\B\\|\\W\\|\\_<\\|[[:punct:]]\\)" token "\\(\\B\\|\\W\\|\\_>\\|[[:punct:]]\\)") target)
+             collect token))
+#+END_SRC
+
+Ok, this seems to match for "face", "helm", and "selection" and "base" but not "blah".
+
+Okay, this seems to work:
+
+#+BEGIN_SRC elisp
+(defcustom helm-org-rifle-re-begin-part
+  "\\(\\B\\|\\W\\|\\_<\\|[[:punct:]]\\)"
+  "Argh"
+  :group 'helm-org-rifle :type 'regexp)
+
+(defcustom helm-org-rifle-re-end-part
+  "\\(\\B\\|\\W\\|\\_>\\|[[:punct:]]\\)"
+  "argh"
+  :group 'helm-org-rifle :type 'regexp)
+
+;; Then do:
+(concat helm-org-rifle-re-begin-part token helm-org-rifle-re-end-part)
+#+END_SRC
+
+But it feels like it's matching slower now, so I guess I need to experiment with different ones...
+
+#+NAME: symtest
+#+BEGIN_SRC elisp :exports code
+  (let ((target "(face-remap-set-base 'helm-selection")
+        (tokens '("face" "helm" "blah" "selection" "base")))
+    (cl-loop for token in tokens
+             when (string-match (concat helm-org-rifle-re-begin-part token helm-org-rifle-re-end-part) target)
+             collect token))
+#+END_SRC
+
+Let's try a simpler one:
+
+#+BEGIN_SRC elisp :results none
+(setq helm-org-rifle-re-begin-part
+  "\\(\\B\\|\\_<\\|[[:punct:]]\\)")
+
+(setq helm-org-rifle-re-end-part
+  "\\(\\B\\|\\_>\\|[[:punct:]]\\)")
+#+END_SRC
+
+#+CALL: symtest[]()
+
+#+RESULTS:
+| face | helm | selection | base |
+
+Ok, that works.  Now for another:
+
+#+BEGIN_SRC elisp :results none
+(setq helm-org-rifle-re-begin-part
+  "\\(\\_<\\|[[:punct:]]\\)")
+
+(setq helm-org-rifle-re-end-part
+  "\\(\\_>\\|[[:punct:]]\\)")
+#+END_SRC
+
+#+CALL: symtest[]()
+
+#+RESULTS:
+| face | helm | selection | base |
+
+Ok, that seems to work too.  Kind of makes sense: symbol boundaries or punctuation (which apparently doesn't count as a symbol-boundary...for some values of syntax table...)
+
+Ok, this seems to work and seems to be decently fast.  Let's commit it and try it out for a while.
+
+** Target heading
+
+Searching for just the first word should find this, but it doesn't; only searching for =face-remap-set-base= does.
+
+#+BEGIN_SRC elisp
+  :after-init-hook (lambda ()
+                     (with-current-buffer helm-buffer
+                       (face-remap-set-base 'helm-selection
+                                            :underline 'unspecified
+                                            :weight 'unspecified
+                                            :background (face-attribute 'helm-selection :background))))
+#+END_SRC
+
+
+* DONE Order-sensitive matching
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+We want order to be irrelevant.  So searching for "bravo alpha" should match the following subheading...
+
+And it does.  Except...
+
+#+BEGIN_SRC elisp
+;; This works
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "emacs org-mode")
+
+;; This works
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "org-mode emac")
+
+;; This gives a weird args-out-of-range error.  Does it only happen in this large file?
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "org-mode emacs")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/reference.org") "org-mode emacs")
+
+;; No, it happens in the smaller file too...are hyphens the problem?...yes...
+#+END_SRC
+
+
+
+** Test entry
+
+alpha bravo
+
+
+* DONE Hyphenated words cause order-sensitive matching?
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+#+BEGIN_SRC elisp
+;; This works fine
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "alpha charlie-delta")
+
+;; So does this
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "charlie-delta")
+
+;; And this
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "charlie-delta alpha")
+
+;; But this does not!
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "org-mode alpha")
+
+;; But this works!
+(helm-org-rifle-get-candidates-in-buffer (current-buffer) "org-mode blah")
+#+END_SRC
+
+The problem seems to be when the hyphenated word is on a different line than the non-hyphenated word (and we're only dealing with two words here...).  I sure don't know why.  Will have to step through the matching code...
+
+** ivy-regex-ignore-order
+
+The =ivy-regex-ignore-order= setting in [[http://oremacs.com/swiper/#completion-styles][ivy/swiper]] might help with figuring this out.
+
+** Test entry
+
+alpha bravo charlie-delta
+argh org-mode blah
+
+
+* DONE Priority
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+Headings with priorities should be correctly displayed in results.
+
+** [#B] Priority target heading
+
+Baby elephant
+
+
+* DONE Match and show tags
+CLOSED: [2016-03-28 Mon 19:34]
+:LOGBOOK:
+- State "DONE"       from "UNDERWAY"   [2016-03-28 Mon 19:34]
+- State "UNDERWAY"   from "DONE"       [2016-03-28 Mon 19:31]
+- State "DONE"       from "TODO"       [2016-03-28 Mon 17:30]
+:END:
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+This should show both this heading and the target:
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "charade"))
+#+END_SRC
+
+#+RESULTS:
+| *** Target heading for tags test :charade:                                                            | 34684 |
+| ** TODO Match and show tags buffer (current-buffer) "charade"))...buffer (current-buffer) "charade")) | 34242 |
+
+This should show only this heading:
+
+#+BEGIN_SRC elisp :results value
+  (let ((helm-org-rifle-show-tags nil))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "charade"))
+#+END_SRC
+
+#+RESULTS:
+| ** TODO Match and show tags buffer (current-buffer) "charade"))...t heading for tags test :charade: ...buffer (current-buffer) "charade"))...buffer (current-buf...buffer (current-buffer) "charade")) | 34242 |
+
+** Target heading for tags test                                    :charade:
+
+Yarr.
+
+** Target heading 2
+
+This should also match for the content: :charade: 
+
+** Fontify tags correctly
+
+Tags are being fontified just like the rest of the heading text, instead of like tags.
+
+#+BEGIN_SRC elisp
+  (helm-org-rifle-fontify-like-in-org-mode (s-join " " (list "*"
+                                                             "Heading"
+                                                             ":tag1:tag2:")))
+#+END_SRC
+
+#+RESULTS:
+:  * Heading :tag1:tag2:
+
+Seems like there needs to be whitespace after the tag string to make it appear in the =org-tag= face.
+
+#+BEGIN_SRC elisp
+  (helm-org-rifle-fontify-like-in-org-mode (s-join " " (list "*"
+                                                             "Heading"
+                                                             ":tag1:tag2: ")))
+#+END_SRC
+
+#+RESULTS:
+: * Heading :tag1:tag2:
+
+** Match with colons
+
+Surrounding tags with colons in the input doesn't seem to work:
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":charade:"))
+#+END_SRC
+
+#+RESULTS:
+
+It's because the colons in the tag string are being matched by the =:punct:= in the regexp's first part, eating the colon so it doesn't match the one in the input string.  I'm not sure how to fix that.  I guess I could make the matching regexp a series of =prefix-input-suffix= groups, and adjust the prefix and suffix for inputs that should match tags...seems messy but I guess it would work.
+
+#+BEGIN_SRC txt
+\(\_<\|[[:punct:]]\)\( \)\(\_>\|[[:punct:]]\)
+
+"(_<|[[:punct:]])(:tag1:)(_>|[[:punct:]])"
+#+END_SRC
+
+#+BEGIN_SRC elisp
+(string-match "^:[[:word:]@:]+:$" ":charade:tag2:")
+(string-match "a" "ba")
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (let* ((input (split-string input " " t))
+         ;; Double colons in tag strings in input so they can match
+         (input (mapcar (lambda (s)
+                          (if (string-match helm-org-rifle-tags-re s)
+                              (replace-regexp-in-string ":" "::" s)
+                            s))
+                        input))
+         (match-all-tokens-re (mapconcat (lambda (token)
+                                           (if (string-match helm-org-rifle-tags-re token)
+                                               ;; Remove punct class from prefix and suffix so it can match tag strings
+                                               (concat "\\_<" (regexp-quote token) "\\_>")
+                                             ;; Not a tag; use normal prefix/suffix
+                                             (concat helm-org-rifle-re-begin-part
+                                                     (regexp-quote token)
+                                                     helm-org-rifle-re-end-part)))))
+         ;; TODO: Turn off case folding if input contains mixed case
+         (case-fold-search t)
+         results))
+#+END_SRC
+
+** Match headings with multiple tags
+
+Now it matches headings with one tag, but not more than one.
+
+#+BEGIN_SRC elisp :results value
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:"))
+#+END_SRC
+
+Maybe this will help, from =org.el=
+
+#+BEGIN_SRC elisp
+(org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+#+END_SRC
+
+#+BEGIN_SRC elisp :results list
+  (let ((helm-org-rifle-show-tags t)
+        (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
+    (--map (substring-no-properties (car it))  (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:")))
+#+END_SRC
+
+Yeah, using that regexp from =org-complex-heading-regexp-format= in =org.el= seems to work.  Whew.
+
+But this is the more correct one I think:
+
+[[file:~/tmp/src/org-mode/lisp/org.el::(let%20((tag-re%20(concat%20org-outline-regexp-bol][re in org.el]]:
+
+#+BEGIN_SRC elisp
+  (let ((tag-re (concat org-outline-regexp-bol
+                        "\\(?:.*?[ \t]\\)?"
+                        (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")))
+        (targets (list ":yes:" "no")))
+    (mapcar (it (when (string-match tag-re it)
+                  (match-string 0 it))) targets))
+#+END_SRC
+
+#+RESULTS:
+| :yes: | nil |
+
+And this more minimal one seems to work too:
+
+#+BEGIN_SRC elisp
+  (let ((tag-re (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$"))
+        (targets (list ":yes:" "location" ":tag:" "notatag")))
+    (mapcar (it (when (string-match tag-re it)
+                  (match-string 0 it))) targets))
+#+END_SRC
+
+#+RESULTS:
+| :yes: | nil | :tag: | nil |
+
+#+BEGIN_SRC elisp
+  (let ((tag-re helm-org-rifle-tags-re)
+        (targets (list ":yes:" "location" ":tag:" "notatag" ":website:Emacs:")))
+    (mapcar (it (when (string-match tag-re it)
+                  (match-string 0 it))) targets))
+#+END_SRC
+
+#+RESULTS:
+| :yes: | nil | :tag: | nil |
+
+*** Target heading with multiple tags                           :gunn:moon:
+
+*** Trying to fix it again
+
+[2016-04-01 Fri 21:18]  Here I go again...   This code is from up above, the first time I implemented/fixed tag matching:
+
+#+BEGIN_SRC elisp :results list value
+  (let ((helm-org-rifle-show-tags t)
+        (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
+    (--map (substring-no-properties (car it))
+           (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org")
+                                                    ":website: Emacs")))
+#+END_SRC
+
+Ok, it seems to work now.
+
+*Note:* Having this block of code (which I copied from further up) saved me probably hours of debugging.  Somehow in the course of fixing the context-matching and re-fixing negation, I broke tag matching, and the key to fixing it again was having this:
+
+#+BEGIN_SRC elisp
+(org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+#+END_SRC
+
+...as opposed to this, which doesn't seem to work:
+
+#+BEGIN_SRC elisp
+(org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
+#+END_SRC
+
+If I hadn't kept these notes, I'd probably have spent at least another hour tracing the problem to the regexp and going back into =org.el= and finding the right one again.  I've never kept notes like this about a programming project before, but I am completely sold on doing this now, especially with Org, which is *so powerful* with its inline evaluation, code block evaluation, intermingling of code with results with comments...
+
+
+* DONE Negation
+CLOSED: [2016-03-28 Mon 20:49]
+:LOGBOOK:
+- State "DONE"       from "UNDERWAY"   [2016-03-28 Mon 20:49]
+- State "UNDERWAY"   from "DONE"       [2016-03-28 Mon 18:57]
+- State "DONE"       from "UNDERWAY"   [2016-03-28 Mon 18:03]
+- State "UNDERWAY"   from ""           [2016-03-28 Mon 17:30]
+:END:
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:50
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_TODO: DONE
+:ARCHIVE_OLPATH: Code
+:END:
+
+Emacs regexps don't support negation or lookahead, so we'll have to do it in stages.
+
+1. Find negation patterns and move them to a separate list.
+2. Test each match against negations and remove any that match.
+
+** Find negation patterns
+
+#+BEGIN_SRC elisp
+(mapcar (it (helm-org-rifle-prep-token it)) '("notatag" ":tag:"))
+
+#+END_SRC
+
+#+RESULTS:
+| \(\(?:[ \n]+\(:[[:alnum:]_@#%%:]+:\)\)?\ | \)notatag\(\(?:[ \n]+\(:[[:alnum:]_@#%%:]+:\)\)?\ | \ | $\) | \(\(?:[ \n]+\(:[[:alnum:]_@#%%:]+:\)\)?\ | \):tag:\(\(?:[ \n]+\(:[[:alnum:]_@#%%:]+:\)\)?\ | \ | $\) |
+
+#+BEGIN_SRC elisp
+  (mapit '("notatag" ":tag:") (string-match helm-org-rifle-tags-re it))
+#+END_SRC
+
+#+RESULTS:
+| 0 | 0 |
+
+#+BEGIN_SRC elisp
+  (let ((helm-org-rifle-tags-re (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")))
+    (mapit '("notatag" ":tag:") (string-match helm-org-rifle-tags-re it)))
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC elisp :results list
+  (let* ((input (split-string "summertime !difficult easy" " " t))
+         (negations (delq nil (mapcar (lambda (token)
+                                        (when (string-match "^!" token)
+                                          (setq input (remove token input))
+                                          (helm-org-rifle-prep-token (s-chop-prefix "!" token))))
+                                      input))))
+    (list input negations))
+#+END_SRC
+
+#+RESULTS:
+- ("summertime" "easy")
+- ("\\(\\_<\\|[[:punct:]]\\)difficult\\(\\_>\\|[[:punct:]]\\)")
+
+** Test negation
+
+#+BEGIN_SRC elisp
+(let ((helm-org-rifle-show-tags t))
+        (helm-org-rifle-get-candidates-in-buffer (current-buffer) "target !winter"))
+#+END_SRC
+
+** Target positive: summertime easy
+
+
+** Target negative: summertime difficult
+
+** Avoid partial negation
+
+e.g. searching for =location !cat= should not exclude results containing =location=.
+
+This should return the =Target positive: location= heading:
+
+#+BEGIN_SRC elisp :results list
+  (let ((helm-org-rifle-show-tags t))
+    (mapit (helm-org-rifle-get-candidates-in-buffer (current-buffer) "location !ca ")
+           (s-replace "\n" "" (s-collapse-whitespace (org-no-properties (car it))))))
+#+END_SRC
+
+#+RESULTS:
+- **** Target positive: location 
+- *** Match headings with multiple tags (targets (list ":yes:" "location" ":tag:" "notatag")))
+
+This should not return that heading:
+
+#+BEGIN_SRC elisp :results list
+  (let ((helm-org-rifle-show-tags t))
+    (mapit (helm-org-rifle-get-candidates-in-buffer (current-buffer) "location !cat ")
+           (s-replace "\n" "" (s-collapse-whitespace (org-no-properties (car it))))))
+#+END_SRC
+
+#+RESULTS:
+- **** Target positive: location 
+- *** Match headings with multiple tags (targets (list ":yes:" "location" ":tag:" "notatag")))
+
+#+BEGIN_SRC elisp
+  (let ((pat "\\bcat\\b")
+        (targets '("a cat sleeps" "a catastrophe" "what")))
+    (mapit targets (when (string-match pat it)(match-string 0 it))))
+#+END_SRC
+
+#+RESULTS:
+| cat | nil | nil |
+
+...sigh.  Use =s-matches= not =s-contains=.  Duh.
+
+#+BEGIN_SRC elisp
+  (let ((pat "\\(\\_<\\|[[:punct:]]\\)cat\\(\\_>\\|[[:punct:]]\\)")
+        (target "a cat sleeps"))
+    (s-matches? pat target))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+*** Conclusion
+
+[2016-03-28 Mon 20:38] Well, I think it's working correctly now, but I'm not 100% sure.  Time will tell.  If it's not, hopefully I'll discover it or get some reports.
+
+*** Target positive: location
+
+notacatbutadog
+
+*** Target negative: cat
+
+*** Target negative 2
+
+cat
+
+** Profile with/without negation
+
+*** Without negation
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          3.090195806   0.3090195806
+org-heading-components                                        1870        0.3476501630  0.0001859091
+s-matches?                                                    12070       0.2892685670  2.396...e-05
+helm-org-rifle-fontify-like-in-org-mode                       190         0.2818512350  0.0014834275
+line-beginning-position                                       8850        0.2493933970  2.818...e-05
+search-forward-regexp                                         6200        0.2002201670  3.229...e-05
+org-do-latex-and-related                                      190         0.183021584   0.0009632714
+string-match                                                  16180       0.1157849300  7.156...e-06
+goto-char                                                     8080        0.1073119259  1.328...e-05
+org-back-to-heading                                           1870        0.0820826830  4.389...e-05
+outline-back-to-heading                                       1870        0.0757641679  4.051...e-05
+outline-next-heading                                          1880        0.07128534    3.791...e-05
+line-end-position                                             4330        0.0655929360  1.514...e-05
+outline-previous-heading                                      1870        0.0335165519  1.792...e-05
+org-at-heading-p                                              4330        0.0254124080  5.868...e-06
+buffer-substring-no-properties                                8340        0.0160720620  1.927...e-06
+outline-on-heading-p                                          6200        0.0159791459  2.577...e-06
+mapcar                                                        2098        0.0149361860  7.119...e-06
+s-trim                                                        1010        0.0134555670  1.332...e-05
+s-join                                                        2450        0.0121108709  4.943...e-06
+#+end_example
+
+
+
+*** With negation
+:PROPERTIES:
+:ID:       413c432f-6c8a-4f41-bbd4-486d859fe571
+:END:
+
+#+BEGIN_SRC elisp :results value
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !mail"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          3.091637074   0.3091637074
+org-heading-components                                        1670        0.4687531710  0.0002806905
+buffer-substring-no-properties                                7070        0.2041990190  2.888...e-05
+goto-char                                                     6800        0.1843262129  2.710...e-05
+map                                                           1680        0.1841657830  0.0001096224
+org-back-to-heading                                           1670        0.1832357559  0.0001097220
+mapcar                                                        1728        0.1819894680  0.0001053179
+car                                                           17102       0.1810326969  1.058...e-05
+s-join                                                        1790        0.1791070739  0.0001000598
+outline-back-to-heading                                       1670        0.1777289460  0.0001064245
+mapconcat                                                     1820        0.1752004220  9.626...e-05
+search-forward-regexp                                         3470        0.1643956769  4.737...e-05
+outline-next-heading                                          1670        0.1309705520  7.842...e-05
+line-beginning-position                                       5300        0.1271316750  2.398...e-05
+line-end-position                                             3460        0.117448273   3.394...e-05
+outline-previous-heading                                      1670        0.0792564969  4.745...e-05
+s-contains?                                                   6740        0.0599737680  8.898...e-06
+helm-org-rifle-prep-token                                     3490        0.0288021979  8.252...e-06
+helm-org-rifle-fontify-like-in-org-mode                       40          0.0239840029  0.0005996000
+string-match                                                  12220       0.0191793460  1.569...e-06
+#+end_example
+
+** DONE Avoid clearing results when bare "!" is entered
+
+It seems awkward that all of the results disappear when a bare =!= is entered.  Even if you type quickly, they all disappear and then reappear.  Should be possible to fix this...
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !")
+(helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm !org")
+#+END_SRC
+
+Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for the feedback!
+
+* Get list of candidates for "test.org" buffer
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:52
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_OLPATH: Code
+:END:
+
+#+BEGIN_SRC elisp
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr blueberry")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "pomegr")
+
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "helm food")
+
+(let ((helm-candidate-separator " ")
+      (helm-org-rifle-show-path t))
+  (helm-org-rifle-get-candidates-in-buffer (get-file-buffer "test.org") "green blue"))
+#+END_SRC
+
+** Other buffers
+
+#+BEGIN_SRC elisp
+(let ((helm-org-rifle-fontify-headings nil))
+  (helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs"))
+
+(helm-org-rifle-get-candidates-in-buffer (get-buffer "reference.org") "emacs")
+(helm-org-rifle-get-candidates-in-buffer (get-buffer "main.org") "emacs")
+
+(helm-org-rifle-get-candidates-in-buffer (get-buffer "main.org") "tires")
+
+#+END_SRC
+
+
+* Open Helm session on current org buffers
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:52
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_OLPATH: Code
+:END:
+
+#+BEGIN_SRC elisp
+(let ((helm-candidate-separator " "))
+  (helm :sources (helm-org-rifle-get-sources)))
+
+(let ((helm-candidate-separator " ")
+      (helm-org-rifle-show-path t))
+  (helm :sources (helm-org-rifle-get-sources)))
+#+END_SRC
+
+** Without fontification
+
+#+BEGIN_SRC elisp
+(let ((helm-candidate-separator " ")
+      (helm-org-rifle-fontify-headings nil))
+  (helm :sources (helm-org-rifle-get-sources)))
+
+(let ((helm-candidate-separator " ")
+      (helm-org-rifle-show-path t)
+      (helm-org-rifle-fontify-headings nil))
+  (helm :sources (helm-org-rifle-get-sources)))
+#+END_SRC
+
