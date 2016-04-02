@@ -125,6 +125,12 @@
   "How many characters around each matched term to display."
   :group 'helm-org-rifle :type 'integer)
 
+(defcustom helm-org-rifle-ellipsis-string "..."
+  "Shown between match context strings."
+  :group 'helm-org-rifle :type 'string
+  :set (lambda (symbol value)
+         (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face))))
+
 (defcustom helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
   "Face for ellipses between match context strings."
   :group 'helm-org-rifle :type 'face
@@ -132,12 +138,6 @@
          (set-default symbol value)
          (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
                                                                   'face value))))
-
-(defcustom helm-org-rifle-ellipsis-string "..."
-  "Shown between match context strings."
-  :group 'helm-org-rifle :type 'string
-  :set (lambda (symbol value)
-         (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face))))
 
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
@@ -328,7 +328,8 @@ begins."
          (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          (positive-re-list (--map (helm-org-rifle-prep-token it) input))
          (context-re (s-wrap (s-join "\\|" input)
-                             (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)) t)))
+                             (rx-to-string `(seq ;; (* bow (1+ not-newline))
+                                             (repeat 0 ,helm-org-rifle-context-characters not-newline)) t)))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
