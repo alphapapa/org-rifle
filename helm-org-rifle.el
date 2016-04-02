@@ -301,23 +301,26 @@ begins."
   (let* ((input (split-string input " " t))
          (negations (-keep (lambda (token)
                              (when (string-match "^!" token)
-                               (setq input (remove token input))
+                               (setq input (remove token input))  ; Remove negations from input
                                (s-presence (regexp-quote (s-chop-prefix "!" token)))))
                            input))
-         (all-tokens (append input negations))
-         (negations (--map (concat "\\b" it "\\b") negations))
-         (match-all-tokens-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
+         (negations-re (when negations
+                         (rx-to-string `(seq bow (or ,@negations) eow) t)))
+         (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
          results)
     (with-current-buffer buffer
       (save-excursion
+
+        ;; Go to first heading
         (goto-char (point-min))
         (when (org-before-first-heading-p)
           (outline-next-heading))
-        (while (re-search-forward match-all-tokens-re nil t)
-          ;; Get matching lines in node
-          (catch 'negated
+
+        ;; Search for matching nodes
+        (while (re-search-forward positive-re nil t)
+          (catch 'negated  ; Skip node if negations found
             (let* ((node-beg (save-excursion
                                (save-match-data
                                  (outline-previous-heading))))
@@ -344,20 +347,15 @@ begins."
 
               ;; Check negations
               (when (and negations
-                         (cl-loop for negation in negations
-                                  do (goto-char node-beg)
-                                  thereis (search-forward-regexp negation node-end t)))
+                         (search-forward-regexp negations-re node-end t))
                 (throw 'negated (goto-char node-end)))
 
-              ;; Get beginning-of-line positions for lines in node
-              ;; that match any token
+              ;; Get beginning-of-line positions for matching lines in node
               (setq matching-positions-in-node
-                    (cl-loop for token in all-tokens
-                             append (cl-loop initially (goto-char node-beg)
-                                             while (search-forward-regexp (helm-org-rifle-prep-token token) node-end t)
-                                             collect (line-beginning-position)
-                                             do (end-of-line))
-                             into result
+                    (cl-loop initially (goto-char node-beg)
+                             while (search-forward-regexp positive-re node-end t)
+                             collect (line-beginning-position) into result
+                             do (end-of-line)
                              finally return (sort (delete-dups result) '<)))
 
               ;; Get list of line-strings containing any token
@@ -391,8 +389,7 @@ begins."
                                                for match = (string-match re line end)
                                                if match
                                                do (setq end (match-end 0))
-                                               and collect (match-string-no-properties 0 line)))
-                      )
+                                               and collect (match-string-no-properties 0 line))))
 
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
                 (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
