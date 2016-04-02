@@ -738,3 +738,318 @@ Fixed.  Thanks to [[https://www.reddit.com/user/washy99999][/u/washy9999]] for t
   (helm :sources (helm-org-rifle-get-sources)))
 #+END_SRC
 
+
+* elp profiling
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-04-02 Sat 04:56
+:ARCHIVE_FILE: ~/src/helm-org-rifle/notes.org
+:ARCHIVE_CATEGORY: notes
+:ARCHIVE_OLPATH: Plans
+:END:
+
+
+#+BEGIN_SRC elisp
+(setq helm-org-rifle-show-path nil)
+(setq helm-org-rifle-show-path t)
+#+END_SRC
+
+** Testing with helm: before negation support                    :read_only:
+#+BEGIN_SRC elisp
+(setq argh-how-many-buffers 0)
+(message "This many buffers: %s" argh-how-many-buffers)
+(setq argh-how-many-times-getc-called 0)
+(message "This many times: %s" argh-how-many-times-getc-called)
+#+END_SRC
+
+#+BEGIN_SRC elisp :results value
+  (progn
+    (dolist (p '("helm-" "org-" "string-" "s-"))
+      (elp-instrument-package p))
+    (let ((helm-pattern "emacs helm"))
+      (helm-org-rifle))
+    (elp-results)
+    (elp-restore-all)
+    (buffer-substring-no-properties (point-min) (point-max)))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+helm-org-rifle                                                1           21.149816496  21.149816496
+helm-internal                                                 1           21.146028492  21.146028492
+helm-display-buffer                                           1           0.015992741   0.015992741
+helm-default-display-buffer                                   1           0.015959396   0.015959396
+helm-split-window-default-fn                                  2           0.015504805   0.0077524025
+helm-window-in-direction                                      2           0.015404318   0.007702159
+helm-cleanup                                                  1           0.005956688   0.005956688
+helm-frame-or-window-configuration                            2           0.00564105    0.002820525
+helm-org-rifle-get-sources                                    1           0.003752977   0.003752977
+string-match                                                  3553        0.0031005809  8.726...e-07
+helm-make-source                                              3           0.001922106   0.000640702
+org-buffer-list                                               1           0.001704984   0.001704984
+helm--setup-source                                            3           0.0013488509  0.000449617
+helm-source--header-line                                      3           0.0011306280  0.0003768760
+helm-initialize                                               1           0.000588538   0.000588538
+helm-initial-setup                                            1           0.000510501   0.000510501
+helm--create-source                                           3           0.000273995   9.133...e-05
+helm-source-sync                                              3           0.000238082   7.936...e-05
+helm-log-run-hook                                             12          0.0002350079  1.958...e-05
+helm--run-init-hooks                                          2           0.000163177   8.15885e-05
+helm-get-sources                                              5           0.000135961   2.71922e-05
+helm-create-helm-buffer                                       1           0.000131969   0.000131969
+helm-funcall-foreach                                          2           0.000125873   6.29365e-05
+helm-compile-sources                                          1           8.7179e-05    8.7179e-05
+helm-buffer-get                                               5           5.823e-05     1.1646e-05
+helm-handle-winner-boring-buffers                             1           5.4042e-05    5.4042e-05
+helm-action-window                                            10          5.110...e-05  5.1105e-06
+helm-clean-up-minibuffer                                      1           5.0868e-05    5.0868e-05
+helm--remap-mouse-mode                                        2           4.403e-05     2.2015e-05
+helm-ff-save-history                                          1           4.3852e-05    4.3852e-05
+helm-org-rifle-buffer-invisible-p                             5           4.0771e-05    8.1542e-06
+helm-file-completion-source-p                                 1           3.9612e-05    3.9612e-05
+helm-source-mm-get-search-or-match-fns                        3           3.739e-05     1.246...e-05
+helm-get-current-source                                       1           3.4542e-05    3.4542e-05
+helm-update-source-p                                          3           2.9221e-05    9.740...e-06
+helm-prevent-switching-other-window                           2           2.8107e-05    1.40535e-05
+s-starts-with?                                                5           2.5263e-05    5.0526e-06
+helm-log                                                      61          2.303...e-05  3.776...e-07
+helm--current-buffer                                          1           2.0959e-05    2.0959e-05
+helm-clear-visible-mark                                       1           2.0575e-05    2.0575e-05
+helm-window                                                   1           1.5778e-05    1.5778e-05
+helm-compile-source--info-index                               3           1.536...e-05  5.121...e-06
+helm-parse-keys                                               1           1.4924e-05    1.4924e-05
+helm-restore-position-on-quit                                 1           1.3328e-05    1.3328e-05
+helm-current-position                                         2           1.279...e-05  6.397...e-06
+helm-attrset                                                  3           1.2792e-05    4.264e-06
+helm-initialize-overlays                                      1           1.0226e-05    1.0226e-05
+helm-setup-user-source                                        3           1.019...e-05  3.397...e-06
+helm-match-line-cleanup                                       1           9.55e-06      9.55e-06
+helm-alive-p                                                  1           6.474e-06     6.474e-06
+helm-compile-source--type                                     3           5.868...e-06  1.956...e-06
+helm-compile-source--candidates-file                          3           5.813e-06     1.937...e-06
+helm-match-functions                                          3           5.695...e-06  1.898...e-06
+helm-search-functions                                         3           5.488...e-06  1.829...e-06
+helm-delayed-source-p                                         3           4.737...e-06  1.579...e-06
+helm-make-actions                                             3           3.953e-06     1.317...e-06
+string-prefix-p                                               5           3.477...e-06  6.954e-07
+string-width                                                  5           2.828...e-06  5.657...e-07
+helm-kill-async-processes                                     2           2.012e-06     1.006e-06
+helm-interpret-value                                          3           1.797e-06     5.99e-07
+helm-compile-source--candidates-in-buffer                     3           1.788e-06     5.96e-07
+helm-mklist                                                   3           1.764...e-06  5.88e-07
+helm-compile-source--dummy                                    3           1.683e-06     5.61e-07
+helm-resume-p                                                 3           1.42e-06      4.733...e-07
+helm-recent-push                                              1           1.399e-06     1.399e-06
+helm-get-attribute-from-source-type                           3           1.371e-06     4.570...e-07
+helm-set-local-variable                                       1           1.261e-06     1.261e-06
+helm-normalize-sources                                        2           1.235e-06     6.175e-07
+helm-initialize-persistent-action                             1           1.192e-06     1.192e-06
+helm-reset-yank-point                                         2           1.177e-06     5.885e-07
+helm-get-previous-header-pos                                  1           9.7e-07       9.7e-07
+helm-log-save-maybe                                           1           9.02e-07      9.02e-07
+helm-find-files--reset-level-tree                             1           7.84e-07      7.84e-07
+helm-get-next-header-pos                                      1           7e-07         7e-07
+string-equal                                                  1           2.75e-07      2.75e-07
+helm-read-pattern-maybe                                       1           0             0.0
+helm-other-buffer                                             1           0             0.0
+helm-update                                                   1           0             0.0
+helm-keyboard-quit                                            1           0             0.0
+#+end_example
+
+*** Results
+
+**** DONE helm-org-rifle-get-sources 
+
+This function is working correctly, returning the number of sources that it should.
+
+**** DONE helm-org-rifle-get-candidates-in-buffer
+
+This function works correctly and pretty quickly.
+
+**** TODO helm-org-rifle-get-candidates-in-buffer called 10 times for each buffer
+
+However, Helm seems to be calling this function, the =:candidates= function...sometimes 10 times per buffer, sometimes less, like this time where it did it 6 times for each buffer (input was "emacs"):
+
+#+BEGIN_EXAMPLE txt
+Evaluate this elisp code block on your system? (y or n) y
+executing Elisp code block...
+This many sources: 18
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+ARGH called for buffer: test.org
+ARGH called for buffer: README.org\helm-org-rifle
+ARGH called for buffer: inbox.org
+ARGH called for buffer: README.org\org-bookmark-heading
+ARGH called for buffer: main.org
+ARGH called for buffer: school.org
+ARGH called for buffer: sparky.org
+ARGH called for buffer: prayers.org
+ARGH called for buffer: calendar.org
+ARGH called for buffer: log.org
+ARGH called for buffer: people.org
+ARGH called for buffer: bible.org
+ARGH called for buffer: books.org
+ARGH called for buffer: misc.org
+ARGH called for buffer: posts.org
+ARGH called for buffer: quotes.org
+ARGH called for buffer: reference.org
+ARGH called for buffer: research.org
+Code block evaluation complete.
+#+END_EXAMPLE
+
+Okay, I think I see what it's doing: Helm is calling the candidates function once for every character that is typed, plus one more time.  When I type =emacs= it calls it 6 times per buffer, and when I type =e= it calls it twice per buffer.  The =:delay= works in that it doesn't start getting candidates until that much time has elapsed after I've finished typing, but then it goes ahead and calls it for every character I typed, plus one.
+
+Problem might be in =helm-update= or =helm-process-delayed-sources=...
+
+** Testing without helm
+#+BEGIN_SRC elisp :results value
+    (progn
+      (let ((buffers (remove-if 'helm-org-rifle-buffer-invisible-p (org-buffer-list nil t)))
+            (string "emacs helm";; (read-from-minibuffer "Words: ")
+                    ))
+        (dolist (p '("helm-" "org-" "string-" "s-"))
+          (elp-instrument-package p))
+        (dolist (buffer buffers)
+          (helm-org-rifle-get-candidates-in-buffer buffer string)))
+      (elp-results)
+      (elp-restore-all)
+  (buffer-substring-no-properties (point-min) (point-max)))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       18          0.325021298   0.0180567387
+string-match                                                  1347        0.0362915149  2.694...e-05
+org-heading-components                                        376         0.0335699080  8.928...e-05
+org-back-to-heading                                           412         0.018007849   4.370...e-05
+s-contains?                                                   1114        0.0121319489  1.089...e-05
+helm-org-rifle-fontify-like-in-org-mode                       18          0.01178797    0.0006548872
+org-indent-refresh-maybe                                      36          0.0028632780  7.953...e-05
+org-at-heading-p                                              706         0.0020766779  2.941...e-06
+org-indent-add-properties                                     36          0.0017027310  4.729...e-05
+org-get-limited-outline-regexp                                72          0.0010015760  1.391...e-05
+org-activate-plain-links                                      23          0.0004599949  1.999...e-05
+s--truthy?                                                    1114        0.0003860220  3.465...e-07
+org-indent-notify-modified-headline                           36          0.0003555730  9.877...e-06
+org-activate-bracket-links                                    18          0.0003234190  1.796...e-05
+org-do-latex-and-related                                      18          0.000282822   1.571...e-05
+org-activate-footnote-links                                   18          0.0002406200  1.336...e-05
+org-reduced-level                                             376         0.0002319499  6.168...e-07
+org-fontify-meta-lines-and-blocks                             18          0.0002315430  1.286...e-05
+org-string-nw-p                                               18          0.000225051   1.250...e-05
+org-unfontify-region                                          18          0.000187095   1.039...e-05
+org-footnote-next-reference-or-definition                     18          0.0001767840  9.821...e-06
+s-join                                                        54          0.0001765719  3.269...e-06
+org-in-src-block-p                                            10          0.0001672479  1.672...e-05
+org-activate-tags                                             18          0.000155625   8.645...e-06
+org-fontify-meta-lines-and-blocks-1                           18          0.0001549140  8.606...e-06
+org-string-match-p                                            18          0.0001511729  8.398...e-06
+org-do-emphasis-faces                                         18          0.000141394   7.855...e-06
+org-activate-dates                                            18          0.000104557   5.808...e-06
+s-pad-left                                                    18          0.0001032720  5.737...e-06
+org-activate-angle-links                                      18          9.853...e-05  5.474...e-06
+string-match-p                                                18          9.2952e-05    5.164e-06
+org-bullets-level-char                                        18          8.3399e-05    4.633...e-06
+org-activate-code                                             18          5.2719e-05    2.928...e-06
+org-get-level-face                                            54          5.143...e-05  9.524...e-07
+org-link-unescape                                             5           5.1e-05       1.02e-05
+org-remove-flyspell-overlays-in                               10          4.6203e-05    4.6203e-06
+org-font-lock-add-priority-faces                              18          3.870...e-05  2.150...e-06
+org-remove-font-lock-display-properties                       18          3.099...e-05  1.721...e-06
+org-hide-wide-columns                                         18          2.987e-05     1.659...e-06
+org-before-change-function                                    36          2.4329e-05    6.758...e-07
+string-to-char                                                36          1.481...e-05  4.114...e-07
+org-font-lock-hook                                            18          1.462...e-05  8.127...e-07
+org-activate-target-links                                     18          1.361...e-05  7.564...e-07
+org-fontify-entities                                          18          1.223...e-05  6.799...e-07
+org-font-lock-add-tag-faces                                   18          9.402...e-06  5.223...e-07
+org-raise-scripts                                             18          7.807e-06     4.337...e-07
+#+end_example
+
