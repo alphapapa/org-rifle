@@ -240,7 +240,7 @@ for end = nil
 #+END_SRC
 
 #+BEGIN_SRC elisp
-(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "emacs org-mode")
+(helm-org-rifle-get-candidates-in-buffer (get-file-buffer "~/org/inbox.org") "emacs :org:")
 #+END_SRC
 
 Hm...not quite.  Well, this is the code from just before the commit that broke it:
@@ -959,15 +959,11 @@ Maybe this will help, from =org.el=
 (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
 #+END_SRC
 
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :results list
   (let ((helm-org-rifle-show-tags t)
         (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
-    (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:"))  
+    (--map (substring-no-properties (car it))  (helm-org-rifle-get-candidates-in-buffer (current-buffer) ":gunn:")))
 #+END_SRC
-
-#+RESULTS:
-| ****   Target heading with multiple tags :gunn:moon: \n                                                            | 38717 |
-| ***   Match headings with multiple tags  \nbuffer (current-buffer) ":gunn:"))...buffer (current-buffer) ":gunn:")) | 38106 |
 
 Yeah, using that regexp from =org-complex-heading-regexp-format= in =org.el= seems to work.  Whew.
 
@@ -1001,7 +997,7 @@ And this more minimal one seems to work too:
 
 #+BEGIN_SRC elisp
   (let ((tag-re helm-org-rifle-tags-re)
-        (targets (list ":yes:" "location" ":tag:" "notatag")))
+        (targets (list ":yes:" "location" ":tag:" "notatag" ":website:Emacs:")))
     (mapcar (it (when (string-match tag-re it)
                   (match-string 0 it))) targets))
 #+END_SRC
@@ -1009,7 +1005,35 @@ And this more minimal one seems to work too:
 #+RESULTS:
 | :yes: | nil | :tag: | nil |
 
-**** Target heading with multiple tags :gunn:moon: 
+**** Target heading with multiple tags :gunn:moon:
+
+**** Trying to fix it again
+
+[2016-04-01 Fri 21:18]  Here I go again...   This code is from up above, the first time I implemented/fixed tag matching:
+
+#+BEGIN_SRC elisp :results list value
+  (let ((helm-org-rifle-show-tags t)
+        (helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")))
+    (--map (substring-no-properties (car it))
+           (helm-org-rifle-get-candidates-in-buffer (find-buffer-visiting "~/org/inbox.org")
+                                                    ":website: Emacs")))
+#+END_SRC
+
+Ok, it seems to work now.
+
+*Note:* Having this block of code (which I copied from further up) saved me probably hours of debugging.  Somehow in the course of fixing the context-matching and re-fixing negation, I broke tag matching, and the key to fixing it again was having this:
+
+#+BEGIN_SRC elisp
+(org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+#+END_SRC
+
+...as opposed to this, which doesn't seem to work:
+
+#+BEGIN_SRC elisp
+(org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
+#+END_SRC
+
+If I hadn't kept these notes, I'd probably have spent at least another hour tracing the problem to the regexp and going back into =org.el= and finding the right one again.  I've never kept notes like this about a programming project before, but I am completely sold on doing this now, especially with Org, which is *so powerful* with its inline evaluation, code block evaluation, intermingling of code with results with comments...
 
 ** DONE Negation
 CLOSED: [2016-03-28 Mon 20:49]

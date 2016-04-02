@@ -98,7 +98,16 @@
 (defconst helm-org-rifle-fontify-buffer-name " *helm-org-rifle-fontify*"
   "The name of the invisible buffer used to fontify `org-mode' strings.")
 
-(defconst helm-org-rifle-tags-re (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
+(defconst helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+  ;; This commented one is another regexp that I think I got somewhere
+  ;; in org.el.  It seems to be the wrong one, because tag matching
+  ;; doesn't seem to work when I use it, and it does seem to work when
+  ;; I use the one above.  But this has been so confusing that I'm
+  ;; leaving it here just in case I need it again, at least for a
+  ;; while, until I'm really sure it's working.
+
+  ;; (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
+
   "Regexp used to match Org tag strings.  From org.el.")
 
 (defvar helm-org-rifle-map
@@ -306,9 +315,7 @@ begins."
                            input))
          (negations-re (when negations
                          (rx-to-string `(seq bow (or ,@negations) eow) t)))
-         (positive-re (s-wrap (rx-to-string `(and (or ,@input)) t)
-                              helm-org-rifle-re-prefix
-                              helm-org-rifle-re-suffix))
+         (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
          (positive-re-list (--map (helm-org-rifle-prep-token it) input))
          ;; TODO: Turn off case folding if input contains mixed case
          (case-fold-search t)
