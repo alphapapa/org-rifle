@@ -9,6 +9,7 @@
      - [[#substring-matching][Substring matching]]
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
+     - [[#improve-context-matching][Improve context matching]]
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
 
 * Code
@@ -808,6 +809,32 @@ It might be nice to only match against headings, but this is not as easy as it m
 ** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
 
 Could be good for testing e.g. negation, to make sure I don't break it.
+
+** TODO Improve context matching
+
+Well, this almost works:
+
+#+BEGIN_SRC sh :results output
+echo "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen" | egrep -o '(\b[^ ]+|)[[:alnum:] ]{0,15}eight[[:alnum:] ]{0,15}(\b[^ ]+|)'
+#+END_SRC
+
+#+RESULTS:
+: five six seven eight nine ten eleven
+
+It correctly goes up to word boundaries, but I had to specify spaces and alnum instead of newlines and word-characters.  Still, I ought to be able to do that in Emacs...
+
+This seems to work!  And it doesn't seem slower!
+
+#+BEGIN_SRC elisp
+  (context-re (s-wrap (s-join "\\|" input)
+                      (rx-to-string `(seq bow (0+ (not space))
+                                          (repeat 0 ,helm-org-rifle-context-characters not-newline))
+                                    t)
+                      (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                          (0+ (not space)) eow)
+                                    t)))
+(setq helm-org-rifle-context-characters 15)
+#+END_SRC
 
 ** DONE Support new Helm with input-idle-delay
 
