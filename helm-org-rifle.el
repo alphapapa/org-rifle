@@ -125,6 +125,20 @@
   "How many characters around each matched term to display."
   :group 'helm-org-rifle :type 'integer)
 
+(defcustom helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
+  "Face for ellipses between match context strings."
+  :group 'helm-org-rifle :type 'face
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
+                                                                  'face value))))
+
+(defcustom helm-org-rifle-ellipsis-string "..."
+  "Shown between match context strings."
+  :group 'helm-org-rifle :type 'string
+  :set (lambda (symbol value)
+         (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face))))
+
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
 
@@ -416,7 +430,7 @@ begins."
                                                    (s-join " " (list (s-repeat (nth 0 components) "*")
                                                                      heading
                                                                      tags))))
-                                               (s-join "..." matched-words-with-context)))
+                                               (s-join helm-org-rifle-ellipsis-string matched-words-with-context)))
                             node-beg)
                       results))
               ;; Go to end of node
