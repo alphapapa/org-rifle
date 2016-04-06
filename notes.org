@@ -8,6 +8,7 @@
      - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
      - [[#substring-matching][Substring matching]]
      - [[#maybe-use-grep-to-find-matching-lines][MAYBE Use grep to find matching lines]]
+     - [[#maybe-flx-sorting][MAYBE flx sorting]]
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
@@ -811,6 +812,9 @@ Now it's /doing/ substring matching again.  I specifically tested this earlier a
 ** MAYBE Use grep to find matching lines
 
 It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
+
+** MAYBE flx sorting
+[[https://github.com/abo-abo/swiper/issues/207][This swiper issue]] may have some good info about caching and such.  It might be too slow for rifle, or at least it might be too slow with lots of results.  Hmm...
 
 ** MAYBE Match only headings
 
