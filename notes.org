@@ -862,7 +862,7 @@ I tried.
 
 Pushing this back to 1.2.
 
-*** TODO Tag, sign, and push tag
+*** DONE Tag, sign, and push tag
 
 ** Stable release template
 :PROPERTIES:
@@ -913,3 +913,5 @@ e.g. =:tag1:tag2:=
 ***** TODO Ellipses customization
 
 *** TODO Tag, sign, and push tag
+
+If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
