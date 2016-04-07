@@ -71,7 +71,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Credits
 
-+ This package is based on =org-search-goto= (specifically, =org-search-goto-ml=).  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]], but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]]. It's a really great package, and the only thing that could make it better is to make it work with Helm.  To avoid confusion, this package has a completely different name.
++ This package is inspired by =org-search-goto-ml= by [[https://lists.gnu.org/archive/html/emacs-orgmode/2011-12/msg00515.html][Tom]].  Its unofficial-official home is [[https://www.emacswiki.org/emacs/org-search-goto-ml.el][on EmacsWiki]], but I've mirrored it [[https://github.com/alphapapa/org-search-goto][on GitHub]] with some small fixes. It's a really great package, and the only thing that could make it better is to make it work with Helm.  To avoid confusion, this package has a completely different name.
 + Thanks to Thierry Volpiatto for doing such an amazing job with Helm.  Without him, this would not be possible. 
 + Thanks to [[https://www.reddit.com/user/washy99999][Jack, aka /u/washy99999]] for great feedback and suggestions.
 
