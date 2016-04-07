@@ -13,7 +13,8 @@
      - [[#maybe-testing-with-buttercup][MAYBE Testing with Buttercup]]
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
  - [[#checklists][Checklists]]
-     - [[#stable-release][Stable release]]
+     - [[#stable-release-11][Stable release 1.1]]
+     - [[#stable-release-template][Stable release template]]
 
 * Code
 
@@ -828,30 +829,87 @@ Could be good for testing e.g. negation, to make sure I don't break it.
 Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.  This will be available in Helm 1.9.4 or commits after [2016-04-01 Fri].
 
 * Checklists
-
-** Stable release
+** Stable release 1.1
+:PROPERTIES:
+:LOGGING:  nil
+:ORDERED:  t
+:END:
 
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
 
-+ [ ] Try to get someone else to test it
-+ [ ] Set =Version:= header
-+ [ ] Update changelog
-+ [ ] Test in clean MELPA sandbox
-    - [ ] Update test checklist from changelog for new features
-    - [ ] Install
-    - [ ] ~require~
-    - [ ] Test functionality:
-        + [ ] Positive terms
-        + [ ] Negation
-        + [ ] TODO keywords
-        + [ ] Priorities
-        + [ ] Tags
-            - [ ] Positive
-            - [ ] Negative
-            - [ ] Multiple tags
-            - [ ] Multiple tags in a single string (=:tag1:tag2:=)
-                + [ ] Positive
-                + [ ] Negative
-        + [ ] Context
-        + [ ] Ellipses
-+ [ ] Tag, sign, and push tag
+*** CANCELED Try to get someone else to test it
+I tried.
+*** DONE Set =Version:= header
+*** DONE Update changelog
+*** DONE Test in clean MELPA sandbox
+**** DONE Update test checklist from changelog for new features
+**** DONE Install
+**** DONE Test functionality:
+***** DONE Positive terms
+***** DONE Negation
+***** DONE TODO keywords
+***** DONE Priorities
+***** DONE Tags
+****** DONE Positive
+****** DONE Negative
+****** DONE Multiple tags
+****** DONE Multiple tags in a single string 
+(=:tag1:tag2:=)
+******* DONE Positive
+******* DONE Negative
+***** DONE Context
+***** CANCELED Ellipses customization
+
+Pushing this back to 1.2.
+
+*** TODO Tag, sign, and push tag
+
+** Stable release template
+:PROPERTIES:
+:LOGGING:  nil
+:END:
+
+Hmm, that seems like a long list.  But I want stable releases to actually be stable.
+
+*** TODO Try to get someone else to test it
+
+*** TODO Set =Version:= header
+
+*** TODO Update changelog
+
+*** TODO Test in clean MELPA sandbox
+
+**** TODO Update test checklist from changelog for new features
+
+**** TODO Install
+
+**** TODO Test functionality:
+
+***** TODO Positive terms
+
+***** TODO Negation
+
+***** TODO TODO keywords
+
+***** TODO Priorities
+
+***** TODO Tags
+
+****** TODO Positive
+
+****** TODO Negative
+
+****** TODO Multiple tags
+
+****** TODO Multiple tags in a single string
+e.g. =:tag1:tag2:=
+
+******* TODO Positive
+
+******* TODO Negative
+
+***** TODO Context
+
+***** TODO Ellipses customization
+
+*** TODO Tag, sign, and push tag
