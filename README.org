@@ -56,6 +56,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog
 
+** 1.2-pre
+
+
+
 ** 1.1
 
 + Restore context display.  This was accidentally broken when adding the negation feature, before the tagging of 1.0.0, so it's like a new feature.
