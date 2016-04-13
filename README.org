@@ -30,7 +30,7 @@ If you installed from MELPA, your rifle is ready.  Just run one of the [[*Usage]
 
 ** Manual
 
-Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magnars/dash.el][dash.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
+Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magnars/dash.el][dash.el]], [[https://github.com/rejeep/f.el][f.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
 
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)
@@ -43,6 +43,8 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 *Commands:*
 + =helm-org-rifle=: Shows results from all open Org buffers
 + =helm-org-rifle-current-buffer=: Shows results from current buffer
++ =helm-org-rifle-directories=: Shows results from selected directories; with prefix, recursively.
++ =helm-org-rifle-files=: Shows results from selected files.
 
 ** Tips
 
@@ -58,7 +60,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.2-pre
 
-
++ Add commands =helm-org-rifle-files= and =helm-org-rifle-directories= to search through files that may or may not already be open.
+    - Add variable =helm-org-rifle-org-filename-regexp= to control what files are searched (e.g. including =.org_archive= files).
+    - Add variable =helm-org-rifle-close-unopened-file-buffers= to control whether new buffers opened for searching remain open.  Leaving them open will make subsequent searches faster, but most users will probably prefer to not have their buffer list cluttered, so this defaults to =nil=.
+    - Add dependency on [[https://github.com/rejeep/f.el][f.el]].
 
 ** 1.1
 
@@ -89,11 +94,7 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
-*** UNDERWAY Search files in directory or in a list
-
-It would be easy to rifle through Org files in a directory or in a list of files, even if they aren't already open.
-
-**** TODO git grep support
+*** MAYBE git grep support
 
 By setting a custom =xfuncname= for a git repo containing org files (see =man 5 gitattributes=), git diff will display the org heading as the hunk header in its output.  Then running =git grep -W= shows *entire org entries* that match.  /And/ =git grep= has *boolean operators*.  And =git grep= is very fast.  Plug these into an async Helm source and boom, lightning-fast searching of org files, even if they aren't open in an Emacs buffer.  Well, as long as the files are in a git repo--but you /are/ storing your org files in a git repo, aren't you?  =)
 

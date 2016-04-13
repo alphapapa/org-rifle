@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
 ;; Version: 1.2-pre
-;; Package-Requires: ((emacs "24.4") (dash "2.12") (helm "1.9.4") (s "1.10.0"))
+;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
 ;;; Commentary:
@@ -50,6 +50,8 @@
 ;; Commands:
 ;; + `helm-org-rifle': Shows results from all open Org buffers
 ;; + `helm-org-rifle-current-buffer': Shows results from current buffer
+;; + `helm-org-rifle-directories': Shows results from selected directories; with prefix, recursively
+;; + `helm-org-rifle-files': Shows results from selected files
 
 ;;; Tips
 
@@ -95,6 +97,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 'f)
 (require 'helm)
 (require 'org)
 (require 's)
@@ -126,6 +129,14 @@
   "Settings for `helm-org-rifle'."
   :group 'helm
   :link '(url-link "http://github.com/alphapapa/helm-org-rifle"))
+
+(defcustom helm-org-rifle-close-unopened-file-buffers t
+  "Close buffers that were not already open.
+After rifling through Org files that are not already open, close
+the buffers if non-nil.  If nil, leave the buffers open.  Leaving
+them open will speed up subsequent searches but clutter the
+buffer list."
+  :group 'helm-org-rifle :type 'boolean)
 
 (defcustom helm-org-rifle-context-characters 25
   "How many characters around each matched term to display."
@@ -159,6 +170,14 @@
   ;;        (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
   ;;                                                                 'face value)))
   )
+
+(defcustom helm-org-rifle-org-filename-regexp "\.org$"
+  "Regular expression to match Org filenames.
+By default, \".org\" files are matched, but you may also select to include \".org_archive\" files, or use a custom regexp."
+  :group 'helm-org-rifle
+  :type '(radio (string :tag "Normal \".org\" files" :value "\.org$")
+                (string :tag "Also include \".org_archive\" files" "\.org\\(_archive\\)?$")
+                (string :tag "Custom regexp.  You know what you're doing.")))
 
 (defcustom helm-org-rifle-fontify-headings t
   "Fontify Org headings.
@@ -236,14 +255,53 @@ So be it, until victory is ours and there is no enemy, but
 peace!"
   (interactive)
   (let ((helm-candidate-separator " "))
-    (helm :sources (helm-org-rifle-get-sources))))
+    (helm :sources (helm-org-rifle-get-sources-for-open-buffers))))
 
 ;;;###autoload
 (defun helm-org-rifle-current-buffer ()
   "Rifle through the current buffer."
   (interactive)
   (let ((helm-candidate-separator " "))
-    (helm :sources (helm-org-rifle-get-source (current-buffer)))))
+    (helm :sources (helm-org-rifle-get-source-for-buffer (current-buffer)))))
+
+;;;###autoload
+(defun helm-org-rifle-files (&optional files)
+  "Rifle through FILES, where FILES is a list of paths to Org files.
+If FILES is nil, prompt with `helm-read-file-name'."
+  (interactive)
+  (let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
+        (helm-candidate-separator " ")
+        (helm-cleanup-hook (lambda ()
+                             ;; Close new buffers if enabled
+                             (when helm-org-rifle-close-unopened-file-buffers
+                               (if (= 0 helm-exit-status)
+                                   ;; Candidate selected; close other new buffers
+                                   (let ((candidate-source (helm-attr 'name (helm-get-current-source))))
+                                     (dolist (source (helm-get-sources))
+                                       (unless (or (equal (helm-attr 'name source)
+                                                          candidate-source)
+                                                   (not (helm-attr 'new-buffer source)))
+                                         (kill-buffer (helm-attr 'buffer source)))))
+                                 ;; No candidates; close all new buffers
+                                 (dolist (source (helm-get-sources))
+                                   (when (helm-attr 'new-buffer source)
+                                     (kill-buffer (helm-attr 'buffer source)))))))))
+    (helm :sources (--map (helm-org-rifle-get-source-for-file it) files))))
+
+;;;###autoload
+(defun helm-org-rifle-directories (prefix &optional directories)
+  "Rifle through Org files in DIRECTORIES; with prefix, recurse into subdirectories.
+If DIRECTORIES is nil, prompt with `helm-read-file-name'."
+  (interactive "p")
+  (let* ((recursive (>= prefix 4))
+         (directories (or directories
+                          (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t))))
+         (files (-flatten (--map (f-files it
+                                          (lambda (file)
+                                            (s-matches? helm-org-rifle-org-filename-regexp (f-filename file)))
+                                          recursive)
+                                 directories))))
+    (helm-org-rifle-files files)))
 
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
@@ -251,6 +309,7 @@ peace!"
 
 (defun helm-org-rifle-show-entry-in-real-buffer (candidate)
   "Show CANDIDATE in its real buffer."
+  (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
   (switch-to-buffer (helm-attr 'buffer))
   (goto-char (car candidate))
   (org-show-entry))
@@ -260,6 +319,7 @@ peace!"
   (let ((buffer (helm-attr 'buffer))
         (pos (car candidate))
         (original-buffer (current-buffer)))
+    (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
     (switch-to-buffer buffer)
     (goto-char pos)
     (org-tree-to-indirect-buffer)
@@ -284,13 +344,14 @@ That is, if its name does not start with a space."
   "`:after-init-hook' for the Helm buffer."
   :group 'helm-org-rifle :type 'hook)
 
-(defun helm-org-rifle-get-source (buffer)
-  "Get a rifle buffer for BUFFER."
+(defun helm-org-rifle-get-source-for-buffer (buffer)
+  "Return Helm source for BUFFER."
   (let ((source (helm-build-sync-source (buffer-name buffer)
                   :after-init-hook helm-org-rifle-after-init-hook
                   :candidates (lambda ()
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
+
                   :match 'identity
                   :multiline t
                   :volatile t
@@ -302,11 +363,27 @@ That is, if its name does not start with a space."
     (helm-attrset 'buffer buffer source)
     source))
 
-(defun helm-org-rifle-get-sources ()
+(defun helm-org-rifle-get-sources-for-open-buffers ()
   "Return list of sources configured for helm-org-rifle.
 One source is returned for each open Org buffer."
-  (mapcar 'helm-org-rifle-get-source
+  (mapcar 'helm-org-rifle-get-source-for-buffer
           (-select 'helm-org-rifle-buffer-visible-p (org-buffer-list nil t))))
+
+(defun helm-org-rifle-get-source-for-file (file)
+  "Return Helm source for FILE.
+If the file is not already in an open buffer, it will be opened
+with `find-file-noselect'."
+  (let ((buffer (org-find-base-buffer-visiting file))
+        new-buffer source)
+    (unless buffer
+      (if (f-exists? file)
+          (progn
+            (setq buffer (find-file-noselect file))
+            (setq new-buffer t))
+        (error "File not found: %s" file)))
+    (setq source (helm-org-rifle-get-source-for-buffer buffer))
+    (helm-attrset 'new-buffer new-buffer source)
+    source))
 
 (defun helm-org-rifle-prep-token (token)
   "Apply regexp prefix and suffix for TOKEN."
