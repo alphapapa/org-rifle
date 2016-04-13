@@ -912,6 +912,8 @@ e.g. =:tag1:tag2:=
 
 ***** TODO Ellipses customization
 
+***** TODO Searching with show-path enabled
+
 *** TODO Tag, sign, and push tag
 
 If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
