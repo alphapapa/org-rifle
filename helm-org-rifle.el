@@ -36,8 +36,8 @@
 
 ;;;; Manual
 
-;; Install the Helm, dash.el, and s.el packages.  Then require this
-;; package in your init file:
+;; Install the Helm, dash.el, f.el, and s.el packages.  Then require
+;; this package in your init file:
 
 ;; (require 'helm-org-rifle)
 
