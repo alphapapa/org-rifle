@@ -505,7 +505,11 @@ begins."
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
                 (push (list (s-join "\n" (list (if path
                                                    (if helm-org-rifle-fontify-headings
-                                                       (concat (org-format-outline-path path)
+                                                       (concat (org-format-outline-path
+                                                                ;; Replace links in path elements with plain text, otherwise
+                                                                ;; they will be truncated by `org-format-outline-path' and only
+                                                                ;; show part of the URL
+                                                                (-map 'helm-org-rifle-replace-links-in-string path))
                                                                "/"
                                                                (helm-org-rifle-fontify-like-in-org-mode
                                                                 (s-join " " (list (s-repeat (nth 0 components) "*")
@@ -552,6 +556,15 @@ created."
       (let ((org-odd-levels-only odd-levels))
         (font-lock-fontify-buffer)
         (buffer-string)))))
+
+(defun helm-org-rifle-replace-links-in-string (string)
+  "Replace `org-mode' links in STRING with their descriptions."
+  (if (string-match org-bracket-link-regexp string)
+      (replace-regexp-in-string org-bracket-link-regexp
+                                (lambda (text) (match-string-no-properties 3 text))
+                                string)
+    ;; No links found; return original string
+    string))
 
 (defun helm-org-rifle-set-input-idle-delay ()
   "Set `helm-input-idle-delay' in Helm buffer."
