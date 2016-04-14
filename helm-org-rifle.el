@@ -424,12 +424,14 @@ begins."
                                                and collect (s-trim (match-string-no-properties 0 line)))))
 
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
-                (push (list (s-join "\n" (list (if (and helm-org-rifle-show-path
-                                                        path)
+                (push (list (s-join "\n" (list (if path
                                                    (if helm-org-rifle-fontify-headings
-                                                       (org-format-outline-path (append path
-                                                                                        (list heading)
-                                                                                        (concat tags " ")))
+                                                       (concat (org-format-outline-path path)
+                                                               "/"
+                                                               (helm-org-rifle-fontify-like-in-org-mode
+                                                                (s-join " " (list (s-repeat (nth 0 components) "*")
+                                                                                  heading
+                                                                                  (concat tags " ")))))
                                                      ;; Not fontifying
                                                      (s-join "/" (append path
                                                                          (list heading)
