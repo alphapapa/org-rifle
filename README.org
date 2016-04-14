@@ -67,6 +67,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
     - Add variable =helm-org-rifle-close-unopened-file-buffers= to control whether new buffers opened for searching remain open.  Leaving them open will make subsequent searches faster, but most users will probably prefer to not have their buffer list cluttered, so this defaults to =nil=.
     - Add dependency on [[https://github.com/rejeep/f.el][f.el]].
 
+** 1.1.1
+
++ Fix =helm-org-rifle-show-path=.  A bug caused no results to be displayed for entries below the top level.
+
 ** 1.1
 
 + Restore context display.  This was accidentally broken when adding the negation feature, before the tagging of 1.0.0, so it's like a new feature.
