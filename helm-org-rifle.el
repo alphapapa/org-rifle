@@ -96,6 +96,8 @@
 
 ;;; Code:
 
+;;;; Require
+
 (require 'dash)
 (require 'f)
 (require 'helm)
@@ -129,6 +131,11 @@
   "Settings for `helm-org-rifle'."
   :group 'helm
   :link '(url-link "http://github.com/alphapapa/helm-org-rifle"))
+
+(defcustom helm-org-rifle-after-init-hook '(helm-org-rifle-set-input-idle-delay)
+  "`:after-init-hook' for the Helm buffer.
+If you're thinking about changing this, you probably know what you're doing."
+  :group 'helm-org-rifle :type 'hook)
 
 (defcustom helm-org-rifle-close-unopened-file-buffers t
   "Close buffers that were not already open.
@@ -231,6 +238,8 @@ because you can always revert your changes).)"
 
 ;;;; Functions
 
+;;;;; Commands
+
 ;;;###autoload
 (defun helm-org-rifle ()
   "This is my rifle.  There are many like it, but this one is mine.
@@ -315,6 +324,51 @@ default."
         (helm-org-rifle-files files)
       (error "No org files found in directories: %s" (s-join " " directories)))))
 
+;;;;; Sources
+
+(defun helm-org-rifle-get-source-for-buffer (buffer)
+  "Return Helm source for BUFFER."
+  (let ((source (helm-build-sync-source (buffer-name buffer)
+                  :after-init-hook helm-org-rifle-after-init-hook
+                  :candidates (lambda ()
+                                (when (s-present? helm-pattern)
+                                  (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
+
+                  :match 'identity
+                  :multiline t
+                  :volatile t
+                  :action (helm-make-actions
+                           "Show entry" 'helm-org-rifle-show-entry
+                           "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
+                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
+                  :keymap helm-org-rifle-map)))
+    (helm-attrset 'buffer buffer source)
+    source))
+
+(defun helm-org-rifle-get-source-for-file (file)
+  "Return Helm source for FILE.
+If the file is not already in an open buffer, it will be opened
+with `find-file-noselect'."
+  (let ((buffer (org-find-base-buffer-visiting file))
+        new-buffer source)
+    (unless buffer
+      (if (f-exists? file)
+          (progn
+            (setq buffer (find-file-noselect file))
+            (setq new-buffer t))
+        (error "File not found: %s" file)))
+    (setq source (helm-org-rifle-get-source-for-buffer buffer))
+    (helm-attrset 'new-buffer new-buffer source)
+    source))
+
+(defun helm-org-rifle-get-sources-for-open-buffers ()
+  "Return list of sources configured for helm-org-rifle.
+One source is returned for each open Org buffer."
+  (mapcar 'helm-org-rifle-get-source-for-buffer
+          (-select 'helm-org-rifle-buffer-visible-p (org-buffer-list nil t))))
+
+;;;;; Show entries
+
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
   (funcall helm-org-rifle-show-entry-function candidate))
@@ -347,67 +401,7 @@ default."
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-org-rifle-show-entry-in-indirect-buffer)))
 
-(defun helm-org-rifle-buffer-visible-p (buffer)
-  "Return non-nil if BUFFER is visible.
-That is, if its name does not start with a space."
-  (not (s-starts-with? " " (buffer-name buffer))))
-
-(defcustom helm-org-rifle-after-init-hook '(helm-org-rifle-set-input-idle-delay)
-  "`:after-init-hook' for the Helm buffer."
-  :group 'helm-org-rifle :type 'hook)
-
-(defun helm-org-rifle-get-source-for-buffer (buffer)
-  "Return Helm source for BUFFER."
-  (let ((source (helm-build-sync-source (buffer-name buffer)
-                  :after-init-hook helm-org-rifle-after-init-hook
-                  :candidates (lambda ()
-                                (when (s-present? helm-pattern)
-                                  (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
-
-                  :match 'identity
-                  :multiline t
-                  :volatile t
-                  :action (helm-make-actions
-                           "Show entry" 'helm-org-rifle-show-entry
-                           "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
-                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
-                  :keymap helm-org-rifle-map)))
-    (helm-attrset 'buffer buffer source)
-    source))
-
-(defun helm-org-rifle-get-sources-for-open-buffers ()
-  "Return list of sources configured for helm-org-rifle.
-One source is returned for each open Org buffer."
-  (mapcar 'helm-org-rifle-get-source-for-buffer
-          (-select 'helm-org-rifle-buffer-visible-p (org-buffer-list nil t))))
-
-(defun helm-org-rifle-get-source-for-file (file)
-  "Return Helm source for FILE.
-If the file is not already in an open buffer, it will be opened
-with `find-file-noselect'."
-  (let ((buffer (org-find-base-buffer-visiting file))
-        new-buffer source)
-    (unless buffer
-      (if (f-exists? file)
-          (progn
-            (setq buffer (find-file-noselect file))
-            (setq new-buffer t))
-        (error "File not found: %s" file)))
-    (setq source (helm-org-rifle-get-source-for-buffer buffer))
-    (helm-attrset 'new-buffer new-buffer source)
-    source))
-
-(defun helm-org-rifle-prep-token (token)
-  "Apply regexp prefix and suffix for TOKEN."
-  (if (string-match helm-org-rifle-tags-re token)
-      ;; Tag
-      (concat (concat "\\(" helm-org-rifle-tags-re "\\| \\)")
-              (regexp-quote token)
-              (concat "\\(" helm-org-rifle-tags-re "\\| \\|$\\)"))
-    ;; Not a tag; use normal prefix/suffix
-    (concat helm-org-rifle-re-prefix
-            (regexp-quote token)
-            helm-org-rifle-re-suffix)))
+;;;;; The meat
 
 (defun helm-org-rifle-get-candidates-in-buffer (buffer input)
   "Return candidates in BUFFER for INPUT.
@@ -419,7 +413,9 @@ STRING begins with a fontified Org heading and optionally
 includes further matching parts separated by newlines.
 
 POSITION is the position in BUFFER where the candidate heading
-begins."
+begins.
+
+This is how the sausage is made."
   (let* ((input (split-string input " " t))
          (negations (-keep (lambda (token)
                              (when (string-match "^!" token)
@@ -547,6 +543,13 @@ begins."
     ;; Return results in the order they appear in the org file
     (nreverse results)))
 
+;;;;; Support functions
+
+(defun helm-org-rifle-buffer-visible-p (buffer)
+  "Return non-nil if BUFFER is visible.
+That is, if its name does not start with a space."
+  (not (s-starts-with? " " (buffer-name buffer))))
+
 (defun helm-org-rifle-fontify-like-in-org-mode (s &optional odd-levels)
   "Fontify string S like in Org-mode.
 
@@ -566,6 +569,18 @@ created."
       (let ((org-odd-levels-only odd-levels))
         (font-lock-fontify-buffer)
         (buffer-string)))))
+
+(defun helm-org-rifle-prep-token (token)
+  "Apply regexp prefix and suffix for TOKEN."
+  (if (string-match helm-org-rifle-tags-re token)
+      ;; Tag
+      (concat (concat "\\(" helm-org-rifle-tags-re "\\| \\)")
+              (regexp-quote token)
+              (concat "\\(" helm-org-rifle-tags-re "\\| \\|$\\)"))
+    ;; Not a tag; use normal prefix/suffix
+    (concat helm-org-rifle-re-prefix
+            (regexp-quote token)
+            helm-org-rifle-re-suffix)))
 
 (defun helm-org-rifle-replace-links-in-string (string)
   "Replace `org-mode' links in STRING with their descriptions."
