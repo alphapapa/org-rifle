@@ -301,7 +301,9 @@ If DIRECTORIES is nil, prompt with `helm-read-file-name'."
                                             (s-matches? helm-org-rifle-org-filename-regexp (f-filename file)))
                                           recursive)
                                  directories))))
-    (helm-org-rifle-files files)))
+    (if files
+        (helm-org-rifle-files files)
+      (error "No org files found in directories: %s" (s-join " " directories)))))
 
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
