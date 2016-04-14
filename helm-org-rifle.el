@@ -185,7 +185,7 @@ option will be inverted."
   )
 
 (defcustom helm-org-rifle-org-filename-regexp "\.org$"
-  "Regular expression to match Org filenames.
+  "Regular expression to match Org filenames in `helm-org-rifle-directories'.
 By default, \".org\" files are matched, but you may also select to include \".org_archive\" files, or use a custom regexp."
   :group 'helm-org-rifle
   :type '(radio (string :tag "Normal \".org\" files" :value "\.org$")
@@ -282,7 +282,9 @@ peace!"
 ;;;###autoload
 (defun helm-org-rifle-files (&optional files)
   "Rifle through FILES, where FILES is a list of paths to Org files.
-If FILES is nil, prompt with `helm-read-file-name'."
+If FILES is nil, prompt with `helm-read-file-name'.  All FILES
+are searched; they are not filtered with
+`helm-org-rifle-org-filename-regexp'."
   (interactive)
   (let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
         (helm-candidate-separator " ")
@@ -308,7 +310,8 @@ If FILES is nil, prompt with `helm-read-file-name'."
   "Rifle through Org files in DIRECTORIES.
 If DIRECTORIES is nil, prompt with `helm-read-file-name'.  With
 prefix or TOGGLE-RECURSION non-nil, toggle recursion from the
-default."
+default.  Files in DIRECTORIES are filtered using
+`helm-org-rifle-org-filename-regexp'."
   (interactive)
   (let* ((recursive (if (or toggle-recursion current-prefix-arg)
                         (not helm-org-rifle-directories-recursive)
