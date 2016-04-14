@@ -66,6 +66,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
     - Add variable =helm-org-rifle-org-filename-regexp= to control what files are searched (e.g. including =.org_archive= files).
     - Add variable =helm-org-rifle-close-unopened-file-buffers= to control whether new buffers opened for searching remain open.  Leaving them open will make subsequent searches faster, but most users will probably prefer to not have their buffer list cluttered, so this defaults to =nil=.
     - Add dependency on [[https://github.com/rejeep/f.el][f.el]].
++ Show results in the order they appear in the Org file (they were shown in reverse order).
 
 ** 1.1.1
 

@@ -534,8 +534,8 @@ begins."
                       results))
               ;; Go to end of node
               (goto-char node-end))))))
-    ;; Return results
-    results))
+    ;; Return results in the order they appear in the org file
+    (nreverse results)))
 
 (defun helm-org-rifle-fontify-like-in-org-mode (s &optional odd-levels)
   "Fontify string S like in Org-mode.
