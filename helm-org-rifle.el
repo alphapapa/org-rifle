@@ -151,6 +151,12 @@ buffer list."
 ;;   (set-default helm-org-rifle-ellipsis-face face)
 ;;   (helm-org-rifle-set-ellipsis-string (helm-org-rifle-ellipsis-string)) )
 
+(defcustom helm-org-rifle-directories-recursive t
+  "Recurse into subdirectories by default in `helm-org-rifle-directories'.
+When `helm-org-rifle-directories' is called with a prefix, this
+option will be inverted."
+  :group 'helm-org-rifle :type 'boolean)
+
 (defcustom helm-org-rifle-ellipsis-string "..."
   "Shown between match context strings."
   :group 'helm-org-rifle :type 'string
@@ -289,11 +295,15 @@ If FILES is nil, prompt with `helm-read-file-name'."
     (helm :sources (--map (helm-org-rifle-get-source-for-file it) files))))
 
 ;;;###autoload
-(defun helm-org-rifle-directories (prefix &optional directories)
-  "Rifle through Org files in DIRECTORIES; with prefix, recurse into subdirectories.
-If DIRECTORIES is nil, prompt with `helm-read-file-name'."
-  (interactive "p")
-  (let* ((recursive (>= prefix 4))
+(defun helm-org-rifle-directories (&optional directories toggle-recursion)
+  "Rifle through Org files in DIRECTORIES.
+If DIRECTORIES is nil, prompt with `helm-read-file-name'.  With
+prefix or TOGGLE-RECURSION non-nil, toggle recursion from the
+default."
+  (interactive)
+  (let* ((recursive (if (or toggle-recursion current-prefix-arg)
+                        (not helm-org-rifle-directories-recursive)
+                      helm-org-rifle-directories-recursive))
          (directories (or directories
                           (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t))))
          (files (-flatten (--map (f-files it
