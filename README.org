@@ -60,6 +60,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog
 
+** 1.3-pre
+
++ Nothing new yet.  D:
+
 ** 1.2.0
 
 + New commands =helm-org-rifle-files= and =helm-org-rifle-directories= to search through files that may or may not already be open.
