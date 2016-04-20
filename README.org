@@ -63,7 +63,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 ** 1.2-pre
 
 + New commands =helm-org-rifle-files= and =helm-org-rifle-directories= to search through files that may or may not already be open.
-    - New option =helm-org-rifle-org-filename-regexp= to control what files are searched (e.g. including =.org_archive= files).
+    - New option =helm-org-rifle-directories-filename-regexp= to control what files are searched in =helm-org-rifle-directories= (e.g. including =.org_archive= files).
     - New option =helm-org-rifle-close-unopened-file-buffers= to control whether new buffers opened for searching remain open.  Leaving them open will make subsequent searches faster, but most users will probably prefer to not have their buffer list cluttered, so this is enabled by default.
     - New option =helm-org-rifle-directories-recursive= to control whether =helm-org-rifle-directories= recursively scans subdirectories, enabled by default.  When =helm-org-rifle-directories= is called with a prefix, this option is inverted.
     - Add dependency on [[https://github.com/rejeep/f.el][f.el]].

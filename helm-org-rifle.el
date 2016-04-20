@@ -184,9 +184,9 @@ option will be inverted."
   ;;                                                                 'face value)))
   )
 
-(defcustom helm-org-rifle-org-filename-regexp "\.org$"
+(defcustom helm-org-rifle-directories-filename-regexp "\.org$"
   "Regular expression to match Org filenames in `helm-org-rifle-directories'.
-By default, \".org\" files are matched, but you may also select to include \".org_archive\" files, or use a custom regexp."
+Files matching this regexp will be searched.  By default, \".org\" files are matched, but you may also select to include \".org_archive\" files, or use a custom regexp."
   :group 'helm-org-rifle
   :type '(radio (string :tag "Normal \".org\" files" :value "\.org$")
                 (string :tag "Also include \".org_archive\" files" "\.org\\(_archive\\)?$")
@@ -284,7 +284,7 @@ peace!"
   "Rifle through FILES, where FILES is a list of paths to Org files.
 If FILES is nil, prompt with `helm-read-file-name'.  All FILES
 are searched; they are not filtered with
-`helm-org-rifle-org-filename-regexp'."
+`helm-org-rifle-directories-filename-regexp'."
   (interactive)
   (let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
         (helm-candidate-separator " ")
@@ -311,7 +311,7 @@ are searched; they are not filtered with
 If DIRECTORIES is nil, prompt with `helm-read-file-name'.  With
 prefix or TOGGLE-RECURSION non-nil, toggle recursion from the
 default.  Files in DIRECTORIES are filtered using
-`helm-org-rifle-org-filename-regexp'."
+`helm-org-rifle-directories-filename-regexp'."
   (interactive)
   (let* ((recursive (if (or toggle-recursion current-prefix-arg)
                         (not helm-org-rifle-directories-recursive)
@@ -320,7 +320,7 @@ default.  Files in DIRECTORIES are filtered using
                           (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t))))
          (files (-flatten (--map (f-files it
                                           (lambda (file)
-                                            (s-matches? helm-org-rifle-org-filename-regexp (f-filename file)))
+                                            (s-matches? helm-org-rifle-directories-filename-regexp (f-filename file)))
                                           recursive)
                                  directories))))
     (if files
