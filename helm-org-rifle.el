@@ -110,15 +110,6 @@
   "The name of the invisible buffer used to fontify `org-mode' strings.")
 
 (defconst helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
-  ;; This commented one is another regexp that I think I got somewhere
-  ;; in org.el.  It seems to be the wrong one, because tag matching
-  ;; doesn't seem to work when I use it, and it does seem to work when
-  ;; I use the one above.  But this has been so confusing that I'm
-  ;; leaving it here just in case I need it again, at least for a
-  ;; while, until I'm really sure it's working.
-
-  ;; (org-re ":\\([[:alnum:]_@#%:]+\\):[ \t]*$")
-
   "Regexp used to match Org tag strings.  From org.el.")
 
 (defvar helm-org-rifle-map
@@ -149,15 +140,6 @@ buffer list."
   "How many characters around each matched term to display."
   :group 'helm-org-rifle :type 'integer)
 
-;; Well this isn't working...
-
-;; (defun helm-org-rifle-set-ellipsis-string (string)
-;;   (set-default helm-org-rifle-ellipsis-string (propertize string 'face helm-org-rifle-ellipsis-face)))
-
-;; (defun helm-org-rifle-set-ellipsis-face (face)
-;;   (set-default helm-org-rifle-ellipsis-face face)
-;;   (helm-org-rifle-set-ellipsis-string (helm-org-rifle-ellipsis-string)) )
-
 (defcustom helm-org-rifle-directories-recursive t
   "Recurse into subdirectories by default in `helm-org-rifle-directories'.
 When `helm-org-rifle-directories' is called with a prefix, this
@@ -166,23 +148,11 @@ option will be inverted."
 
 (defcustom helm-org-rifle-ellipsis-string "..."
   "Shown between match context strings."
-  :group 'helm-org-rifle :type 'string
-
-  ;; And this causes an error because the face isn't defined yet.  Yet if I evaluate each defcustom individually, they work.
-  ;; :set (lambda (symbol value)
-  ;;        (set-default symbol (propertize value 'face helm-org-rifle-ellipsis-face)))
-  )
+  :group 'helm-org-rifle :type 'string)
 
 (defcustom helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
   "Face for ellipses between match context strings."
-  :group 'helm-org-rifle :type 'face
-
-  ;; This causes an error when the file is loaded because `helm-org-rifle-ellipsis-string' isn't set yet.  But...it's a lambda...
-  ;; :set (lambda (symbol value)
-  ;;        (set-default symbol value)
-  ;;        (setq-default helm-org-rifle-ellipsis-string (propertize helm-org-rifle-ellipsis-string
-  ;;                                                                 'face value)))
-  )
+  :group 'helm-org-rifle :type 'face)
 
 (defcustom helm-org-rifle-directories-filename-regexp "\.org$"
   "Regular expression to match Org filenames in `helm-org-rifle-directories'.
