@@ -818,6 +818,10 @@ Now it's /doing/ substring matching again.  I specifically tested this earlier a
 
 It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
 
+** TODO Look at how [[https://github.com/jrblevin/deft][Deft]] searches files
+
+It probably has some good techniques for doing it quickly.
+
 ** MAYBE flx sorting
 [[https://github.com/abo-abo/swiper/issues/207][This swiper issue]] may have some good info about caching and such.  It might be too slow for rifle, or at least it might be too slow with lots of results.  Hmm...
 
