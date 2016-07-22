@@ -4,6 +4,8 @@
 
 [[https://melpa.org/#/helm-org-rifle][file:https://melpa.org/packages/helm-org-rifle-badge.svg]] [[https://stable.melpa.org/#/helm-org-rifle][file:https://stable.melpa.org/packages/helm-org-rifle-badge.svg]]
 
+[[https://alphapapa.github.io/dont-tread-on-emacs/][dont-tread-on-emacs-150.png]]
+
 This is my rifle.  There are many like it, but this one is mine.  My rifle is my best friend. It is my life.  I must master it as I must master my life.
 
 What does my rifle do?  It searches rapidly through my Org files, quickly bringing me the information I need to defeat the enemy.
