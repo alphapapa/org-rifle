@@ -109,6 +109,17 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
+*** TODO Use prefix arg to toggle full-path mode
+
+Along the lines of:
+
+#+BEGIN_SRC elisp
+(defun my/helm-org-rifle-with-full-paths ()
+    (interactive)
+    (let ((helm-org-rifle-show-path (not helm-org-rifle-show-path))
+      (helm-org-rifle))))
+#+END_SRC
+
 *** MAYBE Sorting by timestamps
 
 It would be nifty to optionally sort result nodes by timestamps appearing in them.  It might not be too slow...
