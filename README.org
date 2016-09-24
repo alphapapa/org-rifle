@@ -120,6 +120,14 @@ Along the lines of:
       (helm-org-rifle))))
 #+END_SRC
 
+*** TODO Show some content when only heading matches
+
+When only the heading text matches the query, there is no content shown.  It would be nice to have an option to display a configurable amount of content in this case.
+
+*** TODO Make Helm highlight all matches
+
+Helm only seems to highlight the first match in each candidate.
+
 *** MAYBE Sorting by timestamps
 
 It would be nifty to optionally sort result nodes by timestamps appearing in them.  It might not be too slow...
