@@ -140,6 +140,14 @@ It would be interesting to be able to search for timestamps, e.g. for nodes time
 
 By setting a custom =xfuncname= for a git repo containing org files (see =man 5 gitattributes=), git diff will display the org heading as the hunk header in its output.  Then running =git grep -W= shows *entire org entries* that match.  /And/ =git grep= has *boolean operators*.  And =git grep= is very fast.  Plug these into an async Helm source and boom, lightning-fast searching of org files, even if they aren't open in an Emacs buffer.  Well, as long as the files are in a git repo--but you /are/ storing your org files in a git repo, aren't you?  =)
 
+*** MAYBE sift support
+
+[[https://sift-tool.org/][Sift]] sounds like it might be a perfect solution here, since it supports multi-line matching, replacements, etc.
+
+*** MAYBE ripgrep support
+
+[[http://blog.burntsushi.net/ripgrep/][ripgrep]] might also be useful, although I don't think it supports multi-line yet.
+
 *** UNDERWAY Non-substring matching
 
 Currently matches are made against substrings, like most other commands in Helm.  However, this might not always lead to the best results.  For example, if someone were searching for "Sol", referring to the sun, he probably wouldn't want to match "solution" or "solvent" or "soliloquy".  But if someone were trying to dig up a note he made a while back about apple pie, did he write about "an apple pie" or "some apple pies"?  Dessert hangs in the balance!
