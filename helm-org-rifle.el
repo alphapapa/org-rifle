@@ -48,11 +48,11 @@
 ;; entry, or <C-return> to show it in an indirect buffer.
 
 ;; Commands:
-;; + `helm-org-rifle': Shows results from all open Org buffers
-;; + `helm-org-rifle-agenda-files': Shows results from Org agenda files
-;; + `helm-org-rifle-current-buffer': Shows results from current buffer
-;; + `helm-org-rifle-directories': Shows results from selected directories; with prefix, recursively
-;; + `helm-org-rifle-files': Shows results from selected files
+;; + `helm-org-rifle': Show results from all open Org buffers
+;; + `helm-org-rifle-agenda-files': Show results from Org agenda files
+;; + `helm-org-rifle-current-buffer': Show results from current buffer
+;; + `helm-org-rifle-directories': Show results from selected directories; with prefix, recursively
+;; + `helm-org-rifle-files': Show results from selected files
 
 ;;; Tips
 
