@@ -46,6 +46,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 *Commands:*
 + =helm-org-rifle=: Shows results from all open Org buffers
++ =helm-org-rifle-agenda-files=: Shows results from Org agenda files
 + =helm-org-rifle-current-buffer=: Shows results from current buffer
 + =helm-org-rifle-directories=: Shows results from selected directories; with prefix, recursively.
 + =helm-org-rifle-files=: Shows results from selected files.
@@ -64,7 +65,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.3-pre
 
-+ Nothing new yet.  D:
++ Add =helm-org-rifle-agenda-files= command.
 
 ** 1.2.0
 

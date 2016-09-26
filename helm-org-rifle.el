@@ -49,6 +49,7 @@
 
 ;; Commands:
 ;; + `helm-org-rifle': Shows results from all open Org buffers
+;; + `helm-org-rifle-agenda-files': Shows results from Org agenda files
 ;; + `helm-org-rifle-current-buffer': Shows results from current buffer
 ;; + `helm-org-rifle-directories': Shows results from selected directories; with prefix, recursively
 ;; + `helm-org-rifle-files': Shows results from selected files
@@ -241,6 +242,12 @@ peace!"
   (interactive)
   (let ((helm-candidate-separator " "))
     (helm :sources (helm-org-rifle-get-sources-for-open-buffers))))
+
+;;;###autoload
+(defun helm-org-rifle-agenda-files ()
+  "Rifle through Org agenda files."
+  (interactive)
+  (helm-org-rifle-files org-agenda-files))
 
 ;;;###autoload
 (defun helm-org-rifle-current-buffer ()
