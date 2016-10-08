@@ -53,6 +53,7 @@
 ;; + `helm-org-rifle-current-buffer': Show results from current buffer
 ;; + `helm-org-rifle-directories': Show results from selected directories; with prefix, recursively
 ;; + `helm-org-rifle-files': Show results from selected files
+;; + `helm-org-rifle-org-directory': Show results from Org files in `org-directory'
 
 ;;; Tips
 
@@ -303,6 +304,11 @@ default.  Files in DIRECTORIES are filtered using
     (if files
         (helm-org-rifle-files files)
       (error "No org files found in directories: %s" (s-join " " directories)))))
+
+(defun helm-org-rifle-org-directory ()
+  "Rifle through Org files in `org-directory'."
+  (interactive)
+  (helm-org-rifle-directories (list org-directory)))
 
 ;;;;; Sources
 
