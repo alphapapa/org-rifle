@@ -305,6 +305,7 @@ default.  Files in DIRECTORIES are filtered using
         (helm-org-rifle-files files)
       (error "No org files found in directories: %s" (s-join " " directories)))))
 
+;;;###autoload
 (defun helm-org-rifle-org-directory ()
   "Rifle through Org files in `org-directory'."
   (interactive)
