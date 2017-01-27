@@ -555,6 +555,7 @@ created."
       (insert s)
       (let ((org-odd-levels-only odd-levels))
         (font-lock-fontify-buffer)
+        (org-preview-latex-fragment)
         (buffer-string)))))
 
 (defun helm-org-rifle-prep-token (token)
