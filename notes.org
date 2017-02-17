@@ -2,6 +2,7 @@
  - [[#code][Code]]
      - [[#profiling][Profiling]]
      - [[#context-splitting][Context-splitting]]
+     - [[#lexical-binding][Lexical-binding]]
  - [[#plans][Plans]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
      - [[#match-tags-separately][Match tags separately]]
@@ -767,6 +768,71 @@ I wonder if I should separate out the tags matching.  I already have it getting 
 I think I'm going to stop here.  It seems to work properly right now: context-matching, tag-matching, avoids substring matches, and negation works.  And it seems fast enough, even if it is slower than before.  Maybe there is some combination of these changes that makes everything work at about the same speed as before, but I think trying to figure it out is too complicated with this big candidates-getting function.  I think it would be better to settle on this code that works correctly, and then go back to the =next-gen= branch and try to improve that, which is structured in a simpler way.
 
 [2016-04-02 Sat 02:21] I decided to test in the MELPA sandbox before merging with master and pushing, and it's a good thing I did, because I discovered another weird bug: if the =show-tags= setting is off, the results are way off.  Probably a simpleish logic error in the code somewhere...but I think at this point I should just remove that setting.  As it is it's off by default, and I wonder how many people have gotten bad results because of it and decided that this package is no good.  I doubt anyone would want it off anyway, and it doesn't seem to hurt performance.  So let's just remove that so it's consistent...
+
+** Lexical-binding
+
+[2017-02-17 Fri 09:32] Not sure if there's really a difference here.  Profiling seemed to give inconsistent results.  I restarted Emacs and manually evaluated the buffer with and without lexical-binding for each run.
+
+*** With lexical-binding
+
+#+BEGIN_SRC elisp
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          14.34481924   1.434481924
+re-search-forward                                             35360       4.1555908470  0.0001175223
+org-heading-components                                        3890        1.4120117850  0.0003629850
+goto-char                                                     16550       1.0855072220  6.558...e-05
+helm-org-rifle-fontify-like-in-org-mode                       330         0.7771526110  0.0023550079
+org-back-to-heading                                           4550        0.7548934600  0.0001659106
+outline-back-to-heading                                       4550        0.7398475300  0.0001626038
+line-beginning-position                                       17850       0.6461007940  3.619...e-05
+line-end-position                                             9090        0.6414938720  7.057...e-05
+outline-next-heading                                          4560        0.6103231649  0.0001338427
+s-matches?                                                    23680       0.4412484930  1.863...e-05
+re-search-backward                                            5150        0.4118764539  7.997...e-05
+outline-previous-heading                                      3890        0.3416822689  8.783...e-05
+buffer-substring-no-properties                                17230       0.3203336990  1.859...e-05
+string-match                                                  33130       0.3109712980  9.386...e-06
+org-at-heading-p                                              9520        0.2807140419  2.948...e-05
+s-trim                                                        2430        0.246366405   0.0001013853
+s-join                                                        4890        0.2311894929  4.727...e-05
+mapconcat                                                     4910        0.2146546080  4.371...e-05
+nth                                                           16450       0.2102976200  1.278...e-05
+#+end_example
+
+*** Without lexical-binding
+
+#+BEGIN_SRC elisp
+  (profile-rifle 10 (helm-org-rifle-get-candidates-in-buffer (find-file-noselect "~/org/inbox.org") "emacs helm"))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example txt
+helm-org-rifle-get-candidates-in-buffer                       10          14.533004150  1.4533004150
+re-search-forward                                             35360       4.0412570510  0.0001142889
+org-heading-components                                        3890        1.6954966100  0.0004358603
+goto-char                                                     16550       1.1257232430  6.801...e-05
+s-matches?                                                    23680       0.8714771140  3.680...e-05
+outline-next-heading                                          4560        0.8553618939  0.0001875793
+org-back-to-heading                                           4550        0.7855495260  0.0001726482
+outline-back-to-heading                                       4550        0.7707612399  0.0001693980
+line-beginning-position                                       17850       0.6764154699  3.789...e-05
+line-end-position                                             9090        0.6699040839  7.369...e-05
+helm-org-rifle-fontify-like-in-org-mode                       330         0.5583034520  0.0016918286
+re-search-backward                                            5150        0.4287451879  8.325...e-05
+outline-previous-heading                                      3890        0.3535976249  9.089...e-05
+string-match                                                  33130       0.3122579449  9.425...e-06
+s-join                                                        4890        0.2443076510  4.996...e-05
+mapcar                                                        4260        0.2328538069  5.466...e-05
+mapconcat                                                     4910        0.2284161130  4.652...e-05
+car                                                           49033       0.2206870189  4.500...e-06
+org-do-latex-and-related                                      330         0.2113657950  0.0006405024
+org-string-nw-p                                               330         0.2101716650  0.0006368838
+#+end_example
+
 * Plans
 
 ** TODO Search files instead of buffers

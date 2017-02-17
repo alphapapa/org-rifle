@@ -1,4 +1,4 @@
-;;; helm-org-rifle.el --- Rifle through your Org files
+;;; helm-org-rifle.el --- Rifle through your Org files  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
