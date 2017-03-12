@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
-;; Version: 1.3.0
+;; Version: 1.4.0-pre
 ;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
@@ -129,6 +129,10 @@
   "`:after-init-hook' for the Helm buffer.
 If you're thinking about changing this, you probably know what you're doing."
   :group 'helm-org-rifle :type 'hook)
+
+(defcustom helm-org-rifle-always-show-entry-contents-chars 50
+  "When non-zero, always show this many characters of entry text, even if none of it matches query."
+  :group 'helm-org-rifle :type 'integer)
 
 (defcustom helm-org-rifle-close-unopened-file-buffers t
   "Close buffers that were not already open.
@@ -488,12 +492,16 @@ This is how the sausage is made."
 
                 ;; Node matches all tokens
                 (setq matched-words-with-context
-                      (cl-loop for line in (mapcar 'car matching-lines-in-node)
-                               append (cl-loop with end
-                                               for match = (string-match context-re line end)
-                                               while match
-                                               do (setq end (match-end 0))
-                                               and collect (s-trim (match-string-no-properties 0 line)))))
+                      (or (cl-loop for line in (mapcar 'car matching-lines-in-node)
+                                   ;; Matching entry text found
+                                   append (cl-loop with end
+                                                   for match = (string-match context-re line end)
+                                                   while match
+                                                   do (setq end (match-end 0))
+                                                   and collect (s-trim (match-string-no-properties 0 line))))
+                          (when (> helm-org-rifle-always-show-entry-contents-chars 0)
+                            ;; No match in entry text; add desired entry text
+                            (list (s-collapse-whitespace (s-trim (s-truncate helm-org-rifle-always-show-entry-contents-chars (org-get-entry))))))))
 
                 ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
                 (push (list (s-join "\n" (list (if path

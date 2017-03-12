@@ -66,6 +66,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog
 
+** 1.4.0-pre
+
++ Add option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata.
+
 ** 1.3.0
 
 + Add =helm-org-rifle-agenda-files= command.
@@ -124,10 +128,6 @@ Along the lines of:
     (let ((helm-org-rifle-show-path (not helm-org-rifle-show-path))
       (helm-org-rifle))))
 #+END_SRC
-
-*** TODO Show some content when only heading matches
-
-When only the heading text matches the query, there is no content shown.  It would be nice to have an option to display a configurable amount of content in this case.
 
 *** TODO Make Helm highlight all matches
 
