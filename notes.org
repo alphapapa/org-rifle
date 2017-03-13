@@ -15,7 +15,7 @@
      - [[#support-new-helm-with-input-idle-delay][Support new Helm with input-idle-delay]]
  - [[#bugs][Bugs]]
      - [[#c-negation-only-error][[#C] Negation-only error]]
-     - [[#b-helm-org-rifle-tags-matching][[#B] helm-org-rifle tags matching]]
+     - [[#b-tag-order-matters][[#B] Tag order matters]]
  - [[#checklists][Checklists]]
      - [[#stable-release-130][Stable release 1.3.0]]
      - [[#stable-release-120][Stable release 1.2.0]]
@@ -847,9 +847,14 @@ Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-20451921
 
 If only a negation pattern is given, an error happens.  Not a big deal, doesn't interfere with anything, just change the pattern and it goes away.
 
-** TODO [#B] helm-org-rifle tags matching
+** DONE [#B] Tag order matters
+CLOSED: [2017-03-13 Mon 16:52]
+:LOGBOOK:
+-  State "DONE"       from "TODO"       [2017-03-13 Mon 16:52] \\
+   Fixed!
+:END:
 
-When matching multiple tags in a string, the order of the tags matters, e.g. =:website:Emacs= does not match entries that are tagged =:Emacs:website:= org =:website:something:Emacs:=.  Not a big deal, but would be nice to fix it.  I suppose it could be useful to have this behavior, because the tags can always be specified separately, but it might be unexpected for it to work this way.
+When matching multiple tags in a string, the order of the tags matters, e.g. =:website:Emacs= does not match entries that are tagged =:Emacs:website:= or =:website:something:Emacs:=.  Not a big deal, but would be nice to fix it.  I suppose it could be useful to have this behavior, because the tags can always be specified separately, but it might be unexpected for it to work this way.
 
 * Checklists
 :PROPERTIES:

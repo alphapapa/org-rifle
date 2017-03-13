@@ -407,19 +407,19 @@ POSITION is the position in BUFFER where the candidate heading
 begins.
 
 This is how the sausage is made."
-  (let* ((input (split-string input " " t))
+  (let* ((tokens (helm-org-rifle-split-tags-in-input-list (split-string input " " t)))
          (negations (-keep (lambda (token)
                              (when (string-match "^!" token)
-                               (setq input (remove token input))  ; Remove negations from input
+                               (setq tokens (remove token tokens))  ; Remove negations from tokens
                                (s-presence (regexp-quote (s-chop-prefix "!" token)))))
-                           input))
+                           tokens))
          (negations-re (when negations
                          (rx-to-string `(seq bow (or ,@negations) eow) t)))
-         (positive-re (mapconcat 'helm-org-rifle-prep-token input "\\|"))
-         (positive-re-list (--map (helm-org-rifle-prep-token it) input))
-         (context-re (s-wrap (s-join "\\|" input)
+         (positive-re (mapconcat 'helm-org-rifle-prep-token tokens "\\|"))
+         (positive-re-list (--map (helm-org-rifle-prep-token it) tokens))
+         (context-re (s-wrap (s-join "\\|" tokens)
                              (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)) t)))
-         ;; TODO: Turn off case folding if input contains mixed case
+         ;; TODO: Turn off case folding if tokens contains mixed case
          (case-fold-search t)
          results)
     (with-current-buffer buffer
@@ -585,6 +585,21 @@ created."
                                 string)
     ;; No links found; return original string
     string))
+
+(defun helm-org-rifle-split-tags-in-input-list (input)
+  "Split strings containing multiple Org tags in INPUT into separate tag strings.
+i.e. a string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and \":tag2:\"."
+  (cl-loop for string in input
+           for tags = (helm-org-rifle-split-tag-string string)
+           if tags collect tags into result
+           else collect string into result
+           finally return (-flatten result)))
+
+(defun helm-org-rifle-split-tag-string (s)
+  "Return list containing Org tag strings for input string S containing Org tags.
+i.e. for S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is returned."
+  (cl-loop for tag in (s-match-strings-all "\\(:[[:alnum:]_@#%%]+:\\)" s)
+           collect (cdr tag)))
 
 (defun helm-org-rifle-set-input-idle-delay ()
   "Set `helm-input-idle-delay' in Helm buffer."
