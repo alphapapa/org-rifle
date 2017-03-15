@@ -72,6 +72,7 @@
 ;;   "[#A]".
 ;; + Show headings with certain tags by searching for, e.g. ":tag1:tag2:".
 ;; + Exclude results with a "!", e.g. "pepperoni !anchovies".
+;; + Sort results by timestamp or buffer-order (the default) by calling commands with a universal prefix (C-u).
 ;; + Show entries in an indirect buffer by selecting that action from
 ;;   the Helm actions list, or by pressing <C-return>.
 ;; + The keymap for `helm-org-rifle-occur' results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
@@ -144,6 +145,14 @@ If you're thinking about changing this, you probably know what you're doing."
 (defcustom helm-org-rifle-always-show-entry-contents-chars 50
   "When non-zero, always show this many characters of entry text, even if none of it matches query."
   :group 'helm-org-rifle :type 'integer)
+
+(defcustom helm-org-rifle-before-command-hook '(helm-org-rifle-set-sort-mode)
+  "Hook that runs before each helm-org-rifle command."
+  :group 'helm-org-rifle :type 'hook)
+
+(defcustom helm-org-rifle-after-command-hook '(helm-org-rifle-reset-sort-mode)
+  "Hook that runs after each helm-org-rifle command."
+  :group 'helm-org-rifle :type 'hook)
 
 (defcustom helm-org-rifle-close-unopened-file-buffers t
   "Close buffers that were not already open.
@@ -227,6 +236,29 @@ because you can always revert your changes).)"
 \(What, didn't you read the last warning?  Oh, nevermind.)"
   :group 'helm-org-rifle :type 'regexp)
 
+(defcustom helm-org-rifle-sort-order nil
+  "Sort results in this order by default.
+The sort order may be changed temporarily by calling a command with a universal prefix (C-u).
+
+This is a list of functions which may be called to transform results, typically by sorting them."
+  ;; There seems to be a bug or at least inconsistency in the Emacs
+  ;; customize system.  Setting :tag in an item in a choice or radio
+  ;; list does not allow you to read the :tag from the choice as a
+  ;; plist key, because the key is the second value in the list,
+  ;; making the list not a plist at all.  Also, changing the order of
+  ;; the elements in a list item seems to break the customize dialog,
+  ;; e.g. causing the :tag description to not be shown at all.  It
+  ;; seems like Emacs handles these as pseudo-plists, with special
+  ;; code behind the scenes to handle plist keys that are not in
+  ;; actual plists.
+  :type '(radio (const :tag "Buffer order" nil)
+                (function-item :tag "Latest timestamp" helm-org-rifle-transformer-sort-by-latest-timestamp)
+                (function :tag "Custom function")))
+
+(defcustom helm-org-rifle-sort-order-persist nil
+  "When non-nil, keep the sort order setting when it is changed by calling a command with a universal prefix."
+  :group 'helm-org-rifle :type 'boolean)
+
 (defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
@@ -250,14 +282,42 @@ because you can always revert your changes).)"
 (defvar helm-org-rifle-occur-last-input nil
   "Last input given, used to avoid re-running search when input hasn't changed.")
 
+(defvar helm-org-rifle-transformer nil
+  "Function to transform results, usually for sorting.  Not intended to be user-set at this time.")
 
 ;;;; Functions
 
 ;;;;; Commands
 
 ;;;###autoload
-(defun helm-org-rifle ()
-  "This is my rifle.  There are many like it, but this one is mine.
+(cl-defmacro helm-org-rifle-define-command (name args docstring &key sources (let nil) (transformer nil))
+  "Define interactive helm-org-rifle command, which will run the appropriate hooks.
+Helm will be called with vars in LET bound."
+  `(cl-defun ,(intern (concat "helm-org-rifle" (when (s-present? name) (concat "-" name)))) ,args
+     ,docstring
+     (interactive)
+     (unwind-protect
+         (progn
+           (run-hooks 'helm-org-rifle-before-command-hook)
+           (let* ((helm-candidate-separator " ")
+                  ,(if transformer
+                       ;; I wish there were a cleaner way to do this,
+                       ;; because if this `if' evaluates to nil, `let' will
+                       ;; try to set `nil', which causes an error.  The
+                       ;; choices seem to be to a) evaluate to a list and
+                       ;; unsplice it (since unsplicing `nil' evaluates to
+                       ;; nothing), or b) return an ignored symbol when not
+                       ;; true.  Option B is less ugly.
+                       `(helm-org-rifle-transformer ,transformer)
+                     'ignore)
+                  ,@let)
+             (helm :sources ,sources)))
+       (run-hooks 'helm-org-rifle-after-command-hook))))
+
+;;;###autoload
+(helm-org-rifle-define-command
+ "" ()
+ "This is my rifle.  There are many like it, but this one is mine.
 
 My rifle is my best friend.  It is my life.  I must master it as I
 must master my life.
@@ -283,48 +343,60 @@ saviors of my life.
 
 So be it, until victory is ours and there is no enemy, but
 peace!"
-  (interactive)
-  (let ((helm-candidate-separator " "))
-    (helm :sources (helm-org-rifle-get-sources-for-open-buffers))))
+ :sources (helm-org-rifle-get-sources-for-open-buffers))
+
+;;;###autoload
+(helm-org-rifle-define-command
+ "current-buffer" ()
+ "Rifle through the current buffer."
+ :sources (helm-org-rifle-get-source-for-buffer (current-buffer)))
+
+;;;###autoload
+(helm-org-rifle-define-command
+ "files" (&optional files)
+ "Rifle through FILES, where FILES is a list of paths to Org files.
+If FILES is nil, prompt with `helm-read-file-name'.  All FILES
+are searched; they are not filtered with
+`helm-org-rifle-directories-filename-regexp'."
+ :sources (--map (helm-org-rifle-get-source-for-file it) files)
+ :let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
+       (helm-candidate-separator " ")
+       (helm-cleanup-hook (lambda ()
+                            ;; Close new buffers if enabled
+                            (when helm-org-rifle-close-unopened-file-buffers
+                              (if (= 0 helm-exit-status)
+                                  ;; Candidate selected; close other new buffers
+                                  (let ((candidate-source (helm-attr 'name (helm-get-current-source))))
+                                    (dolist (source (helm-get-sources))
+                                      (unless (or (equal (helm-attr 'name source)
+                                                         candidate-source)
+                                                  (not (helm-attr 'new-buffer source)))
+                                        (kill-buffer (helm-attr 'buffer source)))))
+                                ;; No candidates; close all new buffers
+                                (dolist (source (helm-get-sources))
+                                  (when (helm-attr 'new-buffer source)
+                                    (kill-buffer (helm-attr 'buffer source))))))))))
+
+;;;###autoload
+(helm-org-rifle-define-command
+ "sort-by-latest-timestamp" ()
+ "Rifle through open buffers, sorted by latest timestamp."
+ :transformer 'helm-org-rifle-transformer-sort-by-latest-timestamp
+ :sources (helm-org-rifle-get-sources-for-open-buffers))
+
+;;;###autoload
+(helm-org-rifle-define-command
+ "current-buffer-sort-by-latest-timestamp" ()
+ "Rifle through the current buffer, sorted by latest timestamp."
+ :transformer 'helm-org-rifle-transformer-sort-by-latest-timestamp
+ :sources (helm-org-rifle-get-source-for-buffer (current-buffer)))
 
 ;;;###autoload
 (defun helm-org-rifle-agenda-files ()
   "Rifle through Org agenda files."
+  ;; This does not need to be defined with helm-org-rifle-define-command because it calls helm-org-rifle-files which is.
   (interactive)
   (helm-org-rifle-files org-agenda-files))
-
-;;;###autoload
-(defun helm-org-rifle-current-buffer ()
-  "Rifle through the current buffer."
-  (interactive)
-  (let ((helm-candidate-separator " "))
-    (helm :sources (helm-org-rifle-get-source-for-buffer (current-buffer)))))
-
-;;;###autoload
-(defun helm-org-rifle-files (&optional files)
-  "Rifle through FILES, where FILES is a list of paths to Org files.
-If FILES is nil, prompt with `helm-read-file-name'.  All FILES
-are searched; they are not filtered with
-`helm-org-rifle-directories-filename-regexp'."
-  (interactive)
-  (let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
-        (helm-candidate-separator " ")
-        (helm-cleanup-hook (lambda ()
-                             ;; Close new buffers if enabled
-                             (when helm-org-rifle-close-unopened-file-buffers
-                               (if (= 0 helm-exit-status)
-                                   ;; Candidate selected; close other new buffers
-                                   (let ((candidate-source (helm-attr 'name (helm-get-current-source))))
-                                     (dolist (source (helm-get-sources))
-                                       (unless (or (equal (helm-attr 'name source)
-                                                          candidate-source)
-                                                   (not (helm-attr 'new-buffer source)))
-                                         (kill-buffer (helm-attr 'buffer source)))))
-                                 ;; No candidates; close all new buffers
-                                 (dolist (source (helm-get-sources))
-                                   (when (helm-attr 'new-buffer source)
-                                     (kill-buffer (helm-attr 'buffer source)))))))))
-    (helm :sources (--map (helm-org-rifle-get-source-for-file it) files))))
 
 ;;;###autoload
 (defun helm-org-rifle-directories (&optional directories toggle-recursion)
@@ -333,6 +405,7 @@ If DIRECTORIES is nil, prompt with `helm-read-file-name'.  With
 prefix or TOGGLE-RECURSION non-nil, toggle recursion from the
 default.  Files in DIRECTORIES are filtered using
 `helm-org-rifle-directories-filename-regexp'."
+  ;; This does not need to be defined with helm-org-rifle-define-command because it calls helm-org-rifle-files which is.
   (interactive)
   (let* ((recursive (if (or toggle-recursion current-prefix-arg)
                         (not helm-org-rifle-directories-recursive)
@@ -364,38 +437,42 @@ default.  Files in DIRECTORIES are filtered using
        ,args
      ,docstring
      (interactive)
-     (let (directories-collected files-collected buffers-collected)
-       ;; FIXME: If anyone's reading this and can help me clean up this macro a bit, help would be appreciated.
-       ,preface  ; Maybe not necessary
-       ,(when directories
-          ;; Is there a nicer way to do this?
-          `(setq directories-collected (append directories-collected ,directories)))
-       (when directories-collected
-         (let ((recursive (if current-prefix-arg
-                              (not helm-org-rifle-directories-recursive)
-                            helm-org-rifle-directories-recursive)))
-           (setq files-collected (append files-collected
-                                         (-flatten
-                                          (--map (f-files it
-                                                          (lambda (file)
-                                                            (s-matches? helm-org-rifle-directories-filename-regexp
-                                                                        (f-filename file)))
-                                                          recursive)
-                                                 directories-collected))))))
-       ,(when files
-          ;; Is there a nicer way to do this?
-          `(setq files-collected (append files-collected ,files)))
-       (when files-collected
-         (setq buffers-collected (append (cl-loop for file in files-collected
-                                                  collect (-if-let (buffer (org-find-base-buffer-visiting file))
-                                                              buffer
-                                                            (find-file-noselect file)))
-                                         buffers-collected)))
-       ,(when buffers
-          ;; Is there a nicer way to do this?
-          `(setq buffers-collected (append buffers-collected ,buffers)))
-       (let ((helm-org-rifle-show-full-contents t))
-         (helm-org-rifle-occur-begin buffers-collected)))))
+     (unwind-protect
+         (progn
+           (run-hooks 'helm-org-rifle-before-command-hook)
+           (let (directories-collected files-collected buffers-collected)
+             ;; FIXME: If anyone's reading this and can help me clean up this macro a bit, help would be appreciated.
+             ,preface  ; Maybe not necessary
+             ,(when directories
+                ;; Is there a nicer way to do this?
+                `(setq directories-collected (append directories-collected ,directories)))
+             (when directories-collected
+               (let ((recursive (if current-prefix-arg
+                                    (not helm-org-rifle-directories-recursive)
+                                  helm-org-rifle-directories-recursive)))
+                 (setq files-collected (append files-collected
+                                               (-flatten
+                                                (--map (f-files it
+                                                                (lambda (file)
+                                                                  (s-matches? helm-org-rifle-directories-filename-regexp
+                                                                              (f-filename file)))
+                                                                recursive)
+                                                       directories-collected))))))
+             ,(when files
+                ;; Is there a nicer way to do this?
+                `(setq files-collected (append files-collected ,files)))
+             (when files-collected
+               (setq buffers-collected (append (cl-loop for file in files-collected
+                                                        collect (-if-let (buffer (org-find-base-buffer-visiting file))
+                                                                    buffer
+                                                                  (find-file-noselect file)))
+                                               buffers-collected)))
+             ,(when buffers
+                ;; Is there a nicer way to do this?
+                `(setq buffers-collected (append buffers-collected ,buffers)))
+             (let ((helm-org-rifle-show-full-contents t))
+               (helm-org-rifle-occur-begin buffers-collected))))
+       (run-hooks 'helm-org-rifle-after-command-hook))))
 
 ;;;###autoload
 (helm-org-rifle-define-occur-command
@@ -449,7 +526,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :candidates (lambda ()
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
-
+                  :candidate-transformer helm-org-rifle-transformer
                   :match 'identity
                   :multiline t
                   :volatile t
@@ -718,17 +795,28 @@ This is how the sausage is made."
     (setq helm-org-rifle-occur-last-input input)
     (let ((inhibit-read-only t)
           (results-by-buffer (cl-loop for source-buffer in source-buffers
-                                      collect (helm-org-rifle-occur-get-results-in-buffer source-buffer input))))
+                                      collect (list :buffer source-buffer
+                                                    :results (helm-org-rifle-occur-get-results-in-buffer source-buffer input)))))
+      (when (eq helm-org-rifle-transformer 'helm-org-rifle-transformer-sort-by-latest-timestamp)
+        ;; FIXME: Ugly hack.  Need to refactor a consistent way to set sorting and transformers.
+        (setq results-by-buffer (cl-loop for results-list in results-by-buffer
+                                         collect (-let (((plist &as :buffer buffer :results results) results-list))
+                                                   (list :buffer buffer
+                                                         :results (with-current-buffer buffer
+                                                                    (->> results
+                                                                         (helm-org-rifle-add-timestamps-to-nodes)
+                                                                         (helm-org-rifle-sort-nodes-by-latest-timestamp))))))))
       (with-current-buffer results-buffer
         (erase-buffer)
-        (cl-loop for buffer-results in results-by-buffer
-                 when buffer-results
-                 do (let ((buffer-name (buffer-name (get-text-property 0 :buffer (car buffer-results)))))
-                      (helm-org-rifle-insert-source-header buffer-name)
-                      (cl-loop for entry in buffer-results
-                               do (progn
-                                    (insert entry)
-                                    (insert "\n\n")))))
+        (cl-loop for results-list in results-by-buffer
+                 do (-let (((&plist :buffer buffer :results results) results-list))
+                      (when results
+                        (helm-org-rifle-insert-source-header (buffer-name buffer))
+                        (cl-loop for entry in results
+                                 do (-let (((plist &as :text text . rest) entry))
+                                      (add-text-properties 0 (length text) rest text)
+                                      (insert text)
+                                      (insert "\n\n"))))))
         (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
 
 (defun helm-org-rifle-occur-highlight-matches-in-buffer (buffer input)
@@ -745,8 +833,7 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
     (unless (eq major-mode 'org-mode)
       (error "Buffer %s is not an Org buffer." buffer)))
   (cl-loop for (text pos) in (helm-org-rifle-get-candidates-in-buffer buffer input)
-           do (add-text-properties 0 (length text) (list :buffer buffer :node-beg pos) text)
-           collect text))
+           collect (list :text text :buffer buffer :node-beg pos)))
 
 (defun helm-org-rifle-occur-goto-entry ()
   "Go to node in source buffer that point in occur buffer is in."
@@ -759,6 +846,62 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
     (goto-char (+ node-beg offset))
     (org-reveal)
     (org-cycle)))
+
+;;;;; Timestamp functions
+
+(defun helm-org-rifle-timestamps-in-node (&optional node-start node-end)
+  "Return list of Org timestamp objects in node that begins at NODE-START or current point.
+Objects are those provided by `org-element-timestamp-parser'."
+  (save-excursion
+    (goto-char (or node-start (org-entry-beginning-position)))
+    (let ((node-end (or node-end (org-entry-end-position))))
+      (cl-loop for ts-start = (cdr (org-element-timestamp-successor))
+               while (and ts-start (< ts-start node-end))
+               collect (progn
+                         (goto-char ts-start)
+                         (org-element-timestamp-parser))
+               into result
+               do (goto-char (plist-get (cadar (last result)) :end))
+               finally return result))))
+
+(defun helm-org-rifle-add-timestamps-to-nodes (nodes)
+  "Add `:timestamps' and `:timestamp-floats' to NODES.
+NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to-list-of-nodes'."
+  (->> nodes
+       ;; Add timestamp objects
+       (--map (plist-put it :timestamps (helm-org-rifle-timestamps-in-node (plist-get it :node-beg))))
+       ;; Add float-converted timestamps
+       (-map (lambda (node)
+               (let ((timestamps (cdar (plist-get node :timestamps))))
+                 (plist-put node
+                            :timestamp-floats (if timestamps
+                                                  (--map (org-time-string-to-seconds (plist-get it :raw-value))
+                                                         timestamps)
+                                                (list 0))))))))
+
+(defun helm-org-rifle-sort-nodes-by-latest-timestamp (nodes)
+  "Sort list of node plists by latest timestamp in each node."
+  (sort nodes
+        (lambda (a b)
+          (> (seq-max (plist-get a :timestamp-floats))
+             (seq-max (plist-get b :timestamp-floats))))))
+
+(defun helm-org-rifle-transformer-sort-by-latest-timestamp (candidates)
+  "Sort CANDIDATES by latest timestamp in each candidate in SOURCE."
+  (with-current-buffer (helm-attr 'buffer) ; This is necessary or it will try to use the "*helm*" buffer instead of the source.
+    ;; FIXME: This caused a lot of hair-pulling when adding the occur
+    ;; code, because the occur code doesn't use this transformer and
+    ;; so wasn't running the timestamp-getting function in the right
+    ;; buffer--it was running it in the minibuffer.  It would be good
+    ;; to make them use a common format so they could always use the
+    ;; transformer, but that wouldn't be as good for performance,
+    ;; because then the transformer would ALWAYS have to run.  Maybe
+    ;; it's worth it...
+    (->> candidates
+         (helm-org-rifle-transform-candidates-to-list-of-nodes)
+         (helm-org-rifle-add-timestamps-to-nodes)
+         (helm-org-rifle-sort-nodes-by-latest-timestamp)
+         (helm-org-rifle-transform-list-of-nodes-to-candidates))))
 
 ;;;;; Support functions
 
@@ -860,6 +1003,48 @@ i.e. for S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is returned."
   "Set `helm-input-idle-delay' in Helm buffer."
   (with-helm-buffer
     (setq-local helm-input-idle-delay helm-org-rifle-input-idle-delay)))
+
+(defun helm-org-rifle-set-sort-mode ()
+  "Set sorting mode by setting `helm-org-rifle-sort-order' if prefix given."
+  (cond ((equal '(4) current-prefix-arg)
+         ;; C-u; set sorting mode
+         (setq helm-org-rifle-sort-order (helm-org-rifle-prompt-for-sort-mode))))
+  (setq helm-org-rifle-transformer helm-org-rifle-sort-order))
+
+(defun helm-org-rifle-reset-sort-mode ()
+  "When `helm-org-rifle-sort-order-persist' is nil, reset sort order to the saved value."
+  ;; FIXME: This is inelegant, to say the least, but using hooks to do
+  ;; this means that a command can't simply be called inside a `let',
+  ;; so the value has to be set and then reset.  A dispatcher function
+  ;; which calls all commands might be a better way to do this.
+  (unless helm-org-rifle-sort-order-persist
+    (custom-reevaluate-setting 'helm-org-rifle-sort-order)))
+
+(defun helm-org-rifle-prompt-for-sort-mode ()
+  "Ask the user which sorting method to use.
+Return sorting function corresponding to chosen description string."
+  ;; This mess is required because of what seems like a bug or
+  ;; inconsistency in the Emacs customize system.  See comments in the
+  ;; defcustom.
+  (let* ((choices (--remove (stringp (-last-item it)) ; Filter empty "Custom function"
+                            (cdr (get 'helm-org-rifle-sort-order 'custom-type))))
+         (choice-tag (helm-comp-read "Sort by: " (--map (third it)
+                                                        choices))))
+    (cl-loop for choice in choices
+             when (string= (third choice) choice-tag)
+             return (-last-item choice))))
+
+(defun helm-org-rifle-transform-candidates-to-list-of-nodes (candidates)
+  "Transform Helm-style CANDIDATES list to list of plists."
+  (--map (list :node-beg (cadr it)
+               :text (car it))
+         candidates))
+
+(defun helm-org-rifle-transform-list-of-nodes-to-candidates (nodes)
+  "Transform list of node plists to Helm-style candidates."
+  (--map (list (plist-get it :text)
+               (plist-get it :node-beg))
+         nodes))
 
 (provide 'helm-org-rifle)
 
