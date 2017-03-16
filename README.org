@@ -134,9 +134,11 @@ Along the lines of:
 
 Helm only seems to highlight the first match in each candidate.
 
-*** MAYBE Sorting by timestamps
+*** UNDERWAY Sorting by timestamps
 
 It would be nifty to optionally sort result nodes by timestamps appearing in them.  It might not be too slow...
+
+[2017-03-15 Wed 20:30] A [[https://github.com/alphapapa/helm-org-rifle/issues/11][branch]] has been committed with support for this feature.  Testing would be appreciated.  :)  If no problems are found, it will be released in a basic form soon.
 
 *** MAYBE Timestamp searching
 
