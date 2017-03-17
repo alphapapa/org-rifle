@@ -119,6 +119,10 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
+*** TODO Persistent results buffer like multi-occur
+
+Should be fairly easy using text properties to store the node info, making the buffer read-only, and using a keymap.  Would be especially useful for displaying entire entries instead of just context.
+
 *** TODO Use prefix arg to toggle full-path mode
 
 Along the lines of:
