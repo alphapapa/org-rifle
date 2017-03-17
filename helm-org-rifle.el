@@ -212,6 +212,10 @@ because you can always revert your changes).)"
 \(What, didn't you read the last warning?  Oh, nevermind.)"
   :group 'helm-org-rifle :type 'regexp)
 
+(defvar helm-org-rifle-show-full-entry nil
+  "Show all entry text instead of just context strings.  Not
+  intended to be set manually at this time.")
+
 ;;;; Functions
 
 ;;;;; Commands
@@ -491,48 +495,52 @@ This is how the sausage is made."
                                              thereis (s-matches? re target)))
 
                 ;; Node matches all tokens
-                (setq matched-words-with-context
-                      (or (cl-loop for line in (mapcar 'car matching-lines-in-node)
-                                   ;; Matching entry text found
-                                   append (cl-loop with end
-                                                   for match = (string-match context-re line end)
-                                                   while match
-                                                   do (setq end (match-end 0))
-                                                   and collect (s-trim (match-string-no-properties 0 line))))
-                          (when (> helm-org-rifle-always-show-entry-contents-chars 0)
-                            ;; No match in entry text; add desired entry text
-                            (list (s-collapse-whitespace (s-trim (s-truncate helm-org-rifle-always-show-entry-contents-chars (org-get-entry))))))))
+                (unless helm-org-rifle-show-full-entry
+                  (setq matched-words-with-context
+                        (or (cl-loop for line in (mapcar 'car matching-lines-in-node)
+                                     ;; Matching entry text found
+                                     append (cl-loop with end
+                                                     for match = (string-match context-re line end)
+                                                     while match
+                                                     do (setq end (match-end 0))
+                                                     and collect (s-trim (match-string-no-properties 0 line))))
+                            (when (> helm-org-rifle-always-show-entry-contents-chars 0)
+                              ;; No match in entry text; add desired entry text
+                              (list (s-collapse-whitespace (s-trim (s-truncate helm-org-rifle-always-show-entry-contents-chars (org-get-entry)))))))))
 
-                ;; Return list in format: (string-joining-heading-and-lines-by-newlines node-beg)
-                (push (list (s-join "\n" (list (if path
-                                                   (if helm-org-rifle-fontify-headings
-                                                       (concat (org-format-outline-path
-                                                                ;; Replace links in path elements with plain text, otherwise
-                                                                ;; they will be truncated by `org-format-outline-path' and only
-                                                                ;; show part of the URL
-                                                                (-map 'helm-org-rifle-replace-links-in-string path))
-                                                               "/"
-                                                               (helm-org-rifle-fontify-like-in-org-mode
-                                                                (s-join " " (list (s-repeat (nth 0 components) "*")
-                                                                                  heading
-                                                                                  (concat tags " ")))))
-                                                     ;; Not fontifying
-                                                     (s-join "/" (append path
-                                                                         (list heading)
-                                                                         tags)))
-                                                 ;; No path or not showing path
-                                                 (if helm-org-rifle-fontify-headings
-                                                     (helm-org-rifle-fontify-like-in-org-mode
-                                                      (s-join " " (list (s-repeat (nth 0 components) "*")
-                                                                        heading
-                                                                        (concat tags " "))))
-                                                   ;; Not fontifying
-                                                   (s-join " " (list (s-repeat (nth 0 components) "*")
-                                                                     heading
-                                                                     tags))))
-                                               (s-join helm-org-rifle-ellipsis-string matched-words-with-context)))
-                            node-beg)
-                      results))
+                ;; Return list in format: (text-for-display node-beg)
+                (let* ((heading (if path
+                                    (if helm-org-rifle-fontify-headings
+                                        (concat (org-format-outline-path
+                                                 ;; Replace links in path elements with plain text, otherwise
+                                                 ;; they will be truncated by `org-format-outline-path' and only
+                                                 ;; show part of the URL
+                                                 (-map 'helm-org-rifle-replace-links-in-string path))
+                                                "/"
+                                                (helm-org-rifle-fontify-like-in-org-mode
+                                                 (s-join " " (list (s-repeat (nth 0 components) "*")
+                                                                   heading
+                                                                   (concat tags " ")))))
+                                      ;; Not fontifying
+                                      (s-join "/" (append path
+                                                          (list heading)
+                                                          tags)))
+                                  ;; No path or not showing path
+                                  (if helm-org-rifle-fontify-headings
+                                      (helm-org-rifle-fontify-like-in-org-mode
+                                       (s-join " " (list (s-repeat (nth 0 components) "*")
+                                                         heading
+                                                         (concat tags " "))))
+                                    ;; Not fontifying
+                                    (s-join " " (list (s-repeat (nth 0 components) "*")
+                                                      heading
+                                                      tags)))))
+                       (entry (if helm-org-rifle-show-full-entry
+                                  (s-join "\n" (list heading (org-get-entry)))
+                                ;; Show context strings
+                                (s-join "\n" (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
+                  (push (list entry node-beg)
+                        results)))
               ;; Go to end of node
               (goto-char node-end))))))
     ;; Return results in the order they appear in the org file
