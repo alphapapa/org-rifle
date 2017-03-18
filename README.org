@@ -70,7 +70,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Show headings with certain tags by searching for, e.g. =:tag1:tag2:=.
 +  Exclude results with a =!=, e.g. =pepperoni !anchovies=.
 +  Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
-+  The keymap for =helm-org-rifle-occur= results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
++  The keymap for =helm-org-rifle-occur= results buffers imitates the =org-speed= keys, making it quicker to navigate. You can also collapse and expand headings and drawers with =TAB= and =S-TAB=, just like in regular Org buffers.  Results buffers are marked read-only so you cannot modify them by accidental keypresses.
 +  You can customize the =helm-org-rifle= group if you like.
 
 * Changelog
