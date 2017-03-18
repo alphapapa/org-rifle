@@ -130,6 +130,10 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
+*** TODO [#B] Phrase matching
+
+Don't know how I overlooked this for this long.  Shouldn't be too hard to implement searching for phrases in quotes.  Should probably match multiple spaces (but probably not newlines or tabs) between words; wouldn't want an accidental double-spacebar press in the searched file to prevent a match.
+
 *** TODO Use prefix arg to toggle full-path mode
 
 Along the lines of:
