@@ -709,8 +709,12 @@ This is how the sausage is made."
 
 (defun helm-org-rifle-occur-process-input (input source-buffers results-buffer)
   "Find results in SOURCE-BUFFERS for INPUT and insert into RESULTS-BUFFER."
-  (when (and (s-present? input)
-             (not (string= input helm-org-rifle-occur-last-input)))
+  (when (and (not (s-blank-str? input))
+             (not (string= input helm-org-rifle-occur-last-input))
+             ;; Very short input strings can return so many results
+             ;; that Emacs hangs for a long time.  Let's try a minimum
+             ;; size of 3.
+             (>= (length input) 3))
     (setq helm-org-rifle-occur-last-input input)
     (let ((inhibit-read-only t)
           (results-by-buffer (cl-loop for source-buffer in source-buffers
