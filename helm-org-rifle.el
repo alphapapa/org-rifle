@@ -744,10 +744,9 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (with-current-buffer buffer
     (unless (eq major-mode 'org-mode)
       (error "Buffer %s is not an Org buffer." buffer)))
-  (cl-loop for entry in (helm-org-rifle-get-candidates-in-buffer buffer input)
-           collect (-let (((text pos) entry))
-                     (add-text-properties 0 (length text) (list :buffer buffer :node-beg pos) text)
-                     text)))
+  (cl-loop for (text pos) in (helm-org-rifle-get-candidates-in-buffer buffer input)
+           do (add-text-properties 0 (length text) (list :buffer buffer :node-beg pos) text)
+           collect text))
 
 (defun helm-org-rifle-occur-goto-entry ()
   "Go to node in source buffer that point in occur buffer is in."
