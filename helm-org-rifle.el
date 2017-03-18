@@ -15,13 +15,12 @@
 ;; What does my rifle do?  It searches rapidly through my Org files,
 ;; quickly bringing me the information I need to defeat the enemy.
 
-;; This package is a continuation of the fantastic
-;; org-search-goto/org-search-goto-ml packages, now with Helm
-;; support. It searches both headings and contents of entries in Org
-;; buffers, and it displays entries that match all search terms,
-;; whether the terms appear in the heading, the contents, or both.
-;; Matching portions of entries' contents are displayed with
-;; surrounding context to make it easy to acquire your target.
+;; This package is inspired by org-search-goto/org-search-goto-ml.  It
+;; searches both headings and contents of entries in Org buffers, and
+;; it displays entries that match all search terms, whether the terms
+;; appear in the heading, the contents, or both.  Matching portions of
+;; entries' contents are displayed with surrounding context to make it
+;; easy to acquire your target.
 
 ;; Entries are fontified by default to match the appearance of an Org
 ;; buffer, and optionally the entire path can be displayed for each
@@ -47,31 +46,40 @@
 ;; displayed, grouped by buffer.  Hit "RET" to show the selected
 ;; entry, or <C-return> to show it in an indirect buffer.
 
-;; Commands:
+;; Helm commands:
 ;; + `helm-org-rifle': Show results from all open Org buffers
 ;; + `helm-org-rifle-agenda-files': Show results from Org agenda files
 ;; + `helm-org-rifle-current-buffer': Show results from current buffer
 ;; + `helm-org-rifle-directories': Show results from selected directories; with prefix, recursively
 ;; + `helm-org-rifle-files': Show results from selected files
-;; + `helm-org-rifle-org-directory': Show results from Org files in `org-directory'
+;; + `helm-org-rifle-org-directory': Show results from Org files in =org-directory=
+
+;; Occur commands:
+;; + `helm-org-rifle-occur': Show results from all open Org buffers in occur-like persistent buffer
+;; + `helm-org-rifle-occur-agenda-files': Show results from Org agenda files in occur-like persistent buffer
+;; + `helm-org-rifle-occur-current-buffer': Show results from current buffer in occur-like persistent buffer
+;; + `helm-org-rifle-occur-directories': Show results from selected directories in occur-like persistent buffer; with prefix, recursively
+;; + `helm-org-rifle-occur-files': Show results from selected files in occur-like persistent buffer
+;; + `helm-org-rifle-occur-org-directory': Show results from Org files in =org-directory= in occur-like persistent buffer
 
 ;;; Tips
 
 ;; + Show results from certain buffers by typing the name of the
 ;;   buffer (usually the filename).
 ;; + Show headings with certain todo keywords by typing the keyword,
-;;   e.g. =TODO= or =DONE=.
-;; + Show headings with certain priorities by typing, e.g. =#A= or
-;;   =[#A]=.
-;; + Show headings with certain tags by searching for, e.g. =:tag1:=.
-;; + Exclude results with a =!=, e.g. =pepperoni !anchovies=.
+;;   e.g. "TODO" or "DONE".
+;; + Show headings with certain priorities by typing, e.g. "#A" or
+;;   "[#A]".
+;; + Show headings with certain tags by searching for, e.g. ":tag1:tag2:".
+;; + Exclude results with a "!", e.g. "pepperoni !anchovies".
 ;; + Show entries in an indirect buffer by selecting that action from
-;;   the Helm actions list, or by pressing =<C-return>=.
-;; + You can customize the =helm-org-rifle= group if you like.
+;;   the Helm actions list, or by pressing <C-return>.
+;; + The keymap for `helm-org-rifle-occur' results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
+;; + You can customize the `helm-org-rifle' group if you like.
 
 ;;; Credits:
 
-;; This package is based on org-search-goto (specifically,
+;; This package is inspired by org-search-goto (specifically,
 ;; org-search-goto-ml).  Its unofficial-official home is on
 ;; EmacsWiki[1] but I've mirrored it on GitHub[2].  It's a really
 ;; great package, and the only thing that could make it better is to
@@ -110,6 +118,9 @@
 
 (defconst helm-org-rifle-fontify-buffer-name " *helm-org-rifle-fontify*"
   "The name of the invisible buffer used to fontify `org-mode' strings.")
+
+(defconst helm-org-rifle-occur-results-buffer-name "*helm-org-rifle-occur*"
+  "The name of the results buffer for `helm-org-rifle-occur' commands.")
 
 (defconst helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
   "Regexp used to match Org tag strings.  From org.el.")
@@ -191,6 +202,10 @@ flickering (longer delay)."
                 (function :tag "Show entries in indirect buffers." helm-org-rifle-show-entry-in-indirect-buffer)
                 (function :tag "Custom function")))
 
+(defcustom helm-org-rifle-show-full-contents nil
+  "Show all of each result's contents instead of just context around each matching word."
+  :group 'helm-org-rifle :type 'boolean)
+
 (defcustom helm-org-rifle-show-todo-keywords t
   "Show and match against Org todo keywords."
   :group 'helm-org-rifle :type 'boolean)
@@ -212,9 +227,29 @@ because you can always revert your changes).)"
 \(What, didn't you read the last warning?  Oh, nevermind.)"
   :group 'helm-org-rifle :type 'regexp)
 
-(defvar helm-org-rifle-show-full-entry nil
-  "Show all entry text instead of just context strings.  Not
-  intended to be set manually at this time.")
+(defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
+                                   (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
+                                   (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
+                                   (define-key map (kbd "b") (lambda () (org-speed-move-safe 'org-backward-heading-same-level)))
+                                   (define-key map (kbd "f") (lambda () (org-speed-move-safe 'org-forward-heading-same-level)))
+                                   (define-key map (kbd "p") (lambda () (org-speed-move-safe 'outline-previous-visible-heading)))
+                                   (define-key map (kbd "n") (lambda () (org-speed-move-safe 'outline-next-visible-heading)))
+                                   (define-key map (kbd "u") (lambda () (org-speed-move-safe 'outline-up-heading)))
+                                   (define-key map (kbd "o") (lambda () (org-speed-move-safe 'org-open-at-point)))
+                                   (define-key map (kbd "c") (lambda () (org-speed-move-safe 'org-cycle)))
+                                   (define-key map (kbd "C") (lambda () (org-speed-move-safe 'org-shifttab)))
+                                   (define-key map (kbd "q") 'quit-window)
+                                   map)
+  "Keymap for helm-org-rifle-occur results buffers.  Imitates org-speed keys.")
+
+(defvar helm-org-rifle-occur-minibuffer-map (let ((map (copy-keymap minibuffer-local-map)))
+                                              (define-key map (kbd "C-g") 'helm-org-rifle-occur-cleanup-buffer)
+                                              map)
+  "Keymap for helm-org-rifle-occur minibuffers.")
+
+(defvar helm-org-rifle-occur-last-input nil
+  "Last input given, used to avoid re-running search when input hasn't changed.")
+
 
 ;;;; Functions
 
@@ -318,6 +353,92 @@ default.  Files in DIRECTORIES are filtered using
   "Rifle through Org files in `org-directory'."
   (interactive)
   (helm-org-rifle-directories (list org-directory)))
+
+;;;;;; Occur commands
+
+;;;###autoload
+(cl-defmacro helm-org-rifle-define-occur-command (name args docstring &key buffers files directories preface)
+  "Define `helm-org-rifle-occur' command to search BUFFERS."
+  `(defun ,(intern (concat "helm-org-rifle-occur"
+                           (when name (concat "-" name))))
+       ,args
+     ,docstring
+     (interactive)
+     (let (directories-collected files-collected buffers-collected)
+       ;; FIXME: If anyone's reading this and can help me clean up this macro a bit, help would be appreciated.
+       ,preface  ; Maybe not necessary
+       ,(when directories
+          ;; Is there a nicer way to do this?
+          `(setq directories-collected (append directories-collected ,directories)))
+       (when directories-collected
+         (let ((recursive (if current-prefix-arg
+                              (not helm-org-rifle-directories-recursive)
+                            helm-org-rifle-directories-recursive)))
+           (setq files-collected (append files-collected
+                                         (-flatten
+                                          (--map (f-files it
+                                                          (lambda (file)
+                                                            (s-matches? helm-org-rifle-directories-filename-regexp
+                                                                        (f-filename file)))
+                                                          recursive)
+                                                 directories-collected))))))
+       ,(when files
+          ;; Is there a nicer way to do this?
+          `(setq files-collected (append files-collected ,files)))
+       (when files-collected
+         (setq buffers-collected (append (cl-loop for file in files-collected
+                                                  collect (-if-let (buffer (org-find-base-buffer-visiting file))
+                                                              buffer
+                                                            (find-file-noselect file)))
+                                         buffers-collected)))
+       ,(when buffers
+          ;; Is there a nicer way to do this?
+          `(setq buffers-collected (append buffers-collected ,buffers)))
+       (let ((helm-org-rifle-show-full-contents t))
+         (helm-org-rifle-occur-begin buffers-collected)))))
+
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ nil ()
+ "Search all Org buffers, showing results in an occur-like, persistent buffer."
+ :buffers (--remove (string= helm-org-rifle-occur-results-buffer-name (buffer-name it))
+                    (-select 'helm-org-rifle-buffer-visible-p
+                             (org-buffer-list nil t))))
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ "current-buffer" ()
+ "Search current buffer, showing results in an occur-like, persistent buffer."
+ :buffers (list (current-buffer)))
+
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ "directories" (&optional directories)
+ "Search files in DIRECTORIES, showing results in an occur-like, persistent buffer.
+Files are opened if necessary, and the resulting buffers are left open."
+ :directories (or directories
+                  (helm-read-file-name "Directories: " :marked-candidates t)))
+
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ "files" (&optional files)
+ "Search FILES, showing results in an occur-like, persistent buffer.
+Files are opened if necessary, and the resulting buffers are left open."
+ :files (or files
+            (helm-read-file-name "Files: " :marked-candidates t)))
+
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ "agenda-files" ()
+ "Search Org agenda files, showing results in an occur-like, persistent buffer.
+Files are opened if necessary, and the resulting buffers are left open."
+ :files org-agenda-files)
+
+;;;###autoload
+(helm-org-rifle-define-occur-command
+ "org-directory" ()
+ "Search files in `org-directory', showing results in an occur-like, persistent buffer.
+Files are opened if necessary, and the resulting buffers are left open."
+ :directories (list org-directory))
 
 ;;;;; Sources
 
@@ -495,7 +616,7 @@ This is how the sausage is made."
                                              thereis (s-matches? re target)))
 
                 ;; Node matches all tokens
-                (unless helm-org-rifle-show-full-entry
+                (unless helm-org-rifle-show-full-contents
                   (setq matched-words-with-context
                         (or (cl-loop for line in (mapcar 'car matching-lines-in-node)
                                      ;; Matching entry text found
@@ -535,7 +656,7 @@ This is how the sausage is made."
                                     (s-join " " (list (s-repeat (nth 0 components) "*")
                                                       heading
                                                       tags)))))
-                       (entry (if helm-org-rifle-show-full-entry
+                       (entry (if helm-org-rifle-show-full-contents
                                   (s-join "\n" (list heading (org-get-entry)))
                                 ;; Show context strings
                                 (s-join "\n" (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
@@ -545,6 +666,97 @@ This is how the sausage is made."
               (goto-char node-end))))))
     ;; Return results in the order they appear in the org file
     (nreverse results)))
+
+;;;;; Occur-style
+
+(defun helm-org-rifle-occur-begin (source-buffers)
+  "Begin occur-style command searching BUFFERS, opening results buffer, focusing minibuffer, and running timer to put results in buffer."
+  (let ((inhibit-read-only t)
+        ;; I can't figure out why the asterisks are causing the buffer
+        ;; to not show up in my Helm buffer list, but it does show up
+        ;; in ibuffer.
+        (results-buffer (get-buffer-create helm-org-rifle-occur-results-buffer-name))
+        helm-org-rifle-occur-last-input
+        timer)
+
+    ;; Prepare results buffer
+    (with-current-buffer results-buffer
+      (unless (eq major-mode 'org-mode)
+        (read-only-mode)
+        (visual-line-mode)
+        (org-mode)
+        (hi-lock-mode 1)
+        (use-local-map helm-org-rifle-occur-map))
+      (erase-buffer)
+      (pop-to-buffer results-buffer))
+
+    ;; Run input timer
+    (unwind-protect
+        (minibuffer-with-setup-hook
+            (lambda ()
+              (setq timer (run-with-idle-timer
+                           ;; FIXME: helm-org-rifle-input-idle-delay
+                           ;; doesn't seem to work the same as in a
+                           ;; Helm session, so a longer value is
+                           ;; needed.  It'd be good to make this work
+                           ;; with the same value...
+                           0.25
+                           'repeat
+                           (lambda ()
+                             (helm-org-rifle-occur-process-input (s-trim (minibuffer-contents)) source-buffers results-buffer)))))
+          (read-from-minibuffer "pattern: " nil helm-org-rifle-occur-minibuffer-map nil nil nil nil))
+      (when timer (cancel-timer timer) (setq timer nil)))))
+
+(defun helm-org-rifle-occur-process-input (input source-buffers results-buffer)
+  "Find results in SOURCE-BUFFERS for INPUT and insert into RESULTS-BUFFER."
+  (when (and (s-present? input)
+             (not (string= input helm-org-rifle-occur-last-input)))
+    (setq helm-org-rifle-occur-last-input input)
+    (let ((inhibit-read-only t)
+          (results-by-buffer (cl-loop for source-buffer in source-buffers
+                                      collect (helm-org-rifle-occur-get-results-in-buffer source-buffer input))))
+      (with-current-buffer results-buffer
+        (erase-buffer)
+        (cl-loop for buffer-results in results-by-buffer
+                 when buffer-results
+                 do (let ((buffer-name (buffer-name (get-text-property 0 :buffer (car buffer-results)))))
+                      (helm-org-rifle-insert-source-header buffer-name)
+                      (cl-loop for entry in buffer-results
+                               do (progn
+                                    (insert entry)
+                                    (insert "\n\n")))))
+        (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
+
+(defun helm-org-rifle-occur-highlight-matches-in-buffer (buffer input)
+  "Highlight matches for INPUT in BUFFER using hi-lock-mode."
+  (with-current-buffer buffer
+    (unhighlight-regexp t)
+    (dolist (token (helm-org-rifle-split-tags-in-input-list (s-split-words input)))
+      (highlight-regexp token))))
+
+(defun helm-org-rifle-occur-get-results-in-buffer (buffer input)
+  "Return list of results for INPUT in BUFFER.
+Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
+  (with-current-buffer buffer
+    (unless (eq major-mode 'org-mode)
+      (error "Buffer %s is not an Org buffer." buffer)))
+  (cl-loop for entry in (helm-org-rifle-get-candidates-in-buffer buffer input)
+           collect (-let (((text pos) entry))
+                     (add-text-properties 0 (length text) (list :buffer buffer :node-beg pos) text)
+                     text)))
+
+(defun helm-org-rifle-occur-goto-entry ()
+  "Go to node in source buffer that point in occur buffer is in."
+  (interactive)
+  (let* ((properties (text-properties-at (point)))
+         (source-buffer (plist-get properties :buffer))
+         (node-beg (plist-get properties :node-beg))
+         ;; Get offset of point in node (not sure why +2 is necessary but it works)
+         (offset (+ 2 (- (point) (previous-single-property-change (point) :node-beg)))))
+    (pop-to-buffer source-buffer)
+    (goto-char (+ node-beg offset))
+    (org-reveal)
+    (org-cycle)))
 
 ;;;;; Support functions
 
@@ -572,6 +784,39 @@ created."
       (let ((org-odd-levels-only odd-levels))
         (font-lock-fontify-buffer)
         (buffer-string)))))
+
+(defun helm-org-rifle-insert-source-header (name &optional display-string)
+  "Insert header of source NAME into the current buffer.
+If DISPLAY-STRING is non-`nil' and a string value then display
+this additional info after the source name by overlay.
+From `helm-insert-header'."
+  (unless (bobp)
+    (let ((start (point)))
+      (insert "\n")
+      (set-text-properties start (point) '(helm-header-separator t))))
+  (let ((start (point)))
+    (insert (concat " " name))
+    (set-text-properties (point-at-bol) (point-at-eol) '(helm-header t))
+    (when display-string
+      (overlay-put (make-overlay (point-at-bol) (point-at-eol))
+                   'display display-string))
+    (insert "\n")
+    (set-text-properties start (point) '(font-lock-face helm-source-header))))
+
+(defun helm-org-rifle-occur-cleanup-buffer ()
+  "Cleanup occur results buffer when search is aborted."
+  ;; FIXME: It doesn't seem like this should have to be a command,
+  ;; because it pollutes the command list, but it gave an error once
+  ;; when it waasn't one, and it caused weird behavior...
+  (interactive)
+  (ignore-errors
+    ;; Ignore errors to avoid any weirdness which may result in
+    ;; infinite loops and being stuck in the minibuffer.  This has
+    ;; never happened to me, of course...
+    (kill-buffer helm-org-rifle-occur-results-buffer-name)
+    ;; Not sure if this is absolutely necessary, but it seems to help
+    ;; avoid a weird bug, so it's staying.
+    (abort-recursive-edit)))
 
 (defun helm-org-rifle-prep-token (token)
   "Apply regexp prefix and suffix for TOKEN."

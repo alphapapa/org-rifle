@@ -12,7 +12,7 @@ This is my rifle.  There are many like it, but this one is mine.  My rifle is my
 
 What does my rifle do?  It searches rapidly through my Org files, quickly bringing me the information I need to defeat the enemy.
 
-This package is a continuation of the fantastic [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]] packages, now with Helm support. It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context and grouped by buffer to make it easy to acquire your target.
+This package is inspired by [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]].  It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context and grouped by buffer to make it easy to acquire your target.
 
 Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
 
@@ -46,30 +46,41 @@ Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magna
 
 Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
-*Commands:*
-+ =helm-org-rifle=: Show results from all open Org buffers
-+ =helm-org-rifle-agenda-files=: Show results from Org agenda files
-+ =helm-org-rifle-current-buffer=: Show results from current buffer
-+ =helm-org-rifle-directories=: Show results from selected directories; with prefix, recursively
-+ =helm-org-rifle-files=: Show results from selected files
-+ =helm-org-rifle-org-directory=: Show results from Org files in =org-directory=
+*Helm commands:*
++  =helm-org-rifle=: Show results from all open Org buffers
++  =helm-org-rifle-agenda-files=: Show results from Org agenda files
++  =helm-org-rifle-current-buffer=: Show results from current buffer
++  =helm-org-rifle-directories=: Show results from selected directories; with prefix, recursively
++  =helm-org-rifle-files=: Show results from selected files
++  =helm-org-rifle-org-directory=: Show results from Org files in =org-directory=
+
+*Occur commands:*
++  =helm-org-rifle-occur=: Show results from all open Org buffers in occur-like persistent buffer
++  =helm-org-rifle-occur-agenda-files=: Show results from Org agenda files in occur-like persistent buffer
++  =helm-org-rifle-occur-current-buffer=: Show results from current buffer in occur-like persistent buffer
++  =helm-org-rifle-occur-directories=: Show results from selected directories in occur-like persistent buffer; with prefix, recursively
++  =helm-org-rifle-occur-files=: Show results from selected files in occur-like persistent buffer
++  =helm-org-rifle-occur-org-directory=: Show results from Org files in =org-directory= in occur-like persistent buffer
 
 ** Tips
 
-+ Show results from certain buffers by typing the name of the buffer (usually the filename).
-+ Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
-+ Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
-+ Show headings with certain tags by searching for, e.g. =:tag1:=.
-+ Exclude results with a =!=, e.g. =pepperoni !anchovies=.
-+ Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
-+ You can customize the =helm-org-rifle= group if you like.
++  Show results from certain buffers by typing the name of the buffer (usually the filename).
++  Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
++  Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
++  Show headings with certain tags by searching for, e.g. =:tag1:tag2:=.
++  Exclude results with a =!=, e.g. =pepperoni !anchovies=.
++  Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
++  The keymap for =helm-org-rifle-occur= results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
++  You can customize the =helm-org-rifle= group if you like.
 
 * Changelog
 
 ** 1.4.0-pre
 
-+ Add option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata.
-+ Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
++  New commands =helm-org-rifle-occur= and =helm-org-rifle-occur-current-buffer= which display results in an =occur=-like, persistent buffer.  These are handy when you aren't as certain of what you're looking for and you want to keep the results visible while looking at each result's source buffer.  When you click on or press =RET= on a result, the source buffer will be popped to alongside the results buffer, and the node will be revealed, cycled to, and the point moved to the same place.  These commands do not actually use Helm at all, so maybe they should be renamed to simply =org-rifle=...?
++  Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
++  New option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata.
++  New option =helm-org-rifle-show-full-contents= which displays each result's entire contents rather than just the context around each matching word.  This is off by default, but the =helm-org-rifle-occur= commands activate it for their results.
 
 ** 1.3.0
 
@@ -118,10 +129,6 @@ I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edi
 None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
-
-*** TODO Persistent results buffer like multi-occur
-
-Should be fairly easy using text properties to store the node info, making the buffer read-only, and using a keymap.  Would be especially useful for displaying entire entries instead of just context.  [[https://github.com/alphapapa/helm-org-rifle/tree/occur-style][WIP branch]]
 
 *** TODO Use prefix arg to toggle full-path mode
 
