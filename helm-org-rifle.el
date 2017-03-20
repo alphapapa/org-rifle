@@ -198,7 +198,7 @@ flickering (longer delay)."
 (defcustom helm-org-rifle-show-entry-function 'helm-org-rifle-show-entry-in-real-buffer
   "Default function to use to show selected entries."
   :group 'helm-org-rifle
-  :type '(radio (function :tag "Show entries in real buffers." helm-org-rifle-show-entry-in-real-buffer :value)
+  :type '(radio (function :tag "Show entries in real buffers." helm-org-rifle-show-entry-in-real-buffer)
                 (function :tag "Show entries in indirect buffers." helm-org-rifle-show-entry-in-indirect-buffer)
                 (function :tag "Custom function")))
 
