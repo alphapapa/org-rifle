@@ -4,6 +4,7 @@
      - [[#context-splitting][Context-splitting]]
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
+     - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
      - [[#match-tags-separately][Match tags separately]]
      - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
@@ -794,6 +795,13 @@ This helps for debugging, in case I need it in the future:
     (pop-to-buffer results-buffer))
 #+END_SRC
 * Plans
+
+** MAYBE [#B] Use text properties instead of plists for timestamping
+:PROPERTIES:
+:ID:       6defd9ba-53fe-4cb3-84a7-270085716bda
+:END:
+
+Similar to [[https://github.com/emacs-helm/helm/commit/a794614c975a7decf7bcc58189b89e4d69475fff][this]] in Helm, text properties could be used to store timestamps for results in =helm-org-rifle-get-candidates-in-buffer=, and then it wouldn't be necessary to transform the candidates list into a plist and back.  Also, an arbitrary list of helper functions could be passed in and run on each node as the candidates list is built, making it easy to optionally record extra metadata.
 
 ** TODO Search files instead of buffers
 
