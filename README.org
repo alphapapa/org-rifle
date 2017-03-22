@@ -72,6 +72,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Sort results by timestamp or buffer-order (the default) by calling commands with a universal prefix (=C-u=).
 +  Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
 +  The keymap for =helm-org-rifle-occur= results buffers imitates the =org-speed= keys, making it quicker to navigate. You can also collapse and expand headings and drawers with =TAB= and =S-TAB=, just like in regular Org buffers.  Results buffers are marked read-only so you cannot modify them by accidental keypresses.
++  Delete the result at point in =helm-org-rifle-occur= buffers by pressing =d=.  This does not alter the source buffers but simply removes uninteresting results from view.
 +  You can customize the =helm-org-rifle= group if you like.
 
 * Changelog

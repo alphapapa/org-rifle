@@ -76,6 +76,7 @@
 ;; + Show entries in an indirect buffer by selecting that action from
 ;;   the Helm actions list, or by pressing <C-return>.
 ;; + The keymap for `helm-org-rifle-occur' results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
+;; + Delete the result at point in `helm-org-rifle-occur' buffers by pressing "d".  This does not alter the source buffers but simply removes uninteresting results from view.
 ;; + You can customize the `helm-org-rifle' group if you like.
 
 ;;; Credits:
@@ -262,6 +263,7 @@ This is a list of functions which may be called to transform results, typically 
 (defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
+                                   (define-key map (kbd "d") 'helm-org-rifle-occur-delete-entry)
                                    (define-key map (kbd "b") (lambda () (interactive) (org-speed-move-safe 'org-backward-heading-same-level)))
                                    (define-key map (kbd "f") (lambda () (interactive) (org-speed-move-safe 'org-forward-heading-same-level)))
                                    (define-key map (kbd "p") (lambda () (interactive) (org-speed-move-safe 'outline-previous-visible-heading)))
@@ -846,6 +848,43 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
     (goto-char (+ node-beg offset))
     (org-reveal)
     (org-cycle)))
+
+(defun helm-org-rifle-occur-delete-entry ()
+  "Remove entry at point from results buffer.
+This helps the user remove unwanted results from the buffer."
+  (interactive)
+  (with-current-buffer (get-buffer helm-org-rifle-occur-results-buffer-name)
+    ;; Maybe unnecessary, but good to be sure that we never modify any
+    ;; other buffer by accident (i.e. future, unintentional bugs,
+    ;; which never happen, of course...)
+    (let* ((node-beg (get-text-property (point) :node-beg))
+           (entry-beg-pos (previous-single-property-change (point) :node-beg))
+           (previous-heading-pos (save-excursion
+                                   (outline-previous-heading)
+                                   (point)))
+           (entry-end-pos (next-single-property-change (point) :node-beg))
+           (inhibit-read-only t))
+      ;; Headings in the results buffer are inserted without respect
+      ;; to heading level.  This means that one result which has a
+      ;; lower (i.e. higher numbered) heading level may appear to be
+      ;; structurally a child node of a previously listed result that
+      ;; has a higher (i.e. lower numbered) heading level.  Therefore,
+      ;; using org-cut-subtree could cross the boundary between
+      ;; results, removing multiple results that appear to be part of
+      ;; the same subtree, even though they are not part of the same
+      ;; subtree in their source buffers.  So we find the boundary
+      ;; between results and only use org-cut-subtree when
+      ;; appropriate; otherwise we remove the result text directly.
+      ;; This way, the user can remove a sibling node that is part of
+      ;; the same search result; but if he removes those siblings'
+      ;; parent heading, it will remove them as well.  The end result
+      ;; is that when this function is called, it removes the smallest
+      ;; coherent part of the results buffer.
+      (if (>= previous-heading-pos entry-beg-pos)
+          ;; Previous displayed heading is part of same entry; remove only current subtree
+          (org-cut-subtree)
+        ;; Previous displayed heading is different entry; remove entry directly
+        (delete-region entry-beg-pos entry-end-pos)))))
 
 ;;;;; Timestamp functions
 
