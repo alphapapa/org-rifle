@@ -46,21 +46,22 @@
 ;; displayed, grouped by buffer.  Hit "RET" to show the selected
 ;; entry, or <C-return> to show it in an indirect buffer.
 
-;; Helm commands:
+;; Helm commands: show results in a Helm buffer
 ;; + `helm-org-rifle': Show results from all open Org buffers
 ;; + `helm-org-rifle-agenda-files': Show results from Org agenda files
 ;; + `helm-org-rifle-current-buffer': Show results from current buffer
 ;; + `helm-org-rifle-directories': Show results from selected directories; with prefix, recursively
 ;; + `helm-org-rifle-files': Show results from selected files
-;; + `helm-org-rifle-org-directory': Show results from Org files in =org-directory=
+;; + `helm-org-rifle-org-directory': Show results from Org files in `org-directory'
 
-;; Occur commands:
-;; + `helm-org-rifle-occur': Show results from all open Org buffers in occur-like persistent buffer
-;; + `helm-org-rifle-occur-agenda-files': Show results from Org agenda files in occur-like persistent buffer
-;; + `helm-org-rifle-occur-current-buffer': Show results from current buffer in occur-like persistent buffer
-;; + `helm-org-rifle-occur-directories': Show results from selected directories in occur-like persistent buffer; with prefix, recursively
-;; + `helm-org-rifle-occur-files': Show results from selected files in occur-like persistent buffer
-;; + `helm-org-rifle-occur-org-directory': Show results from Org files in =org-directory= in occur-like persistent buffer
+;; Occur commands: show results in an occur-like, persistent buffer
+;; + `helm-org-rifle-occur': Show results from all open Org buffers
+;; + `helm-org-rifle-occur-agenda-files': Show results from Org agenda files
+;; + `helm-org-rifle-occur-current-buffer': Show results from current buffer
+;; + `helm-org-rifle-occur-directories': Show results from selected directories; with prefix, recursively
+;; + `helm-org-rifle-occur-files': Show results from selected files
+;; + `helm-org-rifle-occur-org-directory': Show results from Org files in `org-directory'
+
 
 ;;; Tips
 
@@ -72,11 +73,17 @@
 ;;   "[#A]".
 ;; + Show headings with certain tags by searching for, e.g. ":tag1:tag2:".
 ;; + Exclude results with a "!", e.g. "pepperoni !anchovies".
-;; + Sort results by timestamp or buffer-order (the default) by calling commands with a universal prefix (C-u).
+;; + Sort results by timestamp or buffer-order (the default) by
+;;   calling commands with a universal prefix (C-u).
 ;; + Show entries in an indirect buffer by selecting that action from
 ;;   the Helm actions list, or by pressing <C-return>.
-;; + The keymap for `helm-org-rifle-occur' results buffers imitates the =org-speed= keys, making it quicker to navigate. Results buffers are marked read-only so you cannot modify them by accidental keypresses.
-;; + Delete the result at point in `helm-org-rifle-occur' buffers by pressing "d".  This does not alter the source buffers but simply removes uninteresting results from view.
+;; + The keymap for `helm-org-rifle-occur' results buffers imitates
+;;   the =org-speed= keys, making it quicker to navigate. Results
+;;   buffers are marked read-only so you cannot modify them by
+;;   accidental keypresses.
+;; + Delete the result at point in `helm-org-rifle-occur' buffers by
+;;   pressing "d".  This does not alter the source buffers but simply
+;;   removes uninteresting results from view.
 ;; + You can customize the `helm-org-rifle' group if you like.
 
 ;;; Credits:

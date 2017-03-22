@@ -53,7 +53,7 @@ Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magna
 
 Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
-*Helm commands:*
+*Helm commands:* show results in a Helm buffer
 +  =helm-org-rifle=: Show results from all open Org buffers
 +  =helm-org-rifle-agenda-files=: Show results from Org agenda files
 +  =helm-org-rifle-current-buffer=: Show results from current buffer
@@ -61,13 +61,13 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  =helm-org-rifle-files=: Show results from selected files
 +  =helm-org-rifle-org-directory=: Show results from Org files in =org-directory=
 
-*Occur commands:*
-+  =helm-org-rifle-occur=: Show results from all open Org buffers in occur-like persistent buffer
-+  =helm-org-rifle-occur-agenda-files=: Show results from Org agenda files in occur-like persistent buffer
-+  =helm-org-rifle-occur-current-buffer=: Show results from current buffer in occur-like persistent buffer
-+  =helm-org-rifle-occur-directories=: Show results from selected directories in occur-like persistent buffer; with prefix, recursively
-+  =helm-org-rifle-occur-files=: Show results from selected files in occur-like persistent buffer
-+  =helm-org-rifle-occur-org-directory=: Show results from Org files in =org-directory= in occur-like persistent buffer
+*Occur commands:* show results in an =occur=-like, persistent buffer
++  =helm-org-rifle-occur=: Show results from all open Org buffers
++  =helm-org-rifle-occur-agenda-files=: Show results from Org agenda files
++  =helm-org-rifle-occur-current-buffer=: Show results from current buffer
++  =helm-org-rifle-occur-directories=: Show results from selected directories; with prefix, recursively
++  =helm-org-rifle-occur-files=: Show results from selected files
++  =helm-org-rifle-occur-org-directory=: Show results from Org files in =org-directory=
 
 ** Tips
 
