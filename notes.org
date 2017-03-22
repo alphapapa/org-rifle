@@ -5,6 +5,7 @@
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
      - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
+     - [[#b-remove-duplicateoverlapping-results-from-occur-buffer][[#B] Remove duplicate/overlapping results from occur buffer]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
      - [[#match-tags-separately][Match tags separately]]
      - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
@@ -802,6 +803,26 @@ This helps for debugging, in case I need it in the future:
 :END:
 
 Similar to [[https://github.com/emacs-helm/helm/commit/a794614c975a7decf7bcc58189b89e4d69475fff][this]] in Helm, text properties could be used to store timestamps for results in =helm-org-rifle-get-candidates-in-buffer=, and then it wouldn't be necessary to transform the candidates list into a plist and back.  Also, an arbitrary list of helper functions could be passed in and run on each node as the candidates list is built, making it easy to optionally record extra metadata.
+
+** TODO [#B] Remove duplicate/overlapping results from occur buffer
+
+Since entire entry contents are displayed by default in the =occur= commands, it should happen that some Org nodes may be displayed twice in the results buffer.  i.e. given a subtree like:
+
+#+BEGIN_SRC txt
+ * Emacs stuff
+ ** Packages of interest
+ *** ace-window
+ *** Helm
+ **** helm-info-emacs command
+#+END_SRC
+
+A search for =emacs= would first return the entire =Emacs stuff= subtree, including all 4 child nodes.  But it would also return the =helm-info-emacs command= node as a separate result since =emacs= appears in its heading.
+
+Since the second result fits entirely inside the first result, the second should be discarded.
+
+Alternatively, the whole command could be changed to only return each entry's own text, i.e. not child headings.  This seems like it might be more "correct," but it also seems like a matter of preference: in the example above, if the user searches for =emacs=, should the =ace-window= node be displayed?  It doesn't mention =emacs= directly, but it is relevant to Emacs since it's in that subtree.
+
+This could probably be configurable without /too/ much added complexity...
 
 ** TODO Search files instead of buffers
 
