@@ -4,7 +4,7 @@
 <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="dont-tread-on-emacs-150.png" align="right"></a>
 #+END_HTML
 
-* helm-org-rifle
+* helm-org-rifle                                                   :noexport:
 
 [[https://melpa.org/#/helm-org-rifle][file:https://melpa.org/packages/helm-org-rifle-badge.svg]] [[https://stable.melpa.org/#/helm-org-rifle][file:https://stable.melpa.org/packages/helm-org-rifle-badge.svg]]
 
@@ -28,7 +28,15 @@ With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is sh
 
 *Note:* I'm using =solarized-theme=, and these =org-level= face styles are just what I use, not part of this package.  If you install this, they will be fontified according to your own theme and faces.
 
-* Installation
+* Contents                                                              :TOC:
+ - [[#installation][Installation]]
+ - [[#usage][Usage]]
+ - [[#changelog][Changelog]]
+ - [[#credits][Credits]]
+ - [[#development][Development]]
+ - [[#license][License]]
+
+* Installation                                            :noexport_children:
 
 ** MELPA
 
@@ -41,8 +49,7 @@ Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magna
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)
 #+END_SRC
-
-* Usage
+* Usage                                                   :noexport_children:
 
 Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
@@ -75,7 +82,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Delete the result at point in =helm-org-rifle-occur= buffers by pressing =d=.  This does not alter the source buffers but simply removes uninteresting results from view.
 +  You can customize the =helm-org-rifle= group if you like.
 
-* Changelog
+* Changelog                                               :noexport_children:
 
 ** 1.4.0-pre
 
@@ -124,7 +131,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 + Thanks to Thierry Volpiatto for doing such an amazing job with Helm.  Without him, this would not be possible. 
 + Thanks to [[https://www.reddit.com/user/washy99999][Jack, aka /u/washy99999]] for great feedback and suggestions.
 
-* Development
+* Development                                             :noexport_children:
 
 I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edit source code and use Emacs, check it out!
 
