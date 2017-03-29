@@ -141,6 +141,10 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
+*** TODO Multi-select
+
+If multiple candidates are selected in the Helm commands, it would be nice to display them in an occur-style buffer.  It seems like it should be simple, but it seems difficult to get a list of marked candidates from Helm, because =helm-marked-candidates= only returns the candidates for the current selection's source, not for all marked candidates.  Surely there is a way...
+
 *** TODO [#B] Phrase matching
 
 Don't know how I overlooked this for this long.  Shouldn't be too hard to implement searching for phrases in quotes.  Should probably match multiple spaces (but probably not newlines or tabs) between words; wouldn't want an accidental double-spacebar press in the searched file to prevent a match.
