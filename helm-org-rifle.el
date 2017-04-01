@@ -26,7 +26,7 @@
 ;; buffer, and optionally the entire path can be displayed for each
 ;; entry, rather than just its own heading.
 
-;;; Installation
+;;; Installation:
 
 ;;;; MELPA
 
@@ -40,7 +40,7 @@
 
 ;; (require 'helm-org-rifle)
 
-;;; Usage
+;;; Usage:
 
 ;; Run one of the rifle commands, type some words, and results will be
 ;; displayed, grouped by buffer.  Hit "RET" to show the selected
@@ -62,9 +62,10 @@
 ;; + `helm-org-rifle-occur-files': Show results from selected files
 ;; + `helm-org-rifle-occur-org-directory': Show results from Org files in `org-directory'
 
+;;;; Tips
 
-;;; Tips
-
+;; + Select multiple results in the Helm buffer to display selected
+;;   entries in a read-only, occur-style buffer.
 ;; + Show results from certain buffers by typing the name of the
 ;;   buffer (usually the filename).
 ;; + Show headings with certain todo keywords by typing the keyword,
