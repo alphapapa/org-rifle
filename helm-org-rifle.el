@@ -268,17 +268,18 @@ This is a list of functions which may be called to transform results, typically 
   :group 'helm-org-rifle :type 'boolean)
 
 (defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
+                                   (define-key map [remap undo] (lambda () (interactive) (let ((inhibit-read-only t)) (undo))))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "d") 'helm-org-rifle-occur-delete-entry)
-                                   (define-key map (kbd "b") (lambda () (interactive) (org-speed-move-safe 'org-backward-heading-same-level)))
-                                   (define-key map (kbd "f") (lambda () (interactive) (org-speed-move-safe 'org-forward-heading-same-level)))
-                                   (define-key map (kbd "p") (lambda () (interactive) (org-speed-move-safe 'outline-previous-visible-heading)))
-                                   (define-key map (kbd "n") (lambda () (interactive) (org-speed-move-safe 'outline-next-visible-heading)))
-                                   (define-key map (kbd "u") (lambda () (interactive) (org-speed-move-safe 'outline-up-heading)))
-                                   (define-key map (kbd "o") (lambda () (interactive) (org-speed-move-safe 'org-open-at-point)))
-                                   (define-key map (kbd "c") (lambda () (interactive) (org-speed-move-safe 'org-cycle)))
-                                   (define-key map (kbd "C") (lambda () (interactive) (org-speed-move-safe 'org-shifttab)))
+                                   (define-key map (kbd "b") (lambda () (interactive) (helm-org-rifle--speed-command 'org-backward-heading-same-level)))
+                                   (define-key map (kbd "f") (lambda () (interactive) (helm-org-rifle--speed-command 'org-forward-heading-same-level)))
+                                   (define-key map (kbd "p") (lambda () (interactive) (helm-org-rifle--speed-command 'outline-previous-visible-heading)))
+                                   (define-key map (kbd "n") (lambda () (interactive) (helm-org-rifle--speed-command 'outline-next-visible-heading)))
+                                   (define-key map (kbd "u") (lambda () (interactive) (helm-org-rifle--speed-command 'outline-up-heading)))
+                                   (define-key map (kbd "o") (lambda () (interactive) (helm-org-rifle--speed-command 'org-open-at-point)))
+                                   (define-key map (kbd "c") (lambda () (interactive) (helm-org-rifle--speed-command 'org-cycle)))
+                                   (define-key map (kbd "C") (lambda () (interactive) (helm-org-rifle--speed-command 'org-shifttab)))
                                    (define-key map (kbd "q") 'quit-window)
                                    map)
   "Keymap for helm-org-rifle-occur results buffers.  Imitates org-speed keys.")
@@ -950,6 +951,10 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
          (helm-org-rifle-transform-list-of-nodes-to-candidates))))
 
 ;;;;; Support functions
+
+(defun helm-org-rifle--speed-command (command)
+  "Call COMMAND with `org-speed-move-safe', ignoring any errors."
+  (ignore-errors (org-speed-move-safe command)))
 
 (defun helm-org-rifle-buffer-visible-p (buffer)
   "Return non-nil if BUFFER is visible.
