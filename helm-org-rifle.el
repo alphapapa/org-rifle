@@ -667,7 +667,8 @@ This is how the sausage is made."
                                (save-match-data
                                  (outline-previous-heading))))
                    (components (org-heading-components))
-                   (path (when helm-org-rifle-show-path
+                   (path (when (or helm-org-rifle-show-path
+                                   negations)
                            (org-get-outline-path)))
                    (priority (when (nth 3 components)
                                ;; TODO: Is there a better way to do this?  The
@@ -688,9 +689,11 @@ This is how the sausage is made."
                    matched-words-with-context)
 
               ;; Check negations
-              (when (and negations
-                         (re-search-forward negations-re node-end t))
-                (throw 'negated (goto-char node-end)))
+              (when negations
+                (when (or (cl-loop for elem in path
+                                   thereis (string-match-p negations-re elem))
+                          (re-search-forward negations-re node-end t))
+                  (throw 'negated (goto-char node-end))))
 
               ;; Get beginning-of-line positions for matching lines in node
               (setq matching-positions-in-node
