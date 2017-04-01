@@ -92,6 +92,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
 +  New option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata.
 +  New option =helm-org-rifle-show-full-contents= which displays each result's entire contents rather than just the context around each matching word.  This is off by default, but the =helm-org-rifle-occur= commands activate it for their results.
++  The display of full outline paths in Helm buffers is tidier.
 +  Fixed very minor bug in customization settings that caused the setting for =helm-org-rifle-show-entry-function= to display the wrong function name, even though it worked correctly.
 
 ** 1.3.0

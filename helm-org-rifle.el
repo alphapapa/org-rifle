@@ -670,9 +670,9 @@ This is how the sausage is made."
                                ;; priority.
                                (concat "[#" (char-to-string (nth 3 components)) "]")))
                    (tags (nth 5 components))
-                   (heading (if helm-org-rifle-show-todo-keywords
-                                (s-join " " (list (nth 2 components) priority (nth 4 components)))
-                              (nth 4 components)))
+                   (heading (s-trim (if helm-org-rifle-show-todo-keywords
+                                        (s-join " " (list (nth 2 components) priority (nth 4 components)))
+                                      (nth 4 components))))
                    (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
                                (save-excursion
                                  (outline-next-heading)
@@ -736,12 +736,10 @@ This is how the sausage is made."
                                                  ;; Replace links in path elements with plain text, otherwise
                                                  ;; they will be truncated by `org-format-outline-path' and only
                                                  ;; show part of the URL
-                                                 (-map 'helm-org-rifle-replace-links-in-string path))
-                                                "/"
-                                                (helm-org-rifle-fontify-like-in-org-mode
-                                                 (s-join " " (list (s-repeat (nth 0 components) "*")
-                                                                   heading
-                                                                   (concat tags " ")))))
+                                                 (-map 'helm-org-rifle-replace-links-in-string (append path (list heading))))
+                                                (if tags
+                                                    (concat " " (helm-org-rifle-fontify-like-in-org-mode tags))
+                                                  ""))
                                       ;; Not fontifying
                                       (s-join "/" (append path
                                                           (list heading)
