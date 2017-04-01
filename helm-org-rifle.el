@@ -267,6 +267,10 @@ This is a list of functions which may be called to transform results, typically 
   "When non-nil, keep the sort order setting when it is changed by calling a command with a universal prefix."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-occur-kill-empty-buffer t
+  "Close occur results buffer after last result is deleted."
+  :type 'boolean)
+
 (defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
                                    (define-key map [remap undo] (lambda () (interactive) (let ((inhibit-read-only t)) (undo))))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
@@ -541,7 +545,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :multiline t
                   :volatile t
                   :action (helm-make-actions
-                           "Show entry" 'helm-org-rifle-show-entry
+                           "Show entry" 'helm-org-rifle--show-marked-entries
                            "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
                            "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
                   :keymap helm-org-rifle-map)))
@@ -572,6 +576,13 @@ One source is returned for each open Org buffer."
 
 ;;;;; Show entries
 
+(defun helm-org-rifle--show-marked-entries (&optional ignore)
+  "Show marked candidates using the default function."
+  (let ((entries (helm-marked-candidates)))
+    (if (> (length entries) 1)
+        (helm-org-rifle--show-entries-as-occur entries)
+      (helm-org-rifle-show-entry (car entries)))))
+
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
   (funcall helm-org-rifle-show-entry-function candidate))
@@ -579,15 +590,15 @@ One source is returned for each open Org buffer."
 (defun helm-org-rifle-show-entry-in-real-buffer (candidate)
   "Show CANDIDATE in its real buffer."
   (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
-  (switch-to-buffer (helm-attr 'buffer))
-  (goto-char (car candidate))
+  (-let (((buffer . pos) candidate))
+    (switch-to-buffer buffer)
+    (goto-char pos))
   (org-show-entry))
 
 (defun helm-org-rifle-show-entry-in-indirect-buffer (candidate)
   "Show CANDIDATE in an indirect buffer."
-  (let ((buffer (helm-attr 'buffer))
-        (pos (car candidate))
-        (original-buffer (current-buffer)))
+  (-let (((buffer . pos) candidate)
+         (original-buffer (current-buffer)))
     (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
     (switch-to-buffer buffer)
     (goto-char pos)
@@ -598,6 +609,7 @@ One source is returned for each open Org buffer."
       ;; so it won't be selected when the indirect buffer is killed.
       (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
                                            (car (window-prev-buffers)))))))
+
 (defun helm-org-rifle-show-entry-in-indirect-buffer-map-action ()
   "Exit Helm buffer and call `helm-org-rifle-show-entry-in-indirect-buffer' with selected candidate."
   (interactive)
@@ -747,7 +759,7 @@ This is how the sausage is made."
                                   (s-join "\n" (list heading (org-get-entry)))
                                 ;; Show context strings
                                 (s-join "\n" (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
-                  (push (list entry node-beg)
+                  (push (cons entry (cons buffer node-beg))
                         results)))
               ;; Go to end of node
               (goto-char node-end))))))
@@ -762,21 +774,9 @@ This is how the sausage is made."
         ;; I can't figure out why the asterisks are causing the buffer
         ;; to not show up in my Helm buffer list, but it does show up
         ;; in ibuffer.
-        (results-buffer (get-buffer-create helm-org-rifle-occur-results-buffer-name))
+        (results-buffer (helm-org-rifle--occur-prepare-results-buffer))
         helm-org-rifle-occur-last-input
         timer)
-
-    ;; Prepare results buffer
-    (with-current-buffer results-buffer
-      (unless (eq major-mode 'org-mode)
-        (read-only-mode)
-        (visual-line-mode)
-        (org-mode)
-        (hi-lock-mode 1)
-        (use-local-map helm-org-rifle-occur-map))
-      (erase-buffer)
-      (pop-to-buffer results-buffer))
-
     ;; Run input timer
     (unwind-protect
         (minibuffer-with-setup-hook
@@ -793,6 +793,21 @@ This is how the sausage is made."
                              (helm-org-rifle-occur-process-input (s-trim (minibuffer-contents)) source-buffers results-buffer)))))
           (read-from-minibuffer "pattern: " nil helm-org-rifle-occur-minibuffer-map nil nil nil nil))
       (when timer (cancel-timer timer) (setq timer nil)))))
+
+(defun helm-org-rifle--occur-prepare-results-buffer ()
+  "Prepare and return results buffer."
+  (let ((buffer (get-buffer-create helm-org-rifle-occur-results-buffer-name))
+        (inhibit-read-only t))
+    (with-current-buffer buffer
+      (unless (eq major-mode 'org-mode)
+        (read-only-mode)
+        (visual-line-mode)
+        (org-mode)
+        (hi-lock-mode 1)
+        (use-local-map helm-org-rifle-occur-map))
+      (erase-buffer)
+      (pop-to-buffer buffer))
+    buffer))
 
 (defun helm-org-rifle-occur-process-input (input source-buffers results-buffer)
   "Find results in SOURCE-BUFFERS for INPUT and insert into RESULTS-BUFFER."
@@ -829,6 +844,21 @@ This is how the sausage is made."
                                       (insert "\n\n"))))))
         (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
 
+(defun helm-org-rifle--show-entries-as-occur (entries)
+  (let ((inhibit-read-only t))
+    (with-current-buffer (helm-org-rifle--occur-prepare-results-buffer)
+      (erase-buffer)
+      (cl-loop for (buffer . node-beg) in entries
+               for text = (with-current-buffer buffer
+                            ;; Modeled on `org-agenda-get-some-entry-text'
+                            (goto-char node-beg)
+                            (buffer-substring (line-beginning-position)
+                                              (progn (outline-next-heading) (point))))
+               do (progn (add-text-properties 0 (length text) (list :buffer buffer :node-beg node-beg) text)
+                         (insert text)
+                         (insert "\n\n")))
+      (helm-org-rifle-occur-highlight-matches-in-buffer (current-buffer) helm-input))))
+
 (defun helm-org-rifle-occur-highlight-matches-in-buffer (buffer input)
   "Highlight matches for INPUT in BUFFER using hi-lock-mode."
   (with-current-buffer buffer
@@ -850,8 +880,9 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (interactive)
   (-let* ((properties (text-properties-at (point)))
           ((&plist :buffer buffer :node-beg node-beg) properties)
-          ;; Get offset of point in node (not sure why +2 is necessary but it works)
-          (offset (+ 2 (- (point) (previous-single-property-change (point) :node-beg)))))
+          ;; FIXME: Get offset of point in node (not sure why +2 is necessary but it works)...or does it?
+          (offset (+ 2 (- (point) (or (previous-single-property-change (point) :node-beg)
+                                      (point-min))))))
     (pop-to-buffer buffer)
     (goto-char (+ node-beg offset))
     (org-reveal)
@@ -861,17 +892,23 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   "Remove entry at point from results buffer.
 This helps the user remove unwanted results from the buffer."
   (interactive)
+  ;; TODO: Test this more thoroughly.
+
   (with-current-buffer (get-buffer helm-org-rifle-occur-results-buffer-name)
-    ;; Maybe unnecessary, but good to be sure that we never modify any
-    ;; other buffer by accident (i.e. future, unintentional bugs,
-    ;; which never happen, of course...)
-    (let* ((node-beg (get-text-property (point) :node-beg))
-           (entry-beg-pos (previous-single-property-change (point) :node-beg))
-           (previous-heading-pos (save-excursion
-                                   (outline-previous-heading)
-                                   (point)))
-           (entry-end-pos (next-single-property-change (point) :node-beg))
-           (inhibit-read-only t))
+    ;; Setting current buffer may be unnecessary, but good to be sure
+    ;; that we never modify any other buffer by accident (i.e. future,
+    ;; unintentional bugs, which never happen, of course...)
+    (let ((entry-beg-pos (or (previous-single-property-change (point) :node-beg)
+                             (point-min)))
+          (entry-end-pos (or (next-single-property-change (point) :node-beg)
+                             (point-max)))
+          (next-heading-pos (save-excursion
+                              (outline-next-heading)
+                              (point)))
+          (previous-heading-pos (save-excursion
+                                  (outline-previous-heading)
+                                  (point)))
+          (inhibit-read-only t))
       ;; Headings in the results buffer are inserted without respect
       ;; to heading level.  This means that one result which has a
       ;; lower (i.e. higher numbered) heading level may appear to be
@@ -888,11 +925,15 @@ This helps the user remove unwanted results from the buffer."
       ;; parent heading, it will remove them as well.  The end result
       ;; is that when this function is called, it removes the smallest
       ;; coherent part of the results buffer.
-      (if (>= previous-heading-pos entry-beg-pos)
+      (if (and (>= previous-heading-pos entry-beg-pos)
+               (>= entry-end-pos next-heading-pos))
           ;; Previous displayed heading is part of same entry; remove only current subtree
           (org-cut-subtree)
         ;; Previous displayed heading is different entry; remove entry directly
-        (delete-region entry-beg-pos entry-end-pos)))))
+        (delete-region entry-beg-pos entry-end-pos))
+      (when (and helm-org-rifle-occur-kill-empty-buffer
+                 (= (point-min) (point-max)))
+        (kill-this-buffer)))))
 
 ;;;;; Timestamp functions
 

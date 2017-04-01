@@ -34,9 +34,8 @@ With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is sh
  - [[#changelog][Changelog]]
  - [[#credits][Credits]]
  - [[#development][Development]]
- - [[#license][License]]
 
-* Installation                                            :noexport_children:
+* Installation                                                   :noexport_1:
 
 ** MELPA
 
@@ -49,7 +48,7 @@ Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magna
 #+BEGIN_SRC elisp
 (require 'helm-org-rifle)
 #+END_SRC
-* Usage                                                   :noexport_children:
+* Usage                                                          :noexport_1:
 
 Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
@@ -71,6 +70,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** Tips
 
++  Select multiple results in the Helm buffer to display selected entries in a read-only, =occur=-style buffer.
 +  Show results from certain buffers by typing the name of the buffer (usually the filename).
 +  Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
 +  Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
@@ -82,10 +82,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Delete the result at point in =helm-org-rifle-occur= buffers by pressing =d=.  This does not alter the source buffers but simply removes uninteresting results from view.
 +  You can customize the =helm-org-rifle= group if you like.
 
-* Changelog                                               :noexport_children:
+* Changelog                                                      :noexport_1:
 
 ** 1.4.0-pre
 
++  The Helm commands now support multiple selection.  If multiple entries are selected, they will be displayed in-full in a read-only, =occur=-style buffer, like the =helm-org-rifle-occur= commands do.
 +  New commands =helm-org-rifle-occur= and =helm-org-rifle-occur-current-buffer= which display results in an =occur=-like, persistent buffer.  These are handy when you aren't as certain of what you're looking for and you want to keep the results visible while looking at each result's source buffer.  When you click on or press =RET= on a result, the source buffer will be popped to alongside the results buffer, and the node will be revealed, cycled to, and the point moved to the same place.  These commands do not actually use Helm at all, so maybe they should be renamed to simply =org-rifle=...?
 +  Results can now be sorted by either the order that nodes appear in their buffers (the default) or the latest timestamp in each node.  To change the sort order, run a command with a universal prefix (=C-u=).  If =helm-org-rifle-sort-order-persist= is set, the sort order remains after setting it, and the default sort order may also be customized.
 +  Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
@@ -131,7 +132,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 + Thanks to Thierry Volpiatto for doing such an amazing job with Helm.  Without him, this would not be possible. 
 + Thanks to [[https://www.reddit.com/user/washy99999][Jack, aka /u/washy99999]] for great feedback and suggestions.
 
-* Development                                             :noexport_children:
+* Development                                                    :noexport_1:
 
 I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edit source code and use Emacs, check it out!
 
@@ -140,10 +141,6 @@ I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edi
 None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
-
-*** TODO Multi-select
-
-If multiple candidates are selected in the Helm commands, it would be nice to display them in an occur-style buffer.  It seems like it should be simple, but it seems difficult to get a list of marked candidates from Helm, because =helm-marked-candidates= only returns the candidates for the current selection's source, not for all marked candidates.  Surely there is a way...
 
 *** TODO [#B] Phrase matching
 
@@ -202,6 +199,6 @@ It would be nice to have a regexp mode...maybe.
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
 
-* License
+* License                                                          :noexport:
 
 GPLv3
