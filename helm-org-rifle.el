@@ -547,6 +547,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
                   :candidate-transformer helm-org-rifle-transformer
+                  :filter-one-by-one 'helm-fuzzy-default-highlight-match
                   :match 'identity
                   :multiline t
                   :volatile t
