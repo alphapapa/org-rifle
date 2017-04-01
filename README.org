@@ -26,7 +26,7 @@ With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is sh
 
 [[screenshot-path.png]]
 
-*Note:* I'm using =solarized-theme=, and these =org-level= face styles are just what I use, not part of this package.  If you install this, they will be fontified according to your own theme and faces.
+*Note:* These screenshots were taken with =solarized-theme= and =spacemacs-dark=, and these =org-level= face styles are part of those themes, not part of this package.  If you install this, they will be fontified according to your own theme and faces.
 
 * Contents                                                              :TOC:
  - [[#installation][Installation]]
