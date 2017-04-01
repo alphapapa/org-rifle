@@ -727,7 +727,7 @@ This is how the sausage is made."
                                                      and collect (s-trim (match-string-no-properties 0 line))))
                             (when (> helm-org-rifle-always-show-entry-contents-chars 0)
                               ;; No match in entry text; add desired entry text
-                              (list (s-collapse-whitespace (s-trim (s-truncate helm-org-rifle-always-show-entry-contents-chars (org-get-entry)))))))))
+                              (list (s-truncate helm-org-rifle-always-show-entry-contents-chars (helm-org-rifle--get-entry-text buffer node-beg)))))))
 
                 ;; Return list in format: (text-for-display node-beg)
                 (let* ((heading (if path
@@ -850,11 +850,7 @@ This is how the sausage is made."
     (with-current-buffer (helm-org-rifle--occur-prepare-results-buffer)
       (erase-buffer)
       (cl-loop for (buffer . node-beg) in entries
-               for text = (with-current-buffer buffer
-                            ;; Modeled on `org-agenda-get-some-entry-text'
-                            (goto-char node-beg)
-                            (buffer-substring (line-beginning-position)
-                                              (progn (outline-next-heading) (point))))
+               for text = (helm-org-rifle--get-entry-text buffer node-beg :include-heading t :full-path helm-org-rifle-show-path)
                do (progn (add-text-properties 0 (length text) (list :buffer buffer :node-beg node-beg) text)
                          (insert text)
                          (insert "\n\n")))
@@ -993,6 +989,54 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
          (helm-org-rifle-transform-list-of-nodes-to-candidates))))
 
 ;;;;; Support functions
+
+(cl-defun helm-org-rifle--get-entry-text (buffer node-beg &key include-heading full-path)
+  "Return Org entry text from node in BUFFER starting at NODE-BEG, skipping drawers.
+If INCLUDE-HEADING is non-nil, heading line will be included.  If
+FULL-PATH is non-nil, the full path to the heading will be
+included, with filename prefix.  Whitespace in text will be
+trimmed."
+  ;; Modeled after `org-agenda-get-some-entry-text'
+  (let (text)
+    (with-current-buffer buffer
+      ;; Get raw entry text
+      (org-with-wide-buffer
+       (goto-char node-beg)
+       (unless (and include-heading
+                    (not full-path))
+         ;; If including the heading but not the full path, just get the heading line here
+         (end-of-line 1))               ; Skip heading
+       (setq text (buffer-substring
+                   (min (1+ (point)) (point-max))
+                   (progn (outline-next-heading) (point))))
+       (when (and full-path include-heading) ; If only `full-path' is specified, it's probably a mistake, but we'll check anyway
+         ;; If not full path; just use the already-captured heading line in `text'
+         (let* ((level (car (org-heading-components)))
+                (path (org-get-outline-path))
+                (path-string (s-join "/" path)))
+           ;; TODO: Unfortunately this cannot preserve the outline
+           ;; path formatting (i.e. the different `org-level' faces),
+           ;; because we're inserting the entry as raw text into the
+           ;; result buffer, and since the result buffer is in
+           ;; org-mode, it will reformat the whole heading line as a
+           ;; top-level heading.  I guess this could be fixed with
+           ;; overlays...but that is a project for another day.
+           (setq text (concat "* " path-string "\n" text))))))
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (while (re-search-forward org-drawer-regexp nil t)
+        ;; Remove drawers
+        (delete-region (match-beginning 0)
+                       (progn (re-search-forward
+                               "^[ \t]*:END:.*\n?" nil 'move)
+                              (point))))
+      ;; Return entry
+      ;; NOTE: The order of these probably doesn't matter, but in case
+      ;; it ever became a performance issue, might be worth fiddling
+      ;; with.
+      (s-trim
+       (buffer-substring (point-min) (point-max))))))
 
 (defun helm-org-rifle--speed-command (command)
   "Call COMMAND with `org-speed-move-safe', ignoring any errors."
