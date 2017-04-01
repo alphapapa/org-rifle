@@ -66,6 +66,8 @@
 
 ;; + Select multiple results in the Helm buffer to display selected
 ;;   entries in a read-only, occur-style buffer.
+;; + Results in a Helm buffer can be saved to a helm-org-rifle-occur
+;;   buffer by pressing C-s.
 ;; + Show results from certain buffers by typing the name of the
 ;;   buffer (usually the filename).
 ;; + Show headings with certain todo keywords by typing the keyword,
@@ -138,6 +140,10 @@
 (defvar helm-org-rifle-map
   (let ((new-map (copy-keymap helm-map)))
     (define-key new-map (kbd "<C-return>") 'helm-org-rifle-show-entry-in-indirect-buffer-map-action)
+    ;; FIXME: The C-s bind seems to only work when pressed twice;
+    ;; before being pressed, it's not bound in the keymap, but after
+    ;; pressing it once, it is, and then it works.  Weird.
+    (define-key new-map (kbd "C-s") 'helm-org-rifle--save-results)
     new-map)
   "Keymap for `helm-org-rifle'.")
 
@@ -582,6 +588,13 @@ One source is returned for each open Org buffer."
           (-select 'helm-org-rifle-buffer-visible-p (org-buffer-list nil t))))
 
 ;;;;; Show entries
+
+(defun helm-org-rifle--save-results ()
+  "Save `helm-org-rifle' result in a `helm-org-rifle-occur' buffer.
+In the spirit of `helm-grep-save-results'."
+  (interactive)
+  (helm-mark-all)
+  (helm-exit-and-execute-action 'helm-org-rifle--show-marked-entries))
 
 (defun helm-org-rifle--show-marked-entries (&optional ignore)
   "Show marked candidates using the default function."

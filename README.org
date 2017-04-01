@@ -71,6 +71,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 ** Tips
 
 +  Select multiple results in the Helm buffer to display selected entries in a read-only, =occur=-style buffer.
++  Results in a Helm buffer can be saved to a =helm-org-rifle-occur= buffer by pressing =C-s=.
 +  Show results from certain buffers by typing the name of the buffer (usually the filename).
 +  Show headings with certain todo keywords by typing the keyword, e.g. =TODO= or =DONE=.
 +  Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
@@ -90,6 +91,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  New commands =helm-org-rifle-occur= and =helm-org-rifle-occur-current-buffer= which display results in an =occur=-like, persistent buffer.  These are handy when you aren't as certain of what you're looking for and you want to keep the results visible while looking at each result's source buffer.  When you click on or press =RET= on a result, the source buffer will be popped to alongside the results buffer, and the node will be revealed, cycled to, and the point moved to the same place.  These commands do not actually use Helm at all, so maybe they should be renamed to simply =org-rifle=...?
 +  Results can now be sorted by either the order that nodes appear in their buffers (the default) or the latest timestamp in each node.  To change the sort order, run a command with a universal prefix (=C-u=).  If =helm-org-rifle-sort-order-persist= is set, the sort order remains after setting it, and the default sort order may also be customized.
 +  The Helm commands now support multiple selection.  If multiple entries are selected, they will be displayed in-full in a read-only, =occur=-style buffer, like the =helm-org-rifle-occur= commands do.
++  Results in a Helm buffer can be saved to a =helm-org-rifle-occur= buffer by pressing =C-s= in the Helm buffer.  (Note: There seems to be a weird bug which requires pressing the key twice.  Hopefully it can be fixed…)
 +  New option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata.
 +  New option =helm-org-rifle-show-full-contents= which displays each result's entire contents rather than just the context around each matching word.  This is off by default, but the =helm-org-rifle-occur= commands activate it for their results.
 
