@@ -690,6 +690,7 @@ This is how the sausage is made."
 
               ;; Check negations
               (when negations
+                ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
                 (when (or (cl-loop for elem in path
                                    thereis (string-match-p negations-re elem))
                           (re-search-forward negations-re node-end t))
