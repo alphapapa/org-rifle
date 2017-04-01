@@ -95,6 +95,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 *Fixes*
 +  Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
++  Org links are "unlinkified" when showing match context, preventing Org syntax characters from cluttering the results.
 +  The display of full outline paths in Helm buffers is tidier.
 +  Fixed very minor bug in customization settings that caused the setting for =helm-org-rifle-show-entry-function= to display the wrong function name, even though it worked correctly.
 

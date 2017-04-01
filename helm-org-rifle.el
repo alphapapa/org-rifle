@@ -264,6 +264,11 @@ This is a list of functions which may be called to transform results, typically 
                 (function-item :tag "Latest timestamp" helm-org-rifle-transformer-sort-by-latest-timestamp)
                 (function :tag "Custom function")))
 
+(defcustom helm-org-rifle-unlinkify-entry-links t
+  "Turn Org links in entry text into plain text so they look nicer in Helm buffers.
+Just in case this is a performance issue for anyone, it can be disabled."
+  :type 'boolean)
+
 (defcustom helm-org-rifle-sort-order-persist nil
   "When non-nil, keep the sort order setting when it is changed by calling a command with a universal prefix."
   :group 'helm-org-rifle :type 'boolean)
@@ -720,6 +725,8 @@ This is how the sausage is made."
                   (setq matched-words-with-context
                         (or (cl-loop for line in (mapcar 'car matching-lines-in-node)
                                      ;; Matching entry text found
+                                     do (when helm-org-rifle-unlinkify-entry-links
+                                          (setq line (helm-org-rifle-replace-links-in-string line)))
                                      append (cl-loop with end
                                                      for match = (string-match context-re line end)
                                                      while match
@@ -1114,7 +1121,8 @@ From `helm-insert-header'."
   "Replace `org-mode' links in STRING with their descriptions."
   (if (string-match org-bracket-link-regexp string)
       (replace-regexp-in-string org-bracket-link-regexp
-                                (lambda (text) (match-string-no-properties 3 text))
+                                (lambda (text) (or (match-string-no-properties 3 text)
+                                                   (match-string-no-properties 1 text)))
                                 string)
     ;; No links found; return original string
     string))
