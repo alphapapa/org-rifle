@@ -706,6 +706,11 @@ This is how the sausage is made."
                 ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
                 (when (or (cl-loop for elem in path
                                    thereis (string-match-p negations-re elem))
+                          ;; FIXME: Doesn't quite match properly with
+                          ;; special chars, e.g. negating "!scratch"
+                          ;; properly excludes the "*scratch*" buffer,
+                          ;; but negating "!*scratch*" doesn't'.
+                          (string-match negations-re buffer-name)
                           (re-search-forward negations-re node-end t))
                   (throw 'negated (goto-char node-end))))
 
