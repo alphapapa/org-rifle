@@ -610,7 +610,8 @@ source, so we must gather them manually."
   (with-current-buffer helm-buffer
     (save-excursion
       (cl-loop for o in helm-visible-mark-overlays
-               collect (overlay-get o 'real)))))
+               collect (overlay-get o 'real) into res
+               finally return (nreverse res)))))
 
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
