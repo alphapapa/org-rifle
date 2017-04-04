@@ -597,10 +597,20 @@ In the spirit of `helm-grep-save-results'."
 
 (defun helm-org-rifle--show-marked-entries (&optional ignore)
   "Show marked candidates using the default function."
-  (let ((entries (helm-marked-candidates)))
+  (let ((entries (helm-org-rifle--get-marked-candidates)))
     (if (> (length entries) 1)
         (helm-org-rifle--show-entries-as-occur entries)
       (helm-org-rifle-show-entry (car entries)))))
+
+(defun helm-org-rifle--get-marked-candidates ()
+  "Return list of all marked candidates in Helm.
+`helm-marked-candidates' only returns results from the current
+source, so we must gather them manually."
+  ;; Based on `helm-revive-visible-mark'
+  (with-current-buffer helm-buffer
+    (save-excursion
+      (cl-loop for o in helm-visible-mark-overlays
+               collect (overlay-get o 'real)))))
 
 (defun helm-org-rifle-show-entry (candidate)
   "Show CANDIDATE using the default function."
