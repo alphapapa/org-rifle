@@ -900,7 +900,13 @@ This is how the sausage is made."
         (cl-loop for results-list in results-by-buffer
                  do (-let (((&plist :buffer buffer :results results) results-list))
                       (when results
-                        (helm-org-rifle-insert-source-header (buffer-name buffer))
+                        ;; FIXME: The source headers don't play nice
+                        ;; with Org mode, since Org considers them
+                        ;; part of the parent heading's entry, so they
+                        ;; get hidden when the parent heading is
+                        ;; collapsed.  Disabling for now.  See TODO
+                        ;; item in readme for ideas on fixing.
+                        ;; (helm-org-rifle-insert-source-header (buffer-name buffer))
                         (cl-loop for entry in results
                                  do (-let (((plist &as :text text . rest) entry))
                                       (add-text-properties 0 (length text) rest text)
