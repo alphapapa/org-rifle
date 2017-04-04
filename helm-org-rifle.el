@@ -385,7 +385,8 @@ If FILES is nil, prompt with `helm-read-file-name'.  All FILES
 are searched; they are not filtered with
 `helm-org-rifle-directories-filename-regexp'."
  :sources (--map (helm-org-rifle-get-source-for-file it) files)
- :let ((files (or files (helm-read-file-name "Files: " :marked-candidates t)))
+ :let ((files (helm-org-rifle--atom-to-list-or-list (or files
+                                                        (helm-read-file-name "Files: " :marked-candidates t))))
        (helm-candidate-separator " ")
        (helm-cleanup-hook (lambda ()
                             ;; Close new buffers if enabled
@@ -427,17 +428,19 @@ are searched; they are not filtered with
 ;;;###autoload
 (defun helm-org-rifle-directories (&optional directories toggle-recursion)
   "Rifle through Org files in DIRECTORIES.
-If DIRECTORIES is nil, prompt with `helm-read-file-name'.  With
-prefix or TOGGLE-RECURSION non-nil, toggle recursion from the
-default.  Files in DIRECTORIES are filtered using
+DIRECTORIES may be a string or list of strings.  If DIRECTORIES
+is nil, prompt with `helm-read-file-name'.  With prefix or
+TOGGLE-RECURSION non-nil, toggle recursion from the default.
+Files in DIRECTORIES are filtered using
 `helm-org-rifle-directories-filename-regexp'."
   ;; This does not need to be defined with helm-org-rifle-define-command because it calls helm-org-rifle-files which is.
   (interactive)
   (let* ((recursive (if (or toggle-recursion current-prefix-arg)
                         (not helm-org-rifle-directories-recursive)
                       helm-org-rifle-directories-recursive))
-         (directories (or directories
-                          (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t))))
+         (directories (helm-org-rifle--atom-to-list-or-list
+                       (or directories
+                           (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t)))))
          (files (-flatten (--map (f-files it
                                           (lambda (file)
                                             (s-matches? helm-org-rifle-directories-filename-regexp (f-filename file)))
@@ -471,7 +474,7 @@ default.  Files in DIRECTORIES are filtered using
              ,preface  ; Maybe not necessary
              ,(when directories
                 ;; Is there a nicer way to do this?
-                `(setq directories-collected (append directories-collected ,directories)))
+                `(setq directories-collected (append directories-collected (helm-org-rifle--atom-to-list-or-list ,directories))))
              (when directories-collected
                (let ((recursive (if current-prefix-arg
                                     (not helm-org-rifle-directories-recursive)
@@ -486,7 +489,7 @@ default.  Files in DIRECTORIES are filtered using
                                                        directories-collected))))))
              ,(when files
                 ;; Is there a nicer way to do this?
-                `(setq files-collected (append files-collected ,files)))
+                `(setq files-collected (append files-collected (helm-org-rifle--atom-to-list-or-list ,files))))
              (when files-collected
                (setq buffers-collected (append (cl-loop for file in files-collected
                                                         collect (-if-let (buffer (org-find-base-buffer-visiting file))
@@ -1049,6 +1052,13 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
          (helm-org-rifle-transform-list-of-nodes-to-candidates))))
 
 ;;;;; Support functions
+
+(defun helm-org-rifle--atom-to-list-or-list (item)
+  "If ITEM is an atom, return (list ITEM).  If ITEM is a list, return ITEM."
+  (cl-typecase item
+    (list item)
+    (atom (list item))
+    (otherwise (error "Not an atom or list: %s" item))))
 
 (cl-defun helm-org-rifle--get-entry-text (buffer node-beg &key include-heading full-path)
   "Return Org entry text from node in BUFFER starting at NODE-BEG, skipping drawers.
