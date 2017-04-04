@@ -151,9 +151,21 @@ None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
 
 ** Ideas
 
+*** TODO [#B] Fix Helm-style headers in occur buffers
+
+Org-mode considers the Helm-style headers in occur buffers to be part of the previous heading's entry text, so they get hidden when the node above them gets collapsed.  Might be able to fix this with an overlay, or /maybe/ with some face tweaking.  In the meantime I will just remove them so they don't appear broken and inconsistent.
+
+*** TODO [#B] jump-to-next/prev-match command for occur buffers
+
+It would be handy to have a built-in command to jump to the next match instance in the occur buffers, maybe something like =M-g n=.  Suggested by washy99999.
+
 *** TODO [#B] Phrase matching
 
 Don't know how I overlooked this for this long.  Shouldn't be too hard to implement searching for phrases in quotes.  Should probably match multiple spaces (but probably not newlines or tabs) between words; wouldn't want an accidental double-spacebar press in the searched file to prevent a match.
+
+*** MAYBE [#C] follow-mode
+
+=helm-follow-mode= can be activated from within Helm already with =C-c C-f=, and on an individual-item basis with =C-j=, and anyone can define a custom command to set it themselves, but it might be worth having an argument to enable it too.
 
 *** TODO Use prefix arg to toggle full-path mode
 
@@ -207,6 +219,10 @@ It would be nice to have a regexp mode...maybe.
 *** MAYBE Match limit
 
 =org-search-goto= had a match limit.  I removed it to simplify things, but it might still be useful, depending on how big one's org files are.  However, performance seems good now, so this probably isn't needed.
+
+*** TODO [#C] always-show-entry-text truncates by 3 too many
+
+=s-truncate= truncates and adds =...=, which means that the chosen length of entry text gets reduced by 3.  Could fix this by using a setter for the =defcustom= that adds 3.
 
 * License                                                          :noexport:
 
