@@ -1157,7 +1157,7 @@ From `helm-insert-header'."
       (replace-regexp-in-string org-bracket-link-regexp
                                 (lambda (text) (or (match-string-no-properties 3 text)
                                                    (match-string-no-properties 1 text)))
-                                string)
+                                string t t)
     ;; No links found; return original string
     string))
 
