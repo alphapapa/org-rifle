@@ -1044,8 +1044,9 @@ trimmed."
          ;; If including the heading but not the full path, just get the heading line here
          (end-of-line 1))               ; Skip heading
        (setq text (buffer-substring
-                   (min (1+ (point)) (point-max))
-                   (progn (outline-next-heading) (point))))
+                   (point)
+                   (or (progn (outline-next-heading) (point))
+                       (point-max))))
        (when (and full-path include-heading) ; If only `full-path' is specified, it's probably a mistake, but we'll check anyway
          ;; If not full path; just use the already-captured heading line in `text'
          (let* ((level (car (org-heading-components)))
