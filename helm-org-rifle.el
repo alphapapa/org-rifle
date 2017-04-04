@@ -945,8 +945,7 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
                                       (point-min))))))
     (pop-to-buffer buffer)
     (goto-char (+ node-beg offset))
-    (org-reveal)
-    (org-cycle)))
+    (org-show-entry)))
 
 (defun helm-org-rifle-occur-delete-entry ()
   "Remove entry at point from results buffer.
