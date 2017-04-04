@@ -734,14 +734,15 @@ This is how the sausage is made."
 
               ;; Get list of line-strings containing any token
               (setq matching-lines-in-node
-                    (cl-loop for pos in matching-positions-in-node
+                    (cl-loop with string
+                             for pos in matching-positions-in-node
                              do (goto-char pos)
-                             ;; Get text of each matching line
-                             for string = (buffer-substring-no-properties (line-beginning-position)
-                                                                          (line-end-position))
                              unless (org-at-heading-p) ; Leave headings out of list of matched lines
+                             ;; Get text of each matching line
                              ;; (DISPLAY . REAL) format for Helm
-                             collect `(,string . (,buffer ,pos))))
+                             collect `(,(buffer-substring-no-properties (line-beginning-position)
+                                                                        (line-end-position))
+                                       . (,buffer ,pos))))
 
               ;; Verify all tokens are contained in each matching node
               (when (cl-loop with targets = (append (-non-nil (list buffer-name
