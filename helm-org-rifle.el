@@ -1085,13 +1085,15 @@ trimmed."
          (end-of-line 1))               ; Skip heading
        (setq text (buffer-substring
                    (point)
-                   (or (progn (outline-next-heading) (point))
+                   (or (save-excursion (outline-next-heading) (point))
                        (point-max))))
        (when (and full-path include-heading) ; If only `full-path' is specified, it's probably a mistake, but we'll check anyway
          ;; If not full path; just use the already-captured heading line in `text'
-         (let* ((level (car (org-heading-components)))
+         (let* ((heading-text (nth 4 (org-heading-components)))
                 (path (org-get-outline-path))
-                (path-string (s-join "/" path)))
+                (path-string (s-join "/" (append path
+                                                 ;; If path is nil, heading-text must be a list for append
+                                                 (list heading-text)))))
            ;; TODO: Unfortunately this cannot preserve the outline
            ;; path formatting (i.e. the different `org-level' faces),
            ;; because we're inserting the entry as raw text into the
