@@ -64,30 +64,32 @@
 
 ;;;; Tips
 
-;; + Select multiple results in the Helm buffer to display selected
-;;   entries in a read-only, occur-style buffer.
-;; + Results in a Helm buffer can be saved to a helm-org-rifle-occur
-;;   buffer by pressing C-s.
+;; + Select multiple entries in the Helm buffer to display selected
+;;   entries in a read-only, `occur`-style buffer.
+;; + Save all results in a Helm buffer to a `helm-org-rifle-occur`
+;;   buffer by pressing `C-s` (like `helm-grep-save-results`).
 ;; + Show results from certain buffers by typing the name of the
 ;;   buffer (usually the filename).
-;; + Show headings with certain todo keywords by typing the keyword,
-;;   e.g. "TODO" or "DONE".
-;; + Show headings with certain priorities by typing, e.g. "#A" or
-;;   "[#A]".
-;; + Show headings with certain tags by searching for, e.g. ":tag1:tag2:".
-;; + Exclude results with a "!", e.g. "pepperoni !anchovies".
+;; + Show headings with certain to-do keywords by typing the keyword,
+;;   e.g. `TODO` or `DONE`.
+;; + Show headings with certain priorities by typing, e.g. `#A` or
+;;   `[#A]`.
+;; + Show headings with certain tags by searching for,
+;;   e.g. `:tag1:tag2:`.
+;; + Negate matches with a `!`, e.g. `pepperoni !anchovies`.
 ;; + Sort results by timestamp or buffer-order (the default) by
-;;   calling commands with a universal prefix (C-u).
+;;   calling commands with a universal prefix (`C-u`).
 ;; + Show entries in an indirect buffer by selecting that action from
-;;   the Helm actions list, or by pressing <C-return>.
-;; + The keymap for `helm-org-rifle-occur' results buffers imitates
-;;   the =org-speed= keys, making it quicker to navigate. Results
-;;   buffers are marked read-only so you cannot modify them by
-;;   accidental keypresses.
-;; + Delete the result at point in `helm-org-rifle-occur' buffers by
-;;   pressing "d".  This does not alter the source buffers but simply
+;;   the Helm actions list, or by pressing `<C-return>`.
+;; + The keymap for `helm-org-rifle-occur` results buffers imitates
+;;   the `org-speed` keys, making it quicker to navigate. You can also
+;;   collapse and expand headings and drawers with `TAB` and `S-TAB`,
+;;   just like in regular Org buffers.  Results buffers are marked
+;;   read-only so you cannot modify them by accidental keypresses.
+;; + Delete the result at point in `helm-org-rifle-occur` buffers by
+;;   pressing `d`.  This does not alter the source buffers but simply
 ;;   removes uninteresting results from view.
-;; + You can customize the `helm-org-rifle' group if you like.
+;; +  You can customize the `helm-org-rifle` group if you like.
 
 ;;; Credits:
 
