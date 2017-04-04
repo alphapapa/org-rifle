@@ -592,8 +592,29 @@ One source is returned for each open Org buffer."
   "Save `helm-org-rifle' result in a `helm-org-rifle-occur' buffer.
 In the spirit of `helm-grep-save-results'."
   (interactive)
-  (helm-mark-all)
+  (helm-org-rifle--mark-all-candidates)
   (helm-exit-and-execute-action 'helm-org-rifle--show-marked-entries))
+
+(defun helm-org-rifle--mark-all-candidates ()
+  "Mark all candidates in Helm buffer.
+`helm-mark-all' only marks in the current source, not all
+sources, so we do it ourselves."
+  ;; Based on `helm-mark-all'
+  (with-helm-window
+    (let ((follow (if (helm-follow-mode-p (helm-get-current-source)) 1 -1)))
+      (helm-follow-mode -1)  ; Disable follow so we don't jump to every candidate
+      (save-excursion
+        (goto-char (point-min))
+        ;; Mark first candidate
+        (forward-line 1)  ; Skip header line
+        (helm-mark-current-line)
+        (helm-make-visible-mark)
+        (while (ignore-errors (goto-char (next-single-property-change (point) 'helm-candidate-separator)))
+          ;; Mark rest of candidates
+          (forward-line 1)
+          (helm-mark-current-line)
+          (helm-make-visible-mark)))
+      (helm-follow-mode follow))))
 
 (defun helm-org-rifle--show-marked-entries (&optional ignore)
   "Show marked candidates using the default function."
