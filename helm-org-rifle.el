@@ -212,6 +212,14 @@ For large result sets this may be slow, although it doesn't seem
 to be a major bottleneck."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-heading-contents-separator "\n"
+  "Separator inserted between entry's heading and contents.
+Usually this should be a newline, but it may be useful to adjust
+it when defining custom commands.  For example, by setting this
+to a non-newline value and disabling `helm-org-rifle-multiline',
+each result can be displayed on a single line."
+  :type 'string)
+
 (defcustom helm-org-rifle-input-idle-delay 0.05
   "How long to wait to find results after the user stops typing, in seconds.
 This helps prevent flickering in the Helm buffer, because the
@@ -220,6 +228,15 @@ search immediately after each keystroke.  You can adjust this to
 get results more quickly (shorter delay) or further reduce
 flickering (longer delay)."
   :group 'helm-org-rifle :type 'float)
+
+(defcustom helm-org-rifle-multiline t
+  "Show entries on multiple lines, with the heading on the first line and a blank line between.
+In most cases this should remain on, but it may be useful to
+disable it when defining custom commands.  Note that if this is
+disabled, usually `helm-org-rifle-heading-contents-separator'
+should be set to a non-newline value, e.g. a space or something
+like \": \"."
+  :type 'boolean)
 
 (defcustom helm-org-rifle-show-entry-function 'helm-org-rifle-show-entry-in-real-buffer
   "Default function to use to show selected entries."
@@ -559,7 +576,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                                   (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
                   :candidate-transformer helm-org-rifle-transformer
                   :match 'identity
-                  :multiline t
+                  :multiline helm-org-rifle-multiline
                   :volatile t
                   :action (helm-make-actions
                            "Show entry" 'helm-org-rifle--show-marked-entries
@@ -822,9 +839,9 @@ This is how the sausage is made."
                                                       heading
                                                       tags)))))
                        (entry (if helm-org-rifle-show-full-contents
-                                  (s-join "\n" (list heading (org-get-entry)))
+                                  (s-join helm-org-rifle-heading-contents-separator (list heading (org-get-entry)))
                                 ;; Show context strings
-                                (s-join "\n" (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
+                                (s-join helm-org-rifle-heading-contents-separator (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
                   (push (cons entry (cons buffer node-beg))
                         results)))
               ;; Go to end of node

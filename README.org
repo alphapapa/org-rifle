@@ -94,6 +94,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  All of the results in a Helm buffer can be saved to a =helm-org-rifle-occur= buffer by pressing =C-s= in the Helm buffer.
 +  New option =helm-org-rifle-always-show-entry-contents-chars= to show some entry contents when the query only matches the heading or metadata, defaults to =50= characters.
 +  New option =helm-org-rifle-show-full-contents= which displays each result's entire contents rather than just the context around each matching word.  This is off by default, but the =helm-org-rifle-occur= commands activate it for their results, and you might use it selectively by calling one of the =rifle= commands inside a =let= that sets this variable.
++  New options =helm-org-rifle-heading-contents-separator= and =helm-org-rifle-multiline=.  These may be useful to compact the results display when defining custom commands.
 +  The functions =helm-org-rifle-files= and =helm-org-rifle-directories= (and their new =-occur= counterparts) now accept either a string or a list of strings.
 
 *Fixes*
