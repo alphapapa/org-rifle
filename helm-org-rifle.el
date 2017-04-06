@@ -615,7 +615,7 @@ One source is returned for each open Org buffer."
 In the spirit of `helm-grep-save-results'."
   (interactive)
   (helm-org-rifle--mark-all-candidates)
-  (helm-exit-and-execute-action 'helm-org-rifle--show-marked-entries))
+  (helm-exit-and-execute-action 'helm-org-rifle--show-candidates))
 
 (defun helm-org-rifle--mark-all-candidates ()
   "Mark all candidates in Helm buffer.
@@ -638,12 +638,17 @@ sources, so we do it ourselves."
           (helm-make-visible-mark)))
       (helm-follow-mode follow))))
 
-(defun helm-org-rifle--show-marked-entries (&optional ignore)
-  "Show marked candidates using the default function."
-  (let ((entries (helm-org-rifle--get-marked-candidates)))
-    (if (> (length entries) 1)
-        (helm-org-rifle--show-entries-as-occur entries)
-      (helm-org-rifle-show-entry (car entries)))))
+(defun helm-org-rifle--show-candidates (&optional candidates)
+  "Show CANDIDATES (or, if nil, all candidates marked in Helm).
+If one candidate is given, the default
+`helm-org-rifle-show-entry-function' will be used.  If multiple
+candidates, `helm-org-rifle--show-entries-as-occur' will be
+used."
+  (let ((candidates (or (helm-org-rifle--get-marked-candidates)
+                        candidates)))
+    (pcase (safe-length candidates)
+      (1 (helm-org-rifle-show-entry candidates))
+      (2 (helm-org-rifle--show-entries-as-occur candidates)))))
 
 (defun helm-org-rifle--get-marked-candidates ()
   "Return list of all marked candidates in Helm.
