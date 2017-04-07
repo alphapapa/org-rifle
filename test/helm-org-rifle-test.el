@@ -38,7 +38,9 @@ them."
   (before-all
     ;; TODO: Make sure customizable options are set uniformly, here and/or in the steps
     ;; TODO: Use assess's buffer-related functions to do this more cleanly
-    (setq test-buffer (find-file-noselect "test/data.org")))
+
+    ;; (setq test-buffer (find-buffer-visiting "data.org"))
+    (setq test-buffer (find-file-noselect (concat default-directory "test/data.org"))))
 
   (describe "helm-org-rifle--get-candidates-in-buffer"
 
