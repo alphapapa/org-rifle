@@ -114,15 +114,16 @@ primarily as a source of food, consuming both their me" "data.org" . 3114)
                           ("***** Fries  
 he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4375))))
 
-    (it "Can match against tags in any order"
-      (expect (helm-org-rifle--test-helper-process-candidates
-               (helm-org-rifle--get-candidates-in-buffer test-buffer ":fowl:barbecue:"))
-              :to-equal '(("**** Chicken :barbecue:fowl: 
+    (describe "Can match against tags..."
+      (it "...in any order"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer ":fowl:barbecue:"))
+                :to-equal '(("**** Chicken :barbecue:fowl: 
 #+BEGIN_QUOTE
-The chicken (Gallus gallus domest..." "data.org" . 3114))))
+The chicken (Gallus gallus domest..." "data.org" . 3114)))))
 
-    (describe "Can negate matches"
-      (it "On headings"
+    (describe "Can negate matches..."
+      (it "...on headings"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !chicken"))
                 :to-equal '(("*** Meat :meat: 
@@ -134,7 +135,7 @@ is the culinary name for meat from the domestic pig (S...e most commonly consume
                             ("***** Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942))))
 
-      (it "On entry text"
+      (it "...on entry text"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "fruit !edible"))
                 :to-equal '(("*** Fruit :fruit: 
@@ -144,7 +145,7 @@ are the most common^[1] fruits sold as \"blueberries\" a" "data.org" . 1143)
                             ("**** Strawberry  
 ivated worldwide for its fruit. The fruit (which is not...t an aggregate accessory fruit) is widely appreciated f...ared foods as preserves, fruit juice, pies, ice creams," "data.org" . 1640))))
 
-      (it "On tags in individual headings"
+      (it "...on tags in individual headings"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !:fowl:"))
                 :to-equal '(("*** Meat :meat: 
@@ -153,7 +154,32 @@ Brisket is a cut of meat from the breast or lower...tissue, so the resulting mea
 od, consuming both their meat and their eggs." "data.org" . 3114) ("**** Pork  
 is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("***** Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
-    ))
+
+    ;; TODO: Add tests for TODO keywords, priorities
+
+    (it "Can match against priorities"
+      (setq expected-result '(("***** [#B] Mashed potatoes  
+#+BEGIN_QUOTE
+Mashed potato (British English) o..." "data.org" . 5066)))
+      (expect (helm-org-rifle--test-helper-process-candidates
+               (helm-org-rifle--get-candidates-in-buffer test-buffer "[#B]"))
+              :to-equal expected-result)
+      (expect (helm-org-rifle--test-helper-process-candidates
+               (helm-org-rifle--get-candidates-in-buffer test-buffer "#B"))
+              :to-equal expected-result))))
+
+;;;; Update-results functions
+
+(defun helm-org-rifle--test-update-result ()
+  "Update result in next `expect'."
+  (interactive)
+  (re-search-forward "(expect")
+  (forward-sexp)
+  (eval-print-last-sexp)
+  (transpose-sexps 1)
+  (kill-sexp)
+  (backward-sexp)
+  (cycle-spacing -1))
 
 ;;; Config
 

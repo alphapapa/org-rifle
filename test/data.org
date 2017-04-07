@@ -77,3 +77,9 @@ Pulled pork is a method of cooking pork where what would otherwise be a tough cu
 #+BEGIN_QUOTE
 French fries are served hot, either soft or crispy, and are generally eaten as part of lunch or dinner or by themselves as a snack, and they commonly appear on the menus of diners, fast food restaurants, pubs, and bars. Fries in America are generally salted and are almost always served with ketchup, but in many countries they have other condiments or toppings, like vinegar, mayonnaise, or other local specialties. Fries can be topped more heavily, as in the dishes of poutine and chili cheese fries. French fries can be made from sweet potatoes instead of potatoes. A baked variant of the French fry ("chunky oven chips") uses less or even no oil.
 #+END_QUOTE
+
+***** [#B] Mashed potatoes
+
+#+BEGIN_QUOTE
+Mashed potato (British English) or mashed potatoes (American English), is a dish prepared by mashing boiled potatoes. Recipes started appearing in 1747 with an entry in The Art of Cookery by Hannah Glasse. Dehydrated and frozen mashed potatoes are available in many supermarkets.
+#+END_QUOTE
