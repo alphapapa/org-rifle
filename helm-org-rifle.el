@@ -579,7 +579,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :multiline helm-org-rifle-multiline
                   :volatile t
                   :action (helm-make-actions
-                           "Show entry" 'helm-org-rifle--show-marked-entries
+                           "Show entry" 'helm-org-rifle--show-candidates
                            "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
                            "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
                   :keymap helm-org-rifle-map)))
