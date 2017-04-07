@@ -79,6 +79,21 @@ he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4375))))
 #+BEGIN_QUOTE
 The chicken (Gallus gallus domest..." "data.org" . 3114))))
 
+    (describe "Can negate matches"
+      (it "On headings"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !chicken"))
+                :to-equal '(("*** Meat :meat: 
+" "data.org" . 2400)
+                            ("***** Brisket :barbecue: 
+Brisket is a cut of meat from the breast or lower...tissue, so the resulting meat must be cooked correctly" "data.org" . 2488)
+                            ("**** Pork  
+is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541)
+                            ("***** Pulled pork :barbecue: 
+erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
+
+    ;; TODO: Add tests for negating entry text and tags
+
     ))
 
 ;;; Config
