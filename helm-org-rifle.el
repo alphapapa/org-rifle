@@ -758,6 +758,10 @@ This is how the sausage is made."
                    matching-lines-in-node
                    matched-words-with-context)
 
+              ;; Goto beginning of node
+              (when node-beg
+                (goto-char node-beg))
+
               ;; Check negations
               (when negations
                 ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
@@ -768,16 +772,19 @@ This is how the sausage is made."
                           ;; properly excludes the "*scratch*" buffer,
                           ;; but negating "!*scratch*" doesn't'.
                           (string-match negations-re buffer-name)
-                          (re-search-forward negations-re node-end t))
+                          (save-excursion
+                            (re-search-forward negations-re node-end t)))
                   (throw 'negated (goto-char node-end))))
 
               ;; Get beginning-of-line positions for matching lines in node
               (setq matching-positions-in-node
-                    (cl-loop initially (goto-char node-beg)
-                             while (re-search-forward positive-re node-end t)
-                             collect (line-beginning-position) into result
-                             do (end-of-line)
-                             finally return (sort (delete-dups result) '<)))
+                    (cl-loop
+                     ;; FIXME: This goto-char should be unnecessary now
+                     initially (goto-char node-beg)
+                     while (re-search-forward positive-re node-end t)
+                     collect (line-beginning-position) into result
+                     do (end-of-line)
+                     finally return (sort (delete-dups result) '<)))
 
               ;; Get list of line-strings containing any token
               (setq matching-lines-in-node
