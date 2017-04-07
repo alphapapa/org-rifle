@@ -739,12 +739,14 @@ This is how the sausage is made."
         ;; Search for matching nodes
         (while (re-search-forward positive-re nil t)
           (catch 'negated  ; Skip node if negations found
-            (let* ((node-beg (save-excursion
-                               (save-match-data
-                                 (outline-previous-heading))))
-                   (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
-                               (save-excursion
-                                 (outline-next-heading))))
+            (let* ((node-beg (or (save-excursion
+                                   (save-match-data
+                                     (outline-previous-heading)))
+                                 (point)))
+                   (node-end (or (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
+                                   (save-excursion
+                                     (outline-next-heading)))
+                                 (point-max)))
                    (components (org-heading-components))
                    (path (when helm-org-rifle-show-path
                            (org-get-outline-path)))
