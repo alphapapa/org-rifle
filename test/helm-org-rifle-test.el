@@ -76,11 +76,11 @@ them."
 
   (describe "helm-org-rifle-split-tags-in-input-list"
 
-    (it "Can split a list of strings containing search terms into a list of tags"
+    (it "Can split a list of strings containing search terms into a list of terms and tags"
       (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither" " " t))
               :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither")))
 
-    (it "Can split a list of strings containing search terms, including negated tags, into a list of tags"
+    (it "Can split a list of strings containing search terms, including negated tags, into a list of terms and tags"
       (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:" " " t))
               :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither" "!:negatedtag:"))))
 
