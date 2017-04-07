@@ -65,10 +65,19 @@ The garden strawberry (or simply strawberry; F...which is not a botanical berry,
 " "data.org" . 1)
                           ("**** Strawberry  
 resh or in such prepared foods as preserves, fruit jui" "data.org" . 1639)
-                          ("**** Chicken :barbecue: 
+                          ("**** Chicken :barbecue:fowl: 
 primarily as a source of food, consuming both their me" "data.org" . 3113)
                           ("***** Fries  
-he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4374))))))
+he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4374))))
+
+    (it "Can match against tags in any order"
+      (expect (helm-org-rifle--test-helper-process-candidates
+               (helm-org-rifle--get-candidates-in-buffer test-buffer ":fowl:barbecue:"))
+              :to-equal '(("**** Chicken :barbecue:fowl: 
+#+BEGIN_QUOTE
+The chicken (Gallus gallus domest..." "data.org" . 3113))))
+
+    ))
 
 ;;; Config
 
