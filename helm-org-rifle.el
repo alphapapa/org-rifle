@@ -573,7 +573,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :after-init-hook helm-org-rifle-after-init-hook
                   :candidates (lambda ()
                                 (when (s-present? helm-pattern)
-                                  (helm-org-rifle-get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
+                                  (helm-org-rifle--get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
                   :candidate-transformer helm-org-rifle-transformer
                   :match 'identity
                   :multiline helm-org-rifle-multiline
@@ -696,7 +696,7 @@ source, so we must gather them manually."
 
 ;;;;; The meat
 
-(defun helm-org-rifle-get-candidates-in-buffer (buffer input)
+(defun helm-org-rifle--get-candidates-in-buffer (buffer input)
   "Return candidates in BUFFER for INPUT.
 
 INPUT is a string.  Candidates are returned in this
@@ -962,7 +962,7 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (with-current-buffer buffer
     (unless (eq major-mode 'org-mode)
       (error "Buffer %s is not an Org buffer." buffer)))
-  (cl-loop for (text pos) in (helm-org-rifle-get-candidates-in-buffer buffer input)
+  (cl-loop for (text pos) in (helm-org-rifle--get-candidates-in-buffer buffer input)
            collect (list :text text :buffer buffer :node-beg pos)))
 
 (defun helm-org-rifle-occur-goto-entry ()
