@@ -103,6 +103,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Org links are "unlinkified" when showing match context, preventing Org syntax characters from cluttering the results.
 +  The display of full outline paths in Helm buffers is tidier.
 +  Fixed bug that may have prevented the first or last heading in a file from being matched.
++  Fixed bug that prevented negated tags (e.g. ~!:tag1:~) from being negated properly.
 +  Fixed very minor bug in customization settings that caused the setting for =helm-org-rifle-show-entry-function= to display the wrong function name, even though it worked correctly.
 
 ** 1.3.0

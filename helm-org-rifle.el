@@ -1250,8 +1250,18 @@ i.e. a string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and \":tag2:\
 (defun helm-org-rifle-split-tag-string (s)
   "Return list containing Org tag strings for input string S containing Org tags.
 i.e. for S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is returned."
-  (cl-loop for tag in (s-match-strings-all "\\(!?:[[:alnum:]_@#%%]+:\\)" s)
-           append (cdr tag)))
+  (cl-loop with skip
+           ;; FIXME: There is probably a nicer way to handle negated
+           ;; tags.  `s-match-strings-all' returns a list containing
+           ;; both "!:negatedtag:" and ":negatedtag:", so we have to
+           ;; skip the extra, non-negated one
+           for tag in (s-match-strings-all "\\(!?\\)\\(:[[:alnum:]_@#%%]+:\\)" s)
+           if skip
+           do (setq skip nil)
+           else if (string= "!" (second tag))
+           do (setq skip t)
+           and collect (car tag)
+           else collect (car tag)))
 
 (defun helm-org-rifle-set-input-idle-delay ()
   "Set `helm-input-idle-delay' in Helm buffer."

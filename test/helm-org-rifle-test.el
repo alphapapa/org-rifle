@@ -42,6 +42,21 @@ them."
     ;; (setq test-buffer (find-buffer-visiting "data.org"))
     (setq test-buffer (find-file-noselect (concat default-directory "test/data.org"))))
 
+  (describe "helm-org-rifle-split-tag-string"
+    (it "Can split a string of search terms and return a list of tags"
+      (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:")
+              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag:"))))
+
+  (describe "helm-org-rifle-split-tags-in-input-list"
+
+    (it "Can split a list of strings containing search terms into a list of tags"
+      (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither" " " t))
+              :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither")))
+
+    (it "Can split a list of strings containing search terms, including negated tags, into a list of tags"
+      (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:" " " t))
+              :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither" "!:negatedtag:"))))
+
   (describe "helm-org-rifle--get-candidates-in-buffer"
 
     ;; FIXME: For some reason the REAL cons in (DISPLAY . REAL) gets
@@ -100,10 +115,17 @@ erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the
                             ("**** Blueberry  
 are the most common^[1] fruits sold as \"blueberries\" a" "data.org" . 1143)
                             ("**** Strawberry  
-ivated worldwide for its fruit. The fruit (which is not...t an aggregate accessory fruit) is widely appreciated f...ared foods as preserves, fruit juice, pies, ice creams," "data.org" . 1640)))))
+ivated worldwide for its fruit. The fruit (which is not...t an aggregate accessory fruit) is widely appreciated f...ared foods as preserves, fruit juice, pies, ice creams," "data.org" . 1640))))
 
-    ;; TODO: Add tests for negating entry text and tags
-
+      (it "On tags in individual headings"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !:fowl:"))
+                :to-equal '(("*** Meat :meat: 
+" "data.org" . 2400) ("***** Brisket :barbecue: 
+Brisket is a cut of meat from the breast or lower...tissue, so the resulting meat must be cooked correctly" "data.org" . 2488) ("**** Chicken :barbecue:fowl: 
+od, consuming both their meat and their eggs." "data.org" . 3114) ("**** Pork  
+is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("***** Pulled pork :barbecue: 
+erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
     ))
 
 ;;; Config
