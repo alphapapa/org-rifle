@@ -1243,15 +1243,15 @@ From `helm-insert-header'."
 i.e. a string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and \":tag2:\"."
   (cl-loop for string in input
            for tags = (helm-org-rifle-split-tag-string string)
-           if tags collect tags into result
+           if tags append tags into result
            else collect string into result
-           finally return (-flatten result)))
+           finally return result))
 
 (defun helm-org-rifle-split-tag-string (s)
   "Return list containing Org tag strings for input string S containing Org tags.
 i.e. for S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is returned."
-  (cl-loop for tag in (s-match-strings-all "\\(:[[:alnum:]_@#%%]+:\\)" s)
-           collect (cdr tag)))
+  (cl-loop for tag in (s-match-strings-all "\\(!?:[[:alnum:]_@#%%]+:\\)" s)
+           append (cdr tag)))
 
 (defun helm-org-rifle-set-input-idle-delay ()
   "Set `helm-input-idle-delay' in Helm buffer."
