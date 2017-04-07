@@ -404,8 +404,8 @@ If FILES is nil, prompt with `helm-read-file-name'.  All FILES
 are searched; they are not filtered with
 `helm-org-rifle-directories-filename-regexp'."
  :sources (--map (helm-org-rifle-get-source-for-file it) files)
- :let ((files (helm-org-rifle--atom-to-list-or-list (or files
-                                                        (helm-read-file-name "Files: " :marked-candidates t))))
+ :let ((files (helm-org-rifle--listify (or files
+                                           (helm-read-file-name "Files: " :marked-candidates t))))
        (helm-candidate-separator " ")
        (helm-cleanup-hook (lambda ()
                             ;; Close new buffers if enabled
@@ -457,7 +457,7 @@ Files in DIRECTORIES are filtered using
   (let* ((recursive (if (or toggle-recursion current-prefix-arg)
                         (not helm-org-rifle-directories-recursive)
                       helm-org-rifle-directories-recursive))
-         (directories (helm-org-rifle--atom-to-list-or-list
+         (directories (helm-org-rifle--listify
                        (or directories
                            (-select 'f-dir? (helm-read-file-name "Directories: " :marked-candidates t)))))
          (files (-flatten (--map (f-files it
@@ -493,7 +493,7 @@ Files in DIRECTORIES are filtered using
              ,preface  ; Maybe not necessary
              ,(when directories
                 ;; Is there a nicer way to do this?
-                `(setq directories-collected (append directories-collected (helm-org-rifle--atom-to-list-or-list ,directories))))
+                `(setq directories-collected (append directories-collected (helm-org-rifle--listify ,directories))))
              (when directories-collected
                (let ((recursive (if current-prefix-arg
                                     (not helm-org-rifle-directories-recursive)
@@ -508,7 +508,7 @@ Files in DIRECTORIES are filtered using
                                                        directories-collected))))))
              ,(when files
                 ;; Is there a nicer way to do this?
-                `(setq files-collected (append files-collected (helm-org-rifle--atom-to-list-or-list ,files))))
+                `(setq files-collected (append files-collected (helm-org-rifle--listify ,files))))
              (when files-collected
                (setq buffers-collected (append (cl-loop for file in files-collected
                                                         collect (-if-let (buffer (org-find-base-buffer-visiting file))
@@ -1082,7 +1082,7 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
 
 ;;;;; Support functions
 
-(defun helm-org-rifle--atom-to-list-or-list (item)
+(defun helm-org-rifle--listify (item)
   "If ITEM is an atom, return (list ITEM).  If ITEM is a list, return ITEM."
   (cl-typecase item
     (list item)
