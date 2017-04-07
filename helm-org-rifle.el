@@ -743,9 +743,7 @@ This is how the sausage is made."
                                (save-excursion
                                  (outline-next-heading))))
                    (components (org-heading-components))
-                   (path (when (or helm-org-rifle-show-path
-                                   ;; BUG: Causes path to show whenever negations are used, regardless of -show-path
-                                   negations)
+                   (path (when helm-org-rifle-show-path
                            (org-get-outline-path)))
                    (priority (when (nth 3 components)
                                ;; TODO: Is there a better way to do this?  The
@@ -763,7 +761,7 @@ This is how the sausage is made."
               ;; Check negations
               (when negations
                 ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
-                (when (or (cl-loop for elem in path
+                (when (or (cl-loop for elem in (or path (org-get-outline-path))
                                    thereis (string-match-p negations-re elem))
                           ;; FIXME: Doesn't quite match properly with
                           ;; special chars, e.g. negating "!scratch"
