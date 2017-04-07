@@ -717,6 +717,9 @@ This is how the sausage is made."
                                (s-presence (regexp-quote (s-chop-prefix "!" token)))))
                            tokens))
          (negations-re (when negations
+                         ;; NOTE: Negations only match against whole
+                         ;; words.  This probably makes sense.  Might
+                         ;; be worth mentioning in docs.
                          (rx-to-string `(seq bow (or ,@negations) eow) t)))
          (positive-re (mapconcat 'helm-org-rifle-prep-token tokens "\\|"))
          (positive-re-list (--map (helm-org-rifle-prep-token it) tokens))
