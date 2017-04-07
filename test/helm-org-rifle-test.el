@@ -197,6 +197,7 @@ the next result after point."
     (if (use-region-p)
         (while (re-search-forward "(expect" (region-end) t)
           (update))
+      (re-search-forward "(expect" (region-end) t)
       (update))))
 
 ;;; Config
