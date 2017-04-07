@@ -39,7 +39,7 @@ them."
     ;; TODO: Make sure customizable options are set uniformly, here and/or in the steps
     ;; TODO: Use assess's buffer-related functions to do this more cleanly
 
-    ;; (setq test-buffer (find-buffer-visiting "data.org"))
+    ;; (setq test-buffer (or (find-buffer-visiting "data.org") (find-file-noselect "data.org")))
     (setq test-buffer (find-file-noselect (concat default-directory "test/data.org"))))
 
   (before-each
