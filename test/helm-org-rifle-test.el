@@ -176,15 +176,22 @@ Mashed potato (British English) o..." "data.org" . 5066)))
 ;;;; Update-results functions
 
 (defun helm-org-rifle--test-update-result ()
-  "Update result in next `expect'."
+  "Update result in next `expect'.
+If region is active, update all results in it.  Otherwise update
+the next result after point."
   (interactive)
-  (re-search-forward "(expect")
-  (forward-sexp)
-  (eval-print-last-sexp)
-  (transpose-sexps 1)
-  (kill-sexp)
-  (backward-sexp)
-  (cycle-spacing -1))
+  (cl-labels ((update ()
+                      (forward-sexp)
+                      (eval-print-last-sexp)
+                      (transpose-sexps 1)
+                      (kill-sexp)
+                      (backward-sexp)
+                      (cycle-spacing -1)
+                      (insert "'")))
+    (if (use-region-p)
+        (while (re-search-forward "(expect" (region-end) t)
+          (update))
+      (update))))
 
 ;;; Config
 
