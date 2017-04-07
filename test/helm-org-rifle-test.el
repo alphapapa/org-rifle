@@ -90,7 +90,17 @@ Brisket is a cut of meat from the breast or lower...tissue, so the resulting mea
                             ("**** Pork  
 is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541)
                             ("***** Pulled pork :barbecue: 
-erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
+erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942))))
+
+      (it "On entry text"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "fruit !edible"))
+                :to-equal '(("*** Fruit :fruit: 
+" "data.org" . 97)
+                            ("**** Blueberry  
+are the most common^[1] fruits sold as \"blueberries\" a" "data.org" . 1143)
+                            ("**** Strawberry  
+ivated worldwide for its fruit. The fruit (which is not...t an aggregate accessory fruit) is widely appreciated f...ared foods as preserves, fruit juice, pies, ice creams," "data.org" . 1640)))))
 
     ;; TODO: Add tests for negating entry text and tags
 
