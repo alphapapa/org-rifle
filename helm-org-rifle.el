@@ -740,6 +740,7 @@ This is how the sausage is made."
                                  (outline-previous-heading))))
                    (components (org-heading-components))
                    (path (when (or helm-org-rifle-show-path
+                                   ;; BUG: Causes path to show whenever negations are used, regardless of -show-path
                                    negations)
                            (org-get-outline-path)))
                    (priority (when (nth 3 components)
