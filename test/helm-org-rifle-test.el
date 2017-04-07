@@ -155,7 +155,12 @@ od, consuming both their meat and their eggs." "data.org" . 3114) ("**** Pork
 is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("***** Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
 
-    ;; TODO: Add tests for TODO keywords, priorities
+    (it "Can match against TODO keywords"
+      (expect (helm-org-rifle--test-helper-process-candidates
+               (helm-org-rifle--get-candidates-in-buffer test-buffer "[#B]"))
+              :to-equal '(("***** [#B] Mashed potatoes  
+#+BEGIN_QUOTE
+Mashed potato (British English) o..." "data.org" . 5066))))
 
     (it "Can match against priorities"
       (setq expected-result '(("***** [#B] Mashed potatoes  
