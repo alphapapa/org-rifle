@@ -96,6 +96,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  New option =helm-org-rifle-show-full-contents= which displays each result's entire contents rather than just the context around each matching word.  This is off by default, but the =helm-org-rifle-occur= commands activate it for their results, and you might use it selectively by calling one of the =rifle= commands inside a =let= that sets this variable.
 +  New options =helm-org-rifle-heading-contents-separator= and =helm-org-rifle-multiline=.  These may be useful to compact the results display when defining custom commands.
 +  The functions =helm-org-rifle-files= and =helm-org-rifle-directories= (and their new =-occur= counterparts) now accept either a string or a list of strings.
++  Tests have been added to prevent future breakage.  Whew.
 
 *Fixes*
 +  Tag order is now irrelevant.  Previously, searching for =:tag1:tag2:= would not show a heading tagged =:tag2:tag1:=.  It could be worked around by searching for =:tag1: :tag2:=, but that was non-obvious and counter-intuitive.  This could be considered a bug-fix, but the change is significant enough that it belongs in a feature update to get more testing.
