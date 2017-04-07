@@ -150,6 +150,20 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 I can't recommend [[https://github.com/tj64/outorg][Outorg]] enough.  If you edit source code and use Emacs, check it out!
 
+** Testing
+
+*** Running tests
+
+Run =make test= from the main project directory.  Testing requires [[https://github.com/cask/cask][Cask]] and [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]].  It's helpful to put this in a git =pre-push= hook.
+
+*** Adding test data
+
+When adding new data to =test/data.org=, it should go at the bottom to avoid breaking the test data embedded in =test/helm-org-rifle-test.el=, which includes buffer positions.  Adding data anywhere else in the file will invalidate those.  However, if necessary, the =helm-org-rifle--test-update-result= function can be used to easily update test data after making such changes.
+
+*** TODO Test interactive functionality
+
+Future testing should include testing interactive functionality, like Helm commands.  This will probably be easier with [[https://github.com/ecukes/ecukes][ecukes]] and [[https://github.com/ecukes/espuds][espuds]].  It would be nice to use [[https://github.com/phillord/assess][assess]], but it requires Emacs 25 by way of its dependency on =m-buffer=.
+
 ** Bugs
 
 None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
