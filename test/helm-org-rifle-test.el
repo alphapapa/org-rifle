@@ -72,7 +72,12 @@ them."
   (describe "helm-org-rifle-split-tag-string"
     (it "Can split a string of search terms and return a list of tags"
       (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:")
-              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag:"))))
+              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag:")))
+
+    (xit "Can handle multiple tags negated at once"
+      ;; BUG: This doesn't work.  Will require more sophisticated handling.
+      (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag1:negatedtag2:")
+              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag1:" "!:negatedtag2:"))))
 
   (describe "helm-org-rifle-split-tags-in-input-list"
 

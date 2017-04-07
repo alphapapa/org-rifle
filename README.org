@@ -166,7 +166,11 @@ Future testing should include testing interactive functionality, like Helm comma
 
 ** Bugs
 
-None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
+# None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
+
+*** TODO Multiple tags negated in a single token
+
+Negating multiple tags in a single token (e.g. ~!:negatedtag1:negatedtag2:~) doesn't work properly.  Fairly minor issue, but will need fixing.
 
 ** Ideas
 
