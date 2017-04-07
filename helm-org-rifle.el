@@ -768,6 +768,10 @@ This is how the sausage is made."
               ;; Check negations
               (when negations
                 ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
+
+                ;; FIXME: Partial negations seem to put the partially
+                ;; negated entry at the end of results.  Not sure why.
+                ;; Could it actually be a good feature, though?
                 (when (or (cl-loop for elem in (or path (org-get-outline-path))
                                    thereis (string-match-p negations-re elem))
                           ;; FIXME: Doesn't quite match properly with
