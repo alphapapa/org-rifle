@@ -8,6 +8,12 @@
 
 ;;;; Helper functions
 
+(defun helm-org-rifle--test-helper-process-candidates (candidates)
+  "Remove text properties and convert buffers to buffer names in CANDIDATES."
+  (->> candidates
+       (helm-org-rifle--test-helper-remove-properties-from-candidates)
+       (helm-org-rifle--test-helper-convert-buffers-to-buffer-names-in-candidates)))
+
 (defun helm-org-rifle--test-helper-remove-properties-from-candidates (candidates)
   "Remove text properties from CANDIDATES display values.
 Since the properties could vary from one user to another
@@ -37,9 +43,8 @@ them."
   (describe "helm-org-rifle--get-candidates-in-buffer"
 
     (it "Can match against headings"
-      (expect (->> (helm-org-rifle--get-candidates-in-buffer test-buffer "berry")
-                   (helm-org-rifle--test-helper-remove-properties-from-candidates)
-                   (helm-org-rifle--test-helper-convert-buffers-to-buffer-names-in-candidates))
+      (expect (helm-org-rifle--test-helper-process-candidates
+               (helm-org-rifle--get-candidates-in-buffer test-buffer "berry"))
               ;; FIXME: For some reason the REAL cons in (DISPLAY . REAL)
               ;; gets flattened into the parent cons.  The test works,
               ;; but I guess it's not exactly the same as the
