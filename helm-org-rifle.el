@@ -739,6 +739,9 @@ This is how the sausage is made."
             (let* ((node-beg (save-excursion
                                (save-match-data
                                  (outline-previous-heading))))
+                   (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
+                               (save-excursion
+                                 (outline-next-heading))))
                    (components (org-heading-components))
                    (path (when (or helm-org-rifle-show-path
                                    ;; BUG: Causes path to show whenever negations are used, regardless of -show-path
@@ -753,10 +756,6 @@ This is how the sausage is made."
                    (heading (s-trim (if helm-org-rifle-show-todo-keywords
                                         (s-join " " (list (nth 2 components) priority (nth 4 components)))
                                       (nth 4 components))))
-                   (node-end (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
-                               (save-excursion
-                                 (outline-next-heading)
-                                 (point))))
                    matching-positions-in-node
                    matching-lines-in-node
                    matched-words-with-context)
