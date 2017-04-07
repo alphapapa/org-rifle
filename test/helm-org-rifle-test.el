@@ -42,6 +42,33 @@ them."
     ;; (setq test-buffer (find-buffer-visiting "data.org"))
     (setq test-buffer (find-file-noselect (concat default-directory "test/data.org"))))
 
+  (before-each
+    ;; Set options consistently
+    ;; TODO: Can we get these defaults from the other file?
+    (setq helm-org-rifle-always-show-entry-contents-chars 50
+          helm-org-rifle-before-command-hook '(helm-org-rifle-set-sort-mode)
+          helm-org-rifle-after-command-hook '(helm-org-rifle-reset-sort-mode)
+          helm-org-rifle-close-unopened-file-buffers t
+          helm-org-rifle-context-characters 25
+          helm-org-rifle-directories-recursive t
+          helm-org-rifle-ellipsis-string "..."
+          helm-org-rifle-ellipsis-face 'font-lock-comment-delimiter-face
+          helm-org-rifle-directories-filename-regexp "\.org$"
+          helm-org-rifle-fontify-headings t
+          helm-org-rifle-heading-contents-separator "\n"
+          helm-org-rifle-input-idle-delay 0.05
+          helm-org-rifle-multiline t
+          helm-org-rifle-show-entry-function 'helm-org-rifle-show-entry-in-real-buffer
+          helm-org-rifle-show-full-contents nil
+          helm-org-rifle-show-todo-keywords t
+          helm-org-rifle-show-path nil
+          helm-org-rifle-re-prefix "\\(\\_<\\|[[:punct:]]\\)"
+          helm-org-rifle-re-suffix "\\(\\_>\\|[[:punct:]]\\)"
+          helm-org-rifle-sort-order nil
+          helm-org-rifle-unlinkify-entry-links t
+          helm-org-rifle-sort-order-persist nil
+          helm-org-rifle-occur-kill-empty-buffer t))
+
   (describe "helm-org-rifle-split-tag-string"
     (it "Can split a string of search terms and return a list of tags"
       (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:")
