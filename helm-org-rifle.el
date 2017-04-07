@@ -709,7 +709,8 @@ POSITION is the position in BUFFER where the candidate heading
 begins.
 
 This is how the sausage is made."
-  (let* ((tokens (helm-org-rifle-split-tags-in-input-list (split-string input " " t)))
+  (let* ((buffer-name (buffer-name buffer))
+         (tokens (helm-org-rifle-split-tags-in-input-list (split-string input " " t)))
          (negations (-keep (lambda (token)
                              (when (string-match "^!" token)
                                (setq tokens (remove token tokens))  ; Remove negations from tokens
@@ -756,7 +757,6 @@ This is how the sausage is made."
                                (save-excursion
                                  (outline-next-heading)
                                  (point))))
-                   (buffer-name (buffer-name buffer))
                    matching-positions-in-node
                    matching-lines-in-node
                    matched-words-with-context)
