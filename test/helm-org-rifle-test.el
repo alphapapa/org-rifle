@@ -53,31 +53,31 @@ them."
       (expect (helm-org-rifle--test-helper-process-candidates
                (helm-org-rifle--get-candidates-in-buffer test-buffer "berry"))
               :to-equal '(("**** Banana  
-le fruit – botanically a berry^[1]^[2] – produced by se" "data.org" . 173)
+le fruit – botanically a berry^[1]^[2] – produced by se" "data.org" . 174)
                           ("**** Blueberry  
 #+BEGIN_QUOTE
-Blueberries are perennial floweri..." "data.org" . 1142)
+Blueberries are perennial floweri..." "data.org" . 1143)
                           ("**** Strawberry  
-The garden strawberry (or simply strawberry; F...which is not a botanical berry, but an aggregate access...colates. Artificial strawberry flavorings and aromas ar" "data.org" . 1639))))
+The garden strawberry (or simply strawberry; F...which is not a botanical berry, but an aggregate access...colates. Artificial strawberry flavorings and aromas ar" "data.org" . 1640))))
 
     (it "Can match against entry text"
       (expect (helm-org-rifle--test-helper-process-candidates
                (helm-org-rifle--get-candidates-in-buffer test-buffer "food"))
               :to-equal '(("* Food :food: 
-" "data.org" . 1)
+" "data.org" . 2)
                           ("**** Strawberry  
-resh or in such prepared foods as preserves, fruit jui" "data.org" . 1639)
+resh or in such prepared foods as preserves, fruit jui" "data.org" . 1640)
                           ("**** Chicken :barbecue:fowl: 
-primarily as a source of food, consuming both their me" "data.org" . 3113)
+primarily as a source of food, consuming both their me" "data.org" . 3114)
                           ("***** Fries  
-he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4374))))
+he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4375))))
 
     (it "Can match against tags in any order"
       (expect (helm-org-rifle--test-helper-process-candidates
                (helm-org-rifle--get-candidates-in-buffer test-buffer ":fowl:barbecue:"))
               :to-equal '(("**** Chicken :barbecue:fowl: 
 #+BEGIN_QUOTE
-The chicken (Gallus gallus domest..." "data.org" . 3113))))
+The chicken (Gallus gallus domest..." "data.org" . 3114))))
 
     ))
 
