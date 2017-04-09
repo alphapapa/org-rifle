@@ -648,7 +648,7 @@ used."
                         candidates)))
     (pcase (safe-length candidates)
       (1 (helm-org-rifle-show-entry candidates))
-      (2 (helm-org-rifle--show-entries-as-occur candidates)))))
+      (_ (helm-org-rifle--show-entries-as-occur candidates)))))
 
 (defun helm-org-rifle--get-marked-candidates ()
   "Return list of all marked candidates in Helm.
