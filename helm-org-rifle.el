@@ -655,6 +655,10 @@ used."
 `helm-marked-candidates' only returns results from the current
 source, so we must gather them manually."
   ;; Based on `helm-revive-visible-mark'
+
+  ;; FIXME: [2017-04-09 Sun 11:02] Current Helm version does this with
+  ;; an arg to `helm-marked-candidates', but this should be faster
+  ;; since it does a lot less behind the scenes.
   (with-current-buffer helm-buffer
     (save-excursion
       (cl-loop for o in helm-visible-mark-overlays
