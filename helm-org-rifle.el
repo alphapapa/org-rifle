@@ -622,6 +622,9 @@ In the spirit of `helm-grep-save-results'."
 `helm-mark-all' only marks in the current source, not all
 sources, so we do it ourselves."
   ;; Based on `helm-mark-all'
+
+  ;; FIXME: [2017-04-09 Sun 12:54] Latest Helm commit adds arg to
+  ;; `helm-mark-all' to mark in all sources.
   (with-helm-window
     (let ((follow (if (helm-follow-mode-p (helm-get-current-source)) 1 -1)))
       (helm-follow-mode -1)  ; Disable follow so we don't jump to every candidate
