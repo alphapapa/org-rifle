@@ -797,6 +797,74 @@ This helps for debugging, in case I need it in the future:
 #+END_SRC
 * Plans
 
+** TODO [#B] Try org-map-entries
+
+I don't know why I didn't realize this sooner, but =org-map-entries= could likely do much of the logic in =helm-org-rifle--get-candidates-in-buffer=.  I don't know for certain if it would be faster, but since it has optional caching, it might very well be.  And it makes it easy to get inherited tags, properties, etc, and to run on regions, subtrees, etc.  Might even completely handle tag matching for me.  Very powerful.  I should definitely try it, and if the performance is good enough, use it.
+
+#+BEGIN_SRC
+(org-map-entries FUNC &optional MATCH SCOPE &rest SKIP)
+
+Call FUNC at each headline selected by MATCH in SCOPE.
+
+FUNC is a function or a lisp form.  The function will be called without
+arguments, with the cursor positioned at the beginning of the headline.
+The return values of all calls to the function will be collected and
+returned as a list.
+
+The call to FUNC will be wrapped into a save-excursion form, so FUNC
+does not need to preserve point.  After evaluation, the cursor will be
+moved to the end of the line (presumably of the headline of the
+processed entry) and search continues from there.  Under some
+circumstances, this may not produce the wanted results.  For example,
+if you have removed (e.g. archived) the current (sub)tree it could
+mean that the next entry will be skipped entirely.  In such cases, you
+can specify the position from where search should continue by making
+FUNC set the variable ‘org-map-continue-from’ to the desired buffer
+position.
+
+MATCH is a tags/property/todo match as it is used in the agenda tags view.
+Only headlines that are matched by this query will be considered during
+the iteration.  When MATCH is nil or t, all headlines will be
+visited by the iteration.
+
+SCOPE determines the scope of this command.  It can be any of:
+
+nil     The current buffer, respecting the restriction if any
+tree    The subtree started with the entry at point
+region  The entries within the active region, if any
+region-start-level
+        The entries within the active region, but only those at
+        the same level than the first one.
+file    The current buffer, without restriction
+file-with-archives
+        The current buffer, and any archives associated with it
+agenda  All agenda files
+agenda-with-archives
+        All agenda files with any archive files associated with them
+(file1 file2 ...)
+        If this is a list, all files in the list will be scanned
+
+The remaining args are treated as settings for the skipping facilities of
+the scanner.  The following items can be given here:
+
+  archive    skip trees with the archive tag
+  comment    skip trees with the COMMENT keyword
+  function or Emacs Lisp form:
+             will be used as value for ‘org-agenda-skip-function’, so
+             whenever the function returns a position, FUNC will not be
+             called for that entry and search will continue from the
+             position returned
+
+If your function needs to retrieve the tags including inherited tags
+at the *current* entry, you can use the value of the variable
+‘org-scanner-tags’ which will be much faster than getting the value
+with ‘org-get-tags-at’.  If your function gets properties with
+‘org-entry-properties’ at the *current* entry, bind ‘org-trust-scanner-tags’
+to t around the call to ‘org-entry-properties’ to get the same speedup.
+Note that if your function moves around to retrieve tags and properties at
+a *different* entry, you cannot use these techniques.
+#+END_SRC
+
 ** MAYBE [#B] Use text properties instead of plists for timestamping
 :PROPERTIES:
 :ID:       6defd9ba-53fe-4cb3-84a7-270085716bda
