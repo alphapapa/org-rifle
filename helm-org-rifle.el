@@ -875,6 +875,75 @@ This is how the sausage is made."
     ;; Return results in the order they appear in the org file
     (nreverse results)))
 
+;;;;; git-grep
+
+(defun helm-org-rifle--call-git-grep (query)
+  "Return result of calling \"git grep\" with QUERY."
+  (with-temp-buffer
+    (call-process "git" nil t nil
+                  "grep" "-Wn" query)
+    (buffer-string)))
+
+(defun helm-org-rifle--parse-git-grep-output (output)
+  "Process OUTPUT string, returning alist in (FILENAME . CONTENTS) format.
+Each CONTENTS is suitable for inserting into a temporary buffer in Org mode."
+  (let ((split-output (s-split (rx bol "--" eol) output)))
+    (cl-loop with results
+             with filename
+             with first-line
+             for item in split-output
+             when (s-present? item)
+             do (progn (setq item (s-trim item))
+                       ;; FIXME: Try to do one string-match with groups
+                       (setq first-line (progn
+                                          (string-match (rx (minimal-match (and (1+ anything) eol))) item)
+                                          (match-string 0 item)))
+                       ;; FIXME: If git grep returns an item that doesn't start with a headline line (which it
+                       ;; seems to be doing sometimes, I don't know why), this will insert an item without a
+                       ;; heading.
+                       (string-match (rx (group-n 1 (minimal-match (1+ anything)))  ; Filename
+                                         (or ":" "=")
+                                         (group-n 2 (1+ digit))  ; Line number
+                                         (or ":" "="))
+                                     first-line)
+                       (setq filename (match-string 1 first-line))
+                       (setq line-number (match-string 2 first-line))
+                       (unless (and filename line-number)
+                         (error "FILENAME OR LINE-NUMBER IS NIL, ITEM: %s" item)))
+             and collect `(,filename
+                           ,line-number
+                           .
+                           ;; Remove filename from each line
+                           ,(replace-regexp-in-string (rx-to-string `(seq line-start
+                                                                          ,filename
+                                                                          (or ":" "-" "=")
+                                                                          (1+ digit)
+                                                                          (or ":" "-" "=")))
+                                                      "" item t t)))))
+
+(defun helm-org-rifle--make-git-grep-results-buffers (results)
+  "Return list of buffers containing inserted RESULTS."
+  (let* ((filenames (-uniq (cl-loop for item in results
+                                    collect (car item))))
+         (buffers (cl-loop for filename in filenames
+                           collect (cons filename
+                                         (get-buffer-create (concat " helm-org-rifle-temp-buffer-for:" filename))))))
+    ;; Clear existing buffers
+    (dolist (buffer buffers)
+      (with-current-buffer (cdr buffer)
+        (erase-buffer)))
+    ;; Insert results
+    (cl-loop for item in results
+             for filename = (car item)
+             for buffer = (cdr (assoc filename buffers))
+             for line-number = (cadr item)
+             for text = (cddr item)
+             do (with-current-buffer buffer
+                  (set-text-properties 0 (length text) (list :line-number line-number) text)
+                  (insert text "\n")))
+    ;; Don't forget to kill the buffers in calling function
+    buffers))
+
 ;;;;; Occur-style
 
 (defun helm-org-rifle-occur-begin (source-buffers)
