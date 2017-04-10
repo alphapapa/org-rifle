@@ -802,6 +802,33 @@ This helps for debugging, in case I need it in the future:
 
 I don't know why I didn't realize this sooner, but =org-map-entries= could likely do much of the logic in =helm-org-rifle--get-candidates-in-buffer=.  I don't know for certain if it would be faster, but since it has optional caching, it might very well be.  And it makes it easy to get inherited tags, properties, etc, and to run on regions, subtrees, etc.  Might even completely handle tag matching for me.  Very powerful.  I should definitely try it, and if the performance is good enough, use it.
 
+e.g. this code from =swiper/counsel/ivy=:
+
+#+BEGIN_SRC elisp
+  (org-map-entries
+   (lambda ()
+     (let* ((components (org-heading-components))
+            (level (make-string
+                    (if org-odd-levels-only
+                        (nth 1 components)
+                      (nth 0 components))
+                    ?*))
+            (todo      (nth 2 components))
+            (priority  (nth 3 components))
+            (text      (nth 4 components))
+            (tags      (nth 5 components)))
+       (list (mapconcat 'identity
+                        (cl-remove-if 'null
+                                      (list level todo
+                                            (if priority (format "[#%c]" priority))
+                                            text tags))
+                        " ")
+             (buffer-file-name)
+             (point))))
+   nil
+   'agenda)
+#+END_SRC
+
 #+BEGIN_SRC
 (org-map-entries FUNC &optional MATCH SCOPE &rest SKIP)
 
