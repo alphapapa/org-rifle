@@ -5,6 +5,7 @@
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
      - [[#try-org-map-entries][Try org-map-entries]]
+     - [[#try-alternative-split-string-instead-of-s-slice-at][Try alternative split-string instead of s-slice-at]]
      - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
      - [[#remove-duplicateoverlapping-results-from-occur-buffer][Remove duplicate/overlapping results from occur buffer]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
@@ -891,6 +892,43 @@ with ‘org-get-tags-at’.  If your function gets properties with
 to t around the call to ‘org-entry-properties’ to get the same speedup.
 Note that if your function moves around to retrieve tags and properties at
 a *different* entry, you cannot use these techniques.
+#+END_SRC
+
+** TODO Try alternative split-string instead of s-slice-at
+
+[[http://emacs.stackexchange.com/a/5730][According to abo-abo]], this should be better than =s-slice-at=:
+
+#+BEGIN_SRC elisp
+  (defun split-string (string &optional separators omit-nulls keep-sep)
+    "Split STRING into substrings bounded by matches for SEPARATORS."
+    (let* ((keep-nulls (not (if separators omit-nulls t)))
+           (rexp (or separators split-string-default-separators))
+           (start 0)
+           this-start this-end
+           notfirst
+           (list nil)
+           (push-one
+            (lambda ()
+              (when (or keep-nulls (< this-start this-end))
+                (let ((this (substring string this-start this-end)))
+                  (when (or keep-nulls (> (length this) 0))
+                    (push this list)))))))
+      (while (and (string-match
+                   rexp string
+                   (if (and notfirst
+                            (= start (match-beginning 0))
+                            (< start (length string)))
+                       (1+ start) start))
+                  (< start (length string)))
+        (setq notfirst t)
+        (setq this-start start this-end (match-beginning 0)
+              start (match-end 0))
+        (funcall push-one)
+        (when keep-sep
+          (push (match-string 0 string) list)))
+      (setq this-start start this-end (length string))
+      (funcall push-one)
+      (nreverse list)))
 #+END_SRC
 
 ** MAYBE [#B] Use text properties instead of plists for timestamping
