@@ -875,6 +875,55 @@ This is how the sausage is made."
     ;; Return results in the order they appear in the org file
     (nreverse results)))
 
+;;;;; agrep
+
+(defun helm-org-rifle--parse-agrep-output (output)
+  "Process OUTPUT string, returning alist in (CONTENTS . (FILENAME . HEADING)) format.
+Each CONTENTS is suitable for inserting into a temporary buffer in Org mode."
+  ;; FIXME: According to <http://emacs.stackexchange.com/a/5730>,
+  ;; `s-slice-at' is inefficient and the alternative `string-match'
+  ;; described there should be used instead.
+  (let ((items (s-slice-at (rx bol (1+ not-newline) ": *") output)))
+    (cl-loop with rest
+             with filename
+             with heading
+             with entry
+             for item in items
+             for first-newline-pos = (string-match "\n" item)
+             for first-line = (subseq item 0 first-newline-pos)
+             do (string-match (rx bol
+                                  (group (1+ (not (any ":"))))  ; Filename
+                                  ": "
+                                  (group (minimal-match (1+ anything)) eol))  ; Heading
+                              first-line)
+             for filename = (match-string 1 first-line)
+             for heading = (match-string 2 first-line)
+             ;; Discard item if first line is not a heading (e.g. "*bold text*" at the beginning of a line)
+             when (string-match org-heading-regexp heading)
+             collect (progn
+                       (setq rest (subseq item first-newline-pos))
+                       (setq entry (s-trim (concat "*" heading "\n" rest)))  ; Add a star to replace the one the split removed
+                       (cons entry (cons filename heading))))))
+
+(defun helm-org-rifle--call-agrep (query &optional &key path recursive)
+  "Return result of calling \"grep\" with QUERY.
+Note: returns lines matching QUERY *and* all headings.
+
+Search PATH if given, otherwise current directory.
+
+Recurse if RECURSIVE is non-nil."
+  (with-temp-buffer
+    (apply 'call-process "agrep" nil t nil
+           "-d" "^*"  ; Org headings as separators
+           "-i"  ; Case-insensitive
+           query
+           (append (f-files (or path ".")
+                            (lambda (file)
+                              (s-matches? helm-org-rifle-directories-filename-regexp (f-filename file)))
+                            recursive)
+                   '("/dev/null")))  ; agrep only displays filenames if multiple files are given; use /dev/null as a dummy extra file
+    (buffer-string)))
+
 ;;;;; Occur-style
 
 (defun helm-org-rifle-occur-begin (source-buffers)
