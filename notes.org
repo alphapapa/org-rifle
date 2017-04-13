@@ -4,6 +4,7 @@
      - [[#context-splitting][Context-splitting]]
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
+     - [[#underway-use-grep-to-find-matching-lines][UNDERWAY Use grep to find matching lines]]
      - [[#try-org-map-entries][Try org-map-entries]]
      - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
      - [[#remove-duplicateoverlapping-results-from-occur-buffer][Remove duplicate/overlapping results from occur buffer]]
@@ -11,7 +12,6 @@
      - [[#match-tags-separately][Match tags separately]]
      - [[#case-sensitive-if-caps-are-present][Case-sensitive if caps are present]]
      - [[#substring-matching][Substring matching]]
-     - [[#maybe-use-grep-to-find-matching-lines][MAYBE Use grep to find matching lines]]
      - [[#look-at-how-deft-searches-files][Look at how Deft searches files]]
      - [[#maybe-flx-sorting][MAYBE flx sorting]]
      - [[#maybe-match-only-headings][MAYBE Match only headings]]
@@ -798,6 +798,20 @@ This helps for debugging, in case I need it in the future:
 #+END_SRC
 * Plans
 
+** UNDERWAY Use grep to find matching lines
+:LOGBOOK:
+-  State "UNDERWAY"   from "MAYBE"      [2017-04-12 Wed 17:26]
+:END:
+
+It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
+
+*** Use plain grep
+
+I think this might work pretty well:
+
+1.  Run =egrep= with a regexp like =(^\*|keyword)=.  This will return all headings /and/ all lines that match the keyword.
+2.  For each non-heading line in the output, look up one line to get its heading, then concat them and fontify them and return them as a candidate.  (Will need to get line-numbers, and will need to make the goto functions handle line numbers as well as positions.
+
 ** TODO [#B] Try org-map-entries
 
 I don't know why I didn't realize this sooner, but =org-map-entries= could likely do much of the logic in =helm-org-rifle--get-candidates-in-buffer=.  I don't know for certain if it would be faster, but since it has optional caching, it might very well be.  And it makes it easy to get inherited tags, properties, etc, and to run on regions, subtrees, etc.  Might even completely handle tag matching for me.  Very powerful.  I should definitely try it, and if the performance is good enough, use it.
@@ -937,10 +951,6 @@ Hm, this is strange.  I'll have to check on it.
 *** TODO Broken again
 
 Now it's /doing/ substring matching again.  I specifically tested this earlier and it was working correctly, not matching substrings.  Now it's doing it again.  What.
-
-** MAYBE Use grep to find matching lines
-
-It might be faster, especially for unopened files, to use =grep -b= to get matching lines in a file, and then backtrack to find the node's heading, and then search the node.
 
 ** TODO Look at how [[https://github.com/jrblevin/deft][Deft]] searches files
 
