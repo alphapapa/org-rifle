@@ -39,7 +39,13 @@ them."
     ;; TODO: Make sure customizable options are set uniformly, here and/or in the steps
     ;; TODO: Use assess's buffer-related functions to do this more cleanly
 
-    ;; (setq test-buffer (or (find-buffer-visiting "data.org") (find-file-noselect "data.org")))
+    ;; TODO: When files are visited literally, in fundamental-mode,
+    ;; the positions of results are slightly different, so the test
+    ;; data doesn't match.  Maybe, if the positions are always
+    ;; different by exactly the same amount, it could be fixed by
+    ;; simple subtraction.
+
+    ;;(setq test-buffer (or (find-buffer-visiting "data.org") (find-file-noselect "data.org" nil t))))
     (setq test-buffer (find-file-noselect (concat default-directory "test/data.org"))))
 
   (before-each

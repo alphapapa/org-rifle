@@ -327,6 +327,16 @@ Just in case this is a performance issue for anyone, it can be disabled."
 (defvar helm-org-rifle-occur-last-input nil
   "Last input given, used to avoid re-running search when input hasn't changed.")
 
+(defvar helm-org-rifle-raw t
+  "When non-nil, read unopened files literally.
+This should significantly improve performance by avoiding
+activating `org-mode' on a buffer unless the user actually
+chooses a result in it.  Note that
+`helm-org-rifle-close-unopened-file-buffers' should be enabled,
+otherwise Org files would be left open in buffers in Fundamental
+Mode, which would be confusing if the user later switched to one
+of those buffers expecting it to be in Org mode.")
+
 (defvar helm-org-rifle-transformer nil
   "Function to transform results, usually for sorting.  Not intended to be user-set at this time.")
 
@@ -595,7 +605,7 @@ with `find-file-noselect'."
     (unless buffer
       (if (f-exists? file)
           (progn
-            (setq buffer (find-file-noselect file))
+            (setq buffer (find-file-noselect file nil helm-org-rifle-raw))
             (setq new-buffer t))
         (error "File not found: %s" file)))
     (setq source (helm-org-rifle-get-source-for-buffer buffer))
@@ -677,6 +687,7 @@ source, so we must gather them manually."
   (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
   (-let (((buffer . pos) candidate))
     (switch-to-buffer buffer)
+    (helm-org-rifle--revert-buffer-if-necessary)
     (goto-char pos))
   (org-show-entry))
 
@@ -686,6 +697,7 @@ source, so we must gather them manually."
          (original-buffer (current-buffer)))
     (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
     (switch-to-buffer buffer)
+    (helm-org-rifle--revert-buffer-if-necessary)
     (goto-char pos)
     (org-tree-to-indirect-buffer)
     (unless (equal original-buffer (car (window-prev-buffers)))
@@ -736,6 +748,10 @@ This is how the sausage is made."
          (case-fold-search t)
          results)
     (with-current-buffer buffer
+      (unless (eq major-mode 'org)
+        ;; Set these if buffer isn't in org-mode, necessary for org-heading-components, org-back-to-heading, org-at-heading-p
+        (setq outline-regexp "\\*+ ")
+        (setq org-complex-heading-regexp "^\\(\\*+\\)\\(?: +\\(C\\(?:ANCELED\\|HECK\\)\\|DONE\\|HAVE-READ\\|IN-PROGRESS\\|MAYBE\\|NEXT\\|READING\\|S\\(?:EEN\\|OMEDAY\\|TARTED\\)\\|TO\\(?:-\\(?:READ\\|WATCH\\)\\|D\\(?:AY\\|O\\)\\)\\|UNDERWAY\\|WA\\(?:\\(?:IT\\|TCH\\)ING\\)\\)\\)?\\(?: +\\(\\[#.\\]\\)\\)?\\(?: +\\(.*?\\)\\)??\\(?:[ 	]+\\(:[[:alnum:]_@#%:]+:\\)\\)?[ 	]*$"))
       (save-excursion
 
         ;; Go to first heading
@@ -995,6 +1011,7 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
           (offset (+ 2 (- (point) (or (previous-single-property-change (point) :node-beg)
                                       (point-min))))))
     (pop-to-buffer buffer)
+    (helm-org-rifle--revert-buffer-if-necessary)
     (goto-char (+ node-beg offset))
     (org-show-entry)))
 
@@ -1102,6 +1119,12 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
          (helm-org-rifle-transform-list-of-nodes-to-candidates))))
 
 ;;;;; Support functions
+
+(defun helm-org-rifle--revert-buffer-if-necessary ()
+  "Revert buffer if it's not in `org-mode'."
+  (unless (or (eq major-mode 'org)
+              (buffer-modified-p))
+    (revert-buffer nil t)))
 
 (defun helm-org-rifle--listify (item)
   "If ITEM is an atom, return (list ITEM).  If ITEM is a list, return ITEM."
