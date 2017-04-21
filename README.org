@@ -14,6 +14,8 @@ What does my rifle do?  It searches rapidly through my Org files, quickly bringi
 
 This package is inspired by [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]].  It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context and grouped by buffer to make it easy to acquire your target.
 
+In contrast with =org-occur= and similar commands, =helm-org-rifle= is entry-based (i.e. a heading and all of its contents, not including subheadings), while =org-occur= is line-based.  So =org-occur= will show you entire lines that contain matching words, without any reference to the heading the line is under, while =helm-org-rifle= will show the heading of the entry that matches, followed by context around each matching word in the entry.  In other words, =helm-org-rifle= is sort of like Google, while =org-occur= is sort of like =grep=.
+
 Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
 
 ** Screenshots
