@@ -22,6 +22,7 @@
      - [[#negation-only-error][Negation-only error]]
      - [[#tag-order-matters][Tag order matters]]
  - [[#checklists][Checklists]]
+     - [[#stable-release-140][Stable release 1.4.0]]
      - [[#stable-release-130][Stable release 1.3.0]]
      - [[#stable-release-120][Stable release 1.2.0]]
      - [[#stable-release-11][Stable release 1.1]]
@@ -1018,6 +1019,73 @@ When matching multiple tags in a string, the order of the tags matters, e.g. =:w
 :PROPERTIES:
 :LOGGING:  nil
 :END:
+
+** Stable release 1.4.0
+
+Hmm, that seems like a long list.  But I want stable releases to actually be stable.
+
+*** DONE Try to get someone else to test it
+
+It's been 10 days since the last change to the code, and Z has said it's working well.
+
+*** DONE Set =Version:= header
+
+Use =x.y.0=, not =x.y=.
+
+**** DONE =helm-org-rifle.el=
+
+**** DONE =README.org=
+
+*** DONE Update changelog
+
+*** DONE Test in clean MELPA sandbox
+
+**** CANCELED Update test checklist from changelog for new features
+
+**** DONE Install
+
+**** CANCELED Test functionality:
+
+The =buttercup= tests handle the important stuff, and the other stuff hasn't changed, and I've tested it recently.
+
+***** CANCELED Positive terms
+
+***** CANCELED Negation
+
+***** CANCELED TODO keywords
+
+***** CANCELED Priorities
+
+***** CANCELED Tags
+
+****** CANCELED Positive
+
+****** CANCELED Negative
+
+****** CANCELED Multiple tags
+
+****** CANCELED Multiple tags in a single string
+e.g. =:tag1:tag2:=
+
+******* CANCELED Positive
+
+******* CANCELED Negative
+
+***** CANCELED Context
+
+***** CANCELED Ellipses customization
+
+***** CANCELED Searching with show-path enabled
+
+***** CANCELED =helm-org-rifle-files=
+
+***** CANCELED =helm-org-rifle-directories=
+
+*** TODO Tag, sign, and push tag
+
+If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
+
+*** TODO GitHub release notes
 
 ** DONE Stable release 1.3.0
 

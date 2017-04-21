@@ -85,7 +85,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
-** 1.4.0-pre
+** 1.4.0
 
 *Additions*
 +  New commands =helm-org-rifle-occur=, =helm-org-rifle-occur-current-buffer=, =helm-org-rifle-occur-files=, =helm-org-rifle-occur-agenda-files=, =helm-org-rifle-occur-org-directories=, and =helm-org-rifle-occur-org-directory=, which display results in an =occur=-like, persistent buffer.  These are handy when you aren't as certain of what you're looking for and you want to keep the results visible while looking at each result's source buffer.  When you click on or press =RET= on a result, the source buffer will be popped to alongside the results buffer, and the node will be revealed, cycled to, and the point moved to the same place.  These commands do not actually use Helm at all, so maybe they should be renamed to simply =org-rifle=...?
