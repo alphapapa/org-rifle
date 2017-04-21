@@ -26,3 +26,6 @@ env:
 
 script:
   make test
+
+notifications:
+  email: false
