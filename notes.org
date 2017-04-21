@@ -5,6 +5,7 @@
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
      - [[#try-org-map-entries][Try org-map-entries]]
+     - [[#clean-up-persistent-action-buffers][Clean up persistent-action buffers]]
      - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
      - [[#remove-duplicateoverlapping-results-from-occur-buffer][Remove duplicate/overlapping results from occur buffer]]
      - [[#search-files-instead-of-buffers][Search files instead of buffers]]
@@ -798,7 +799,7 @@ This helps for debugging, in case I need it in the future:
 #+END_SRC
 * Plans
 
-** TODO [#B] Try org-map-entries
+** TODO [#C] Try org-map-entries
 
 I don't know why I didn't realize this sooner, but =org-map-entries= could likely do much of the logic in =helm-org-rifle--get-candidates-in-buffer=.  I don't know for certain if it would be faster, but since it has optional caching, it might very well be.  And it makes it easy to get inherited tags, properties, etc, and to run on regions, subtrees, etc.  Might even completely handle tag matching for me.  Very powerful.  I should definitely try it, and if the performance is good enough, use it.
 
@@ -891,6 +892,14 @@ with ‘org-get-tags-at’.  If your function gets properties with
 to t around the call to ‘org-entry-properties’ to get the same speedup.
 Note that if your function moves around to retrieve tags and properties at
 a *different* entry, you cannot use these techniques.
+#+END_SRC
+
+** TODO [#B] Clean up persistent-action buffers
+
+Thierry [[https://github.com/emacs-helm/helm/issues/1747#issuecomment-295191205][showed]] me this example which I should be able to use:
+
+#+BEGIN_SRC elisp
+ (condition-case _err (helm :sources my-source <etc...>) (quit (delete-my-buffers-or-whatever)))
 #+END_SRC
 
 ** MAYBE [#B] Use text properties instead of plists for timestamping
