@@ -1237,6 +1237,7 @@ From `helm-insert-header'."
 
 (defun helm-org-rifle-replace-links-in-string (string)
   "Replace `org-mode' links in STRING with their descriptions."
+  ;; FIXME: Use `org-link-display-format'.
   (if (string-match org-bracket-link-regexp string)
       (replace-regexp-in-string org-bracket-link-regexp
                                 (lambda (text) (or (match-string-no-properties 3 text)
