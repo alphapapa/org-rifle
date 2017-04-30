@@ -865,7 +865,11 @@ This is how the sausage is made."
                                                       heading
                                                       tags)))))
                        (entry (if helm-org-rifle-show-full-contents
-                                  (s-join helm-org-rifle-heading-contents-separator (list heading (org-get-entry)))
+                                  (s-join helm-org-rifle-heading-contents-separator (list heading (buffer-substring (save-excursion
+                                                                                                                      (goto-char node-beg)
+                                                                                                                      (forward-line 1)
+                                                                                                                      (point))
+                                                                                                                    node-end)))
                                 ;; Show context strings
                                 (s-join helm-org-rifle-heading-contents-separator (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
                   (push (cons entry (cons buffer node-beg))

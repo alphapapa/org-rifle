@@ -91,6 +91,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 Standby...
 
+** 1.4.1
+
++  In =occur= commands, get only entries, not entire subtrees.  This is the intended behavior and makes it consistent with the non =occur= commands.  (It's so easy to forget that =org-get-entry= gets "the entry text, after heading, entire subtree.")
+
 ** 1.4.0
 
 *Additions*
