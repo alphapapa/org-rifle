@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
-;; Version: 1.4.0
+;; Version: 1.4.1
 ;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
@@ -865,7 +865,11 @@ This is how the sausage is made."
                                                       heading
                                                       tags)))))
                        (entry (if helm-org-rifle-show-full-contents
-                                  (s-join helm-org-rifle-heading-contents-separator (list heading (org-get-entry)))
+                                  (s-join helm-org-rifle-heading-contents-separator (list heading (buffer-substring (save-excursion
+                                                                                                                      (goto-char node-beg)
+                                                                                                                      (forward-line 1)
+                                                                                                                      (point))
+                                                                                                                    node-end)))
                                 ;; Show context strings
                                 (s-join helm-org-rifle-heading-contents-separator (list heading (s-join helm-org-rifle-ellipsis-string matched-words-with-context))))))
                   (push (cons entry (cons buffer node-beg))
