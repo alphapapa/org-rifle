@@ -442,7 +442,7 @@ are searched; they are not filtered with
   "Rifle through Org agenda files."
   ;; This does not need to be defined with helm-org-rifle-define-command because it calls helm-org-rifle-files which is.
   (interactive)
-  (helm-org-rifle-files org-agenda-files))
+  (helm-org-rifle-files (org-agenda-files)))
 
 ;;;###autoload
 (defun helm-org-rifle-directories (&optional directories toggle-recursion)
