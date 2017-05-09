@@ -556,7 +556,7 @@ Files are opened if necessary, and the resulting buffers are left open."
  "agenda-files" ()
  "Search Org agenda files, showing results in an occur-like, persistent buffer.
 Files are opened if necessary, and the resulting buffers are left open."
- :files org-agenda-files)
+ :files (org-agenda-files))
 
 ;;;###autoload
 (helm-org-rifle-define-occur-command

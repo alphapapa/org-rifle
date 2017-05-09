@@ -89,7 +89,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.5.0-pre
 
-Standby...
++ Use =(org-agenda-files)= function instead of the =org-agenda-files= variable in =helm-org-rifle-agenda-files= and =helm-org-rifle-occur-agenda-files=.  This way, directory entries are expanded, and other Org customizations are respected.  Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]].
 
 ** 1.4.1
 
@@ -155,6 +155,7 @@ Standby...
 + Thanks to Thierry Volpiatto for doing such an amazing job with Helm.  Without him, this would not be possible. 
 + Thanks to [[https://www.reddit.com/user/washy99999][Jack, aka /u/washy99999]] for great feedback and suggestions.
 + Thanks to Jorgen Schäfer for [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]], which makes testing simple.
++ Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]] for suggesting the =(org-agenda-files)= function.
 
 * Development                                                    :noexport_1:
 
