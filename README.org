@@ -156,6 +156,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 + Thanks to [[https://www.reddit.com/user/washy99999][Jack, aka /u/washy99999]] for great feedback and suggestions.
 + Thanks to Jorgen Schäfer for [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]], which makes testing simple.
 + Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]] for suggesting the =(org-agenda-files)= function.
++ Thanks to [[https://github.com/zeltak][@zeltak]] for helping to test many changes.
 
 * Development                                                    :noexport_1:
 
