@@ -964,6 +964,10 @@ This is how the sausage is made."
         (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
 
 (defun helm-org-rifle--show-entries-as-occur (entries)
+  "Display a buffer showing ENTRIES.
+ENTRIES is a list of (BUFFER . NODE-BEG) pairs from the REAL of
+the (DISPLAY . REAL) pair from
+`helm-org-rifle--get-candidates-in-buffer'."
   (let ((inhibit-read-only t))
     (with-current-buffer (helm-org-rifle--occur-prepare-results-buffer)
       (erase-buffer)
