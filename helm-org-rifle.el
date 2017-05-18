@@ -298,11 +298,20 @@ Just in case this is a performance issue for anyone, it can be disabled."
   "When non-nil, keep the sort order setting when it is changed by calling a command with a universal prefix."
   :group 'helm-org-rifle :type 'boolean)
 
+(defface helm-org-rifle-separator
+  ;; FIXME: Pick better default color.  Black is probably too harsh.
+  '((((background dark))
+     :background "black")
+    (((background light))
+     :foreground "black"))
+  "Face for `helm-org-rifle-separator', which is displayed between results.")
+
 (defcustom helm-org-rifle-occur-kill-empty-buffer t
   "Close occur results buffer after last result is deleted."
   :type 'boolean)
 
 (defvar helm-org-rifle-occur-map (let ((map (copy-keymap org-mode-map)))
+                                   (define-key map [remap org-cycle] 'helm-org-rifle-occur--org-cycle)
                                    (define-key map [remap undo] (lambda () (interactive) (let ((inhibit-read-only t)) (undo))))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
@@ -326,6 +335,12 @@ Just in case this is a performance issue for anyone, it can be disabled."
 
 (defvar helm-org-rifle-occur-last-input nil
   "Last input given, used to avoid re-running search when input hasn't changed.")
+
+(defvar helm-org-rifle-occur-separator
+  (let ((text "\n"))
+    (set-text-properties 0 (length text) '(helm-org-rifle-result-separator t font-lock-face helm-org-rifle-separator) text)
+    text)
+  "Propertized separator for results in occur buffers.")
 
 (defvar helm-org-rifle-transformer nil
   "Function to transform results, usually for sorting.  Not intended to be user-set at this time.")
@@ -881,6 +896,116 @@ This is how the sausage is made."
 
 ;;;;; Occur-style
 
+(defun helm-org-rifle-occur--org-cycle (&optional arg)
+  "Cycle folding of Org entries in an occur buffer.
+This folds first at boundaries defined by `helm-header' and
+`helm-org-rifle-result-separator' text-properties, and then
+normally, by outline headings."
+  (interactive)
+  (cl-letf (((symbol-function 'org-end-of-subtree)
+             'helm-org-rifle--org-end-of-subtree)
+            ((symbol-function 'outline-next-heading)
+             'helm-org-rifle--outline-next-heading))
+    (if (text-property-any (line-beginning-position) (line-end-position) 'helm-header t)
+        ;; On a header line; cycle all entries in this source
+        (let ((start (line-beginning-position))
+              (end (save-excursion
+                     (while (text-property-any (line-beginning-position) (line-end-position) 'helm-header t)
+                       (forward-line 1))
+                     (forward-char)
+                     (let ((char (or (next-single-property-change (point) 'helm-header nil)
+                                     (point-max))))
+                       (when char
+                         (goto-char char)))
+                     (point))))
+          (cl-loop for char = (next-single-property-change (point) 'helm-org-rifle-result-separator nil)
+                   while (and char
+                              (< char end))
+                   do (progn
+                        (goto-char char)
+                        (outline-next-heading)
+                        (outline-hide-subtree))))
+      ;; Cycle this entry normally
+      (org-cycle arg))))
+
+(defun helm-org-rifle--outline-next-heading ()
+  "Move to the next Helm header, result separator, outline heading, or point-max, whichever is smallest.
+This is intended to override `outline-next-heading' in occur
+results buffers."
+  (interactive)
+  (cl-flet ((min (&rest args)
+                 (apply 'min (cl-loop for arg in args
+                                      when arg
+                                      collect arg)))
+            (next-outline-heading ()
+                                  ;; This is basically a copy of `outline-next-heading'
+                                  (when (re-search-forward (concat "^\\(?:" outline-regexp "\\)")
+                                                           nil 'move)
+                                    (match-beginning 0))))
+    (cond ((or (memq 'helm-header (text-properties-at (point)))
+               (memq 'helm-org-rifle-result-separator (text-properties-at (point))))
+           ;; At a source header or result separator; go to first outline heading
+           (goto-char (next-outline-heading)))
+
+          ((org-at-heading-p)
+           ;; At a heading; go to next header or separator or end-of-buffer
+           (goto-char (1- (min (next-single-property-change (point) 'helm-org-rifle-result-separator)
+                               (next-single-property-change (point) 'helm-header)
+                               (point-max)))))
+
+          (t
+           (let ((char (min (next-single-property-change (point) 'helm-org-rifle-result-separator)
+                            (next-single-property-change (point) 'helm-header)
+                            (next-outline-heading))))
+             (when char
+               (goto-char char)))))))
+
+(defun helm-org-rifle--org-end-of-subtree (&optional invisible-ok to-heading)
+  "Goto to the end of a subtree.
+This function is a copy of `org-end-of-subtree', but it respects
+headers and separators."
+  ;; This contains an exact copy of the original function, but it uses
+  ;; `org-back-to-heading', to make it work also in invisible
+  ;; trees.  And is uses an invisible-ok argument.
+  ;; Under Emacs this is not needed, but the old outline.el needs this fix.
+  ;; Furthermore, when used inside Org, finding the end of a large subtree
+  ;; with many children and grandchildren etc, this can be much faster
+  ;; than the outline version.
+  (org-back-to-heading invisible-ok)
+  (let ((first t)
+	(level (funcall outline-level)))
+    (if (and (derived-mode-p 'org-mode) (< level 1000))
+	;; A true heading (not a plain list item), in Org
+	;; This means we can easily find the end by looking
+	;; only for the right number of stars.  Using a regexp to do
+	;; this is so much faster than using a Lisp loop.
+        (cl-flet ((min (&rest args)
+                       (apply 'min (cl-loop for arg in args
+                                            when arg
+                                            collect arg))))
+          (let* ((re (concat "^\\*\\{1," (int-to-string level) "\\} "))
+                 (re-pos (save-excursion
+                           (forward-char 1)
+                           (and (re-search-forward re nil 'move) (beginning-of-line 1))))
+                 (char (min (next-single-property-change (point) 'helm-org-rifle-result-separator)
+                            (next-single-property-change (point) 'helm-header)
+                            re-pos
+                            (point-max))))
+            (goto-char char)))
+      ;; something else, do it the slow way
+      (while (and (not (eobp))
+		  (or first (> (funcall outline-level) level)))
+	(setq first nil)
+	(outline-next-heading)))
+    (unless to-heading
+      (when (memq (preceding-char) '(?\n ?\^M))
+	;; Go to end of line before heading
+	(forward-char -1)
+	(when (memq (preceding-char) '(?\n ?\^M))
+	  ;; leave blank line before heading
+	  (forward-char -1)))))
+  (point))
+
 (defun helm-org-rifle-occur-begin (source-buffers)
   "Begin occur-style command searching BUFFERS, opening results buffer, focusing minibuffer, and running timer to put results in buffer."
   (let ((inhibit-read-only t)
@@ -910,7 +1035,10 @@ This is how the sausage is made."
 (defun helm-org-rifle--occur-prepare-results-buffer ()
   "Prepare and return results buffer."
   (let ((buffer (get-buffer-create helm-org-rifle-occur-results-buffer-name))
-        (inhibit-read-only t))
+        (inhibit-read-only t)
+        ;; Prevent source headers from being indented.
+        ;; FIXME: This works on my config, but it needs wider testing.
+        (org-startup-indented  nil))
     (with-current-buffer buffer
       (unless (eq major-mode 'org-mode)
         (read-only-mode)
@@ -949,18 +1077,12 @@ This is how the sausage is made."
         (cl-loop for results-list in results-by-buffer
                  do (-let (((&plist :buffer buffer :results results) results-list))
                       (when results
-                        ;; FIXME: The source headers don't play nice
-                        ;; with Org mode, since Org considers them
-                        ;; part of the parent heading's entry, so they
-                        ;; get hidden when the parent heading is
-                        ;; collapsed.  Disabling for now.  See TODO
-                        ;; item in readme for ideas on fixing.
-                        ;; (helm-org-rifle-insert-source-header (buffer-name buffer))
+                        (helm-org-rifle-insert-source-header (buffer-name buffer))
                         (cl-loop for entry in results
                                  do (-let (((plist &as :text text . rest) entry))
                                       (add-text-properties 0 (length text) rest text)
-                                      (insert text)
-                                      (insert "\n\n"))))))
+                                      (insert helm-org-rifle-occur-separator)
+                                      (insert text))))))
         (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
 
 (defun helm-org-rifle--show-entries-as-occur (entries)
@@ -974,8 +1096,8 @@ the (DISPLAY . REAL) pair from
       (cl-loop for (buffer . node-beg) in entries
                for text = (helm-org-rifle--get-entry-text buffer node-beg :include-heading t :full-path helm-org-rifle-show-path)
                do (progn (add-text-properties 0 (length text) (list :buffer buffer :node-beg node-beg) text)
-                         (insert text)
-                         (insert "\n\n")))
+                         (insert helm-org-rifle-occur-separator)
+                         (insert text)))
       (helm-org-rifle-occur-highlight-matches-in-buffer (current-buffer) helm-input))))
 
 (defun helm-org-rifle-occur-highlight-matches-in-buffer (buffer input)
@@ -1002,9 +1124,12 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
           ;; FIXME: Get offset of point in node (not sure why +2 is necessary but it works)...or does it?
           (offset (+ 2 (- (point) (or (previous-single-property-change (point) :node-beg)
                                       (point-min))))))
-    (pop-to-buffer buffer)
-    (goto-char (+ node-beg offset))
-    (org-show-entry)))
+    (when node-beg
+      ;; If node-beg is nil, point is on something like a source
+      ;; header, in which case we do nothing
+      (pop-to-buffer buffer)
+      (goto-char (+ node-beg offset))
+      (org-show-entry))))
 
 (defun helm-org-rifle-occur-delete-entry ()
   "Remove entry at point from results buffer.
@@ -1198,23 +1323,21 @@ created."
         (font-lock-fontify-buffer)
         (buffer-string)))))
 
-(defun helm-org-rifle-insert-source-header (name &optional display-string)
-  "Insert header of source NAME into the current buffer.
-If DISPLAY-STRING is non-`nil' and a string value then display
-this additional info after the source name by overlay.
+(defun helm-org-rifle-insert-source-header (text)
+  "Insert header containing TEXT into the current buffer.
 From `helm-insert-header'."
   (unless (bobp)
     (let ((start (point)))
       (insert "\n")
       (set-text-properties start (point) '(helm-header-separator t))))
-  (let ((start (point)))
-    (insert (concat " " name))
-    (set-text-properties (point-at-bol) (point-at-eol) '(helm-header t))
-    (when display-string
-      (overlay-put (make-overlay (point-at-bol) (point-at-eol))
-                   'display display-string))
-    (insert "\n")
-    (set-text-properties start (point) '(font-lock-face helm-source-header))))
+  (setq text (concat " " text "\n"))
+  ;; Only set the font-lock-face on a single line
+  (add-text-properties 0 (length text) '(font-lock-face helm-source-header) text)
+  ;; Apply the `helm-header' property to the whole thing, including
+  ;; newlines
+  (setq text (concat "\n" text ))
+  (add-text-properties 0 (length text) '(helm-header t) text)
+  (insert text))
 
 (defun helm-org-rifle-occur-cleanup-buffer ()
   "Cleanup occur results buffer when search is aborted."

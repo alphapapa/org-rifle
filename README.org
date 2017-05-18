@@ -90,6 +90,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 ** 1.5.0-pre
 
 + Use =(org-agenda-files)= function instead of the =org-agenda-files= variable in =helm-org-rifle-agenda-files= and =helm-org-rifle-occur-agenda-files=.  This way, directory entries are expanded, and other Org customizations are respected.  Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]].
++ In =occur= results:
+     -  Show a header for each source buffer.
+     -  Show separators between each result.
+     -  Fold search results individually, instead of folding the "fake" subtrees which are effectively created by inserting Org entries into the results buffer.
+     -  Fold every entry in a source when the =org-cycle= key is pressed with point on a source header.
 
 ** 1.4.2
 
@@ -193,10 +198,6 @@ Negating multiple tags in a single token (e.g. ~!:negatedtag1:negatedtag2:~) doe
 *** TODO [#B] Testing
 
 After reading about Emacs testing packages, it looks like the best way to test this package is with some combination of Assess, Buttercup, Ecukes, ERT, and Espuds.  Espuds's steps should help testing interactive things, like Helm (although this will still be difficult), and Buttercup should make unit testing easier, and Assess should help with everything.  Buttercup is intended as an alternative to ERT, but ERT might be useful too.
-
-*** TODO [#B] Fix Helm-style headers in occur buffers
-
-Org-mode considers the Helm-style headers in occur buffers to be part of the previous heading's entry text, so they get hidden when the node above them gets collapsed.  Might be able to fix this with an overlay, or /maybe/ with some face tweaking.  In the meantime I will just remove them so they don't appear broken and inconsistent.
 
 *** TODO [#B] jump-to-next/prev-match command for occur buffers
 
