@@ -991,7 +991,7 @@ Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (with-current-buffer buffer
     (unless (eq major-mode 'org-mode)
       (error "Buffer %s is not an Org buffer." buffer)))
-  (cl-loop for (text pos) in (helm-org-rifle--get-candidates-in-buffer buffer input)
+  (cl-loop for (text . (_ .  pos)) in (helm-org-rifle--get-candidates-in-buffer buffer input)
            collect (list :text text :buffer buffer :node-beg pos)))
 
 (defun helm-org-rifle-occur-goto-entry ()
