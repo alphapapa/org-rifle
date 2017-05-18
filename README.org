@@ -85,6 +85,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.4.2
+
++  Fix node positions in =occur= commands.  This prevented the user from jumping to the position of results in source buffers.
+
 ** 1.4.1
 
 +  In =occur= commands, get only entries, not entire subtrees.  This is the intended behavior and makes it consistent with the non =occur= commands.  (It's so easy to forget that =org-get-entry= gets "the entry text, after heading, entire subtree.")
