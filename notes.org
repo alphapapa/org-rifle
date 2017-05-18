@@ -4,6 +4,7 @@
      - [[#context-splitting][Context-splitting]]
      - [[#occur-like][Occur-like]]
  - [[#plans][Plans]]
+     - [[#try-inserting-outline-paths-into-separatorsoverlays-in-occur-buffers][Try inserting outline paths into separators/overlays in occur buffers]]
      - [[#try-org-map-entries][Try org-map-entries]]
      - [[#clean-up-persistent-action-buffers][Clean up persistent-action buffers]]
      - [[#maybe-b-use-text-properties-instead-of-plists-for-timestamping][MAYBE [#B] Use text properties instead of plists for timestamping]]
@@ -799,6 +800,10 @@ This helps for debugging, in case I need it in the future:
     (pop-to-buffer results-buffer))
 #+END_SRC
 * Plans
+
+** TODO Try inserting outline paths into separators/overlays in occur buffers
+
+Using overlays should prevent Org itself from re-fontifying the paths.
 
 ** TODO [#C] Try org-map-entries
 

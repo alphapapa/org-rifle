@@ -934,9 +934,7 @@ This is intended to override `outline-next-heading' in occur
 results buffers."
   (interactive)
   (cl-flet ((min (&rest args)
-                 (apply 'min (cl-loop for arg in args
-                                      when arg
-                                      collect arg)))
+                 (apply 'min (-non-nil args)))
             (next-outline-heading ()
                                   ;; This is basically a copy of `outline-next-heading'
                                   (when (re-search-forward (concat "^\\(?:" outline-regexp "\\)")
@@ -980,9 +978,7 @@ headers and separators."
 	;; only for the right number of stars.  Using a regexp to do
 	;; this is so much faster than using a Lisp loop.
         (cl-flet ((min (&rest args)
-                       (apply 'min (cl-loop for arg in args
-                                            when arg
-                                            collect arg))))
+                       (apply 'min (-non-nil args))))
           (let* ((re (concat "^\\*\\{1," (int-to-string level) "\\} "))
                  (re-pos (save-excursion
                            (forward-char 1)
