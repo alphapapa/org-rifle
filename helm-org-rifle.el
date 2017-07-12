@@ -1133,6 +1133,8 @@ This helps the user remove unwanted results from the buffer."
   (interactive)
   ;; TODO: Test this more thoroughly.
 
+  ;; FIXME: This needs to be updated to use the source headers and entry separators.
+
   (with-current-buffer (get-buffer helm-org-rifle-occur-results-buffer-name)
     ;; Setting current buffer may be unnecessary, but good to be sure
     ;; that we never modify any other buffer by accident (i.e. future,
