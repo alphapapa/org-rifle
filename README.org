@@ -185,6 +185,8 @@ When adding new data to =test/data.org=, it should go at the bottom to avoid bre
 
 Future testing should include testing interactive functionality, like Helm commands.  This will probably be easier with [[https://github.com/ecukes/ecukes][ecukes]] and [[https://github.com/ecukes/espuds][espuds]].  It would be nice to use [[https://github.com/phillord/assess][assess]], but it requires Emacs 25 by way of its dependency on =m-buffer=.
 
+*Update:* Ryan C. Thompson graciously updated his new [[https://github.com/DarwinAwardWinner/with-simulated-input][with-simulated-input]] library to support interactive use with simulated idle timers, which seems to work perfectly for this!
+
 ** Bugs
 
 # None at the moment.  Bug reporter z...I mean, bug zapper, standing by...
