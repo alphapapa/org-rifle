@@ -244,6 +244,14 @@ By setting a custom =xfuncname= for a git repo containing org files (see =man 5 
 
 [[http://blog.burntsushi.net/ripgrep/][ripgrep]] might also be useful, although I don't think it supports multi-line yet.
 
+*** MAYBE async matching
+
+It might be interesting to use [[https://github.com/jwiegley/emacs-async][emacs-async]] to do matching in files that aren't already open in the current Emacs process.  I'm not sure if it would be worth it, because even if it were faster in some cases for unopened files, it wouldn't be faster compared to searching already opened files.  And even though loading large files can be slow, once they are opened, the price is paid, and searching is faster; doing it in external Emacs processes would be slow every time, not just the first.
+
+But there might be some cases where it would be helpful.  It might be possible to do it without loading the files in Org in the other processes, and it might be helpful to do all the searching in one process instead of one for each file.  For the case of opening many small files that don't need to be frequently accessed, that the user doesn't want to keep open, doing it in another process might actually be good.
+
+But it might also be complicated to keep the search process open while the user is changing the query; and without doing that, a new search process would be started every time the user changed the query, which would mean loading the files all over again.  So I'm not sure this idea would be generally useful.
+
 *** UNDERWAY Non-substring matching
 
 Currently matches are made against substrings, like most other commands in Helm.  However, this might not always lead to the best results.  For example, if someone were searching for "Sol", referring to the sun, he probably wouldn't want to match "solution" or "solvent" or "soliloquy".  But if someone were trying to dig up a note he made a while back about apple pie, did he write about "an apple pie" or "some apple pies"?  Dessert hangs in the balance!
