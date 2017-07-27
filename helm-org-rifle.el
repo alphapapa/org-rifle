@@ -1236,6 +1236,7 @@ NODES is a list of plists as returned by `helm-org-rifle-transform-candidates-to
 
 (defun helm-org-rifle--listify (item)
   "If ITEM is an atom, return (list ITEM).  If ITEM is a list, return ITEM."
+  ;; TODO: This could simply be e.g. (defun listify (&rest args) args)
   (cl-typecase item
     (list item)
     (atom (list item))
