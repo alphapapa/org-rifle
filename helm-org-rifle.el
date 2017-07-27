@@ -349,6 +349,18 @@ Just in case this is a performance issue for anyone, it can be disabled."
 
 ;;;;; Commands
 
+(defun helm-org-rifle--no-results ()
+  (when (helm-empty-buffer-p)
+    (with-helm-buffer
+      (if (s-present? helm-input)
+          ;; Input given, no results
+          (setq mode-line-format '(" " mode-line-buffer-identification " "
+                                   (:eval (propertize "[No results]" 'face 'helm-grep-finish))))
+        ;; No input
+        ;; FIXME: This doesn't seem to happen after clearing a query, but I'll leave it for now
+        (setq mode-line-format '(" " mode-line-buffer-identification " "
+                                 "No input"))))))
+
 ;;;###autoload
 (cl-defmacro helm-org-rifle-define-command (name args docstring &key sources (let nil) (transformer nil))
   "Define interactive helm-org-rifle command, which will run the appropriate hooks.
@@ -358,6 +370,7 @@ Helm will be called with vars in LET bound."
      (interactive)
      (unwind-protect
          (progn
+           (add-hook 'helm-after-update-hook 'helm-org-rifle--no-results)
            (run-hooks 'helm-org-rifle-before-command-hook)
            (let* ((helm-candidate-separator " ")
                   ,(if transformer
@@ -372,7 +385,9 @@ Helm will be called with vars in LET bound."
                      'ignore)
                   ,@let)
              (helm :sources ,sources)))
-       (run-hooks 'helm-org-rifle-after-command-hook))))
+       (progn
+         (remove-hook 'helm-after-update-hook 'helm-org-rifle--no-results)
+         (run-hooks 'helm-org-rifle-after-command-hook)))))
 
 ;;;###autoload
 (helm-org-rifle-define-command
