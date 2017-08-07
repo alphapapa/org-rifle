@@ -735,21 +735,21 @@ This is how the sausage is made."
   (with-current-buffer buffer
     ;; Run this in the buffer so we can get its todo-keywords (i.e. `org-todo-keywords-1')
     (-let* ((buffer-name (buffer-name buffer))
-            ((includes excludes tags todo-keywords) (helm-org-rifle--parse-input input))
+            ((includes excludes include-tags exclude-tags todo-keywords) (helm-org-rifle--parse-input input))
             (excludes-re (when excludes
-                           ;; NOTE: Excludes only match against whole
-                           ;; words.  This probably makes sense.
+                           ;; NOTE: Excludes only match against whole words.  This probably makes sense.
                            ;; TODO: Might be worth mentioning in docs.
-                           (rx-to-string `(seq bow (or ,@excludes) eow) t)))
-            (tags (--map (s-wrap it ":") tags))  ; Wrap tags in ":" for the regexp
-            (positive-re (rx-to-string `(seq (or ,@(append includes tags todo-keywords)))))
+                           (rx-to-string `(seq (or ,@excludes))
+                                         t)))
+            (include-tags (--map (s-wrap it ":") include-tags))  ; Wrap include-tags in ":" for the regexp
+            (positive-re (rx-to-string `(seq (or ,@(append includes include-tags todo-keywords)))))
             ;; NOTE: We leave todo-keywords out of the required-positive-re-list,
             ;; because that is used to verify that all positive tokens
             ;; are matched in an entry, and we want todo-keywords to
             ;; match OR-wise.
-            (required-positive-re-list (mapcar #'regexp-quote (append includes tags)))
+            (required-positive-re-list (mapcar #'regexp-quote (append includes include-tags)))
             (context-re (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
-                                            (or ,@(append includes tags todo-keywords))
+                                            (or ,@(append includes include-tags todo-keywords))
                                             (repeat 0 ,helm-org-rifle-context-characters not-newline))
                                       t))
             ;; TODO: Turn off case folding if tokens contains mixed case
@@ -783,9 +783,9 @@ This is how the sausage is made."
                     (heading (s-trim (if helm-org-rifle-show-todo-keywords
                                          (s-join " " (list todo-keyword priority heading))
                                        heading)))
-                    (matching-positions-in-node)
-                    (matching-lines-in-node)
-                    (matched-words-with-context))
+                    (matching-positions-in-node nil)
+                    (matching-lines-in-node nil)
+                    (matched-words-with-context nil))
 
               ;; Goto beginning of node
               (when node-beg
@@ -794,6 +794,12 @@ This is how the sausage is made."
               ;; Check todo keyword
               (when todo-keywords
                 (unless (member todo-keyword todo-keywords)
+                  (throw 'negated (goto-char node-end))))
+
+              ;; Check for excluded tags
+              (when (and exclude-tags tags)
+                (when (cl-intersection (org-split-string tags ":") exclude-tags
+                                       :test #'string=)
                   (throw 'negated (goto-char node-end))))
 
               ;; Check excludes
@@ -903,11 +909,18 @@ This is how the sausage is made."
 
 (defun helm-org-rifle--parse-input (input)
   "Return list of token types in INPUT string.
-Returns (INCLUDES EXCLUDES TAGS TODO-KEYWORDS)."
-  (let ((tags-regexp (rx bos (1+ ":" (1+ (char alnum "_"))) ":" eos))
-        includes excludes tags todo-keywords)
+Returns (INCLUDES EXCLUDES INCLUDE-TAGS EXCLUDE-TAGS TODO-KEYWORDS)."
+  (let ((tags-regexp (rx bos (optional "!") (1+ ":" (1+ (char alnum "_"))) ":" eos))
+        includes excludes include-tags exclude-tags todo-keywords)
     (dolist (token (split-string input " " t))
       (pcase token
+        ;; Tags
+        ((pred (string-match tags-regexp))
+         (if (string-match "^!" token)
+             ;; Exclude tag
+             (setq exclude-tags (append exclude-tags (org-split-string (cl-subseq token 1) ":")))
+           ;; Match tag
+           (setq include-tags (append include-tags (org-split-string token ":")))))
         ;; Negation
         ((pred (string-match "^!")
                ;; Ignore bare "!"
@@ -916,12 +929,9 @@ Returns (INCLUDES EXCLUDES TAGS TODO-KEYWORDS)."
         ;; TODO keyword
         ((guard (member token org-todo-keywords-1))
          (push token todo-keywords))
-        ;; Tags
-        ((pred (string-match tags-regexp))
-         (setq tags (append tags (org-split-string token ":"))))
         ;; Positive terms
         (otherwise (push token includes))))
-    (list includes excludes tags todo-keywords)))
+    (list includes excludes include-tags exclude-tags todo-keywords)))
 
 ;;;;; Occur-style
 

@@ -75,8 +75,9 @@ them."
                 (helm-org-rifle--parse-input
                  "notatag :tag1:tag2: :tag3: notatageither !:excludedtagA: !:excludedtagB: !excludeA TODO DONE"))
               :to-equal '(("notatageither" "notatag")
-                          ("excludeA" ":excludedtagB:" ":excludedtagA:")
+                          ("excludeA")
                           ("tag1" "tag2" "tag3")
+                          ("excludedtagA" "excludedtagB")
                           ("DONE" "TODO")))))
 
   (describe "helm-org-rifle--get-candidates-in-buffer"
