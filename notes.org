@@ -800,6 +800,13 @@ This helps for debugging, in case I need it in the future:
     (pop-to-buffer results-buffer))
 #+END_SRC
 * Plans
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+** TODO To-do keyword negation
+
+I forgot to add this when I rewrote the input handling.
 
 ** TODO Try inserting outline paths into separators/overlays in occur buffers
 
@@ -1006,6 +1013,9 @@ Could be good for testing e.g. negation, to make sure I don't break it.
 Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.  This will be available in Helm 1.9.4 or commits after [2016-04-01 Fri].
 
 * Bugs
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
 
 ** TODO [#C] Negation-only error
 
