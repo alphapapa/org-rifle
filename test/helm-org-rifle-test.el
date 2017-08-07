@@ -69,25 +69,15 @@ them."
           helm-org-rifle-sort-order-persist nil
           helm-org-rifle-occur-kill-empty-buffer t))
 
-  (describe "helm-org-rifle-split-tag-string"
-    (it "Can split a string of search terms and return a list of tags"
-      (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:")
-              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag:")))
-
-    (xit "Can handle multiple tags negated at once"
-      ;; BUG: This doesn't work.  Will require more sophisticated handling.
-      (expect (helm-org-rifle-split-tag-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag1:negatedtag2:")
-              :to-equal '(":tag1:" ":tag2:" ":tag3:" "!:negatedtag1:" "!:negatedtag2:"))))
-
-  (describe "helm-org-rifle-split-tags-in-input-list"
-
-    (it "Can split a list of strings containing search terms into a list of terms and tags"
-      (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither" " " t))
-              :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither")))
-
-    (it "Can split a list of strings containing search terms, including negated tags, into a list of terms and tags"
-      (expect (helm-org-rifle-split-tags-in-input-list (split-string "notatag :tag1:tag2: :tag3: notatageither !:negatedtag:" " " t))
-              :to-equal '("notatag" ":tag1:" ":tag2:" ":tag3:" "notatageither" "!:negatedtag:"))))
+  (describe "helm-org-rifle--parse-input"
+    (it "Can parse a string of search terms correctly"
+      (expect (let ((org-todo-keywords-1 '("TODO" "DONE")))
+                (helm-org-rifle--parse-input
+                 "notatag :tag1:tag2: :tag3: notatageither !:excludedtagA: !:excludedtagB: !excludeA TODO DONE"))
+              :to-equal '(("notatageither" "notatag")
+                          ("excludeA" ":excludedtagB:" ":excludedtagA:")
+                          ("tag1" "tag2" "tag3")
+                          ("DONE" "TODO")))))
 
   (describe "helm-org-rifle--get-candidates-in-buffer"
 

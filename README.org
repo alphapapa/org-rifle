@@ -95,6 +95,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
      -  Show separators between each result.
      -  Fold search results individually, instead of folding the "fake" subtrees which are effectively created by inserting Org entries into the results buffer.
      -  Fold every entry in a source when the =org-cycle= key is pressed with point on a source header.
++  Rewrote input parsing.
 
 ** 1.4.2
 

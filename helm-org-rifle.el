@@ -122,6 +122,7 @@
 
 ;;;; Require
 
+(require 'cl-lib)
 (require 'dash)
 (require 'f)
 (require 'helm)
@@ -731,25 +732,24 @@ POSITION is the position in BUFFER where the candidate heading
 begins.
 
 This is how the sausage is made."
-  (let* ((buffer-name (buffer-name buffer))
-         (tokens (helm-org-rifle-split-tags-in-input-list (split-string input " " t)))
-         (negations (-keep (lambda (token)
-                             (when (string-match "^!" token)
-                               (setq tokens (remove token tokens))  ; Remove negations from tokens
-                               (s-presence (regexp-quote (s-chop-prefix "!" token)))))
-                           tokens))
-         (negations-re (when negations
-                         ;; NOTE: Negations only match against whole
-                         ;; words.  This probably makes sense.  Might
-                         ;; be worth mentioning in docs.
-                         (rx-to-string `(seq bow (or ,@negations) eow) t)))
-         (positive-re (mapconcat 'helm-org-rifle-prep-token tokens "\\|"))
-         (positive-re-list (--map (helm-org-rifle-prep-token it) tokens))
-         (context-re (s-wrap (s-join "\\|" tokens)
-                             (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)) t)))
-         ;; TODO: Turn off case folding if tokens contains mixed case
-         (case-fold-search t)
-         results)
+  (-let* ((buffer-name (buffer-name buffer))
+          ((includes excludes tags todo-keywords) (helm-org-rifle--parse-input input))
+          (excludes-re (when excludes
+                         ;; NOTE: Excludes only match against whole
+                         ;; words.  This probably makes sense.
+                         ;; TODO: Might be worth mentioning in docs.
+                         (rx-to-string `(seq bow (or ,@excludes) eow) t)))
+          (tags (--map (s-wrap it ":") tags))  ; Wrap tags in ":" for the regexp
+          (positive-tokens (append includes tags))
+          (positive-re (rx-to-string `(seq (or ,@positive-tokens))))
+          (positive-re-list (mapcar #'regexp-quote positive-tokens))
+          (context-re (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                          (or ,@positive-tokens)
+                                          (repeat 0 ,helm-org-rifle-context-characters not-newline))
+                                    t))
+          ;; TODO: Turn off case folding if tokens contains mixed case
+          (case-fold-search t)
+          (results nil))
     (with-current-buffer buffer
       (save-excursion
 
@@ -760,12 +760,12 @@ This is how the sausage is made."
 
         ;; Search for matching nodes
         (while (re-search-forward positive-re nil t)
-          (catch 'negated  ; Skip node if negations found
+          (catch 'negated  ; Skip node if excludes found
             (let* ((node-beg (or (save-excursion
                                    (save-match-data
                                      (outline-previous-heading)))
                                  (point)))
-                   (node-end (or (save-match-data  ; This is confusing; should these be reversed here?  Does it matter?
+                   (node-end (or (save-match-data  ; HACK: This is confusing; should these be reversed here?  Does it matter?
                                    (save-excursion
                                      (outline-next-heading)))
                                  (point-max)))
@@ -789,22 +789,22 @@ This is how the sausage is made."
               (when node-beg
                 (goto-char node-beg))
 
-              ;; Check negations
-              (when negations
+              ;; Check excludes
+              (when excludes
                 ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
 
-                ;; FIXME: Partial negations seem to put the partially
+                ;; FIXME: Partial excludes seem to put the partially
                 ;; negated entry at the end of results.  Not sure why.
                 ;; Could it actually be a good feature, though?
                 (when (or (cl-loop for elem in (or path (org-get-outline-path))
-                                   thereis (string-match-p negations-re elem))
+                                   thereis (string-match-p excludes-re elem))
                           ;; FIXME: Doesn't quite match properly with
                           ;; special chars, e.g. negating "!scratch"
                           ;; properly excludes the "*scratch*" buffer,
                           ;; but negating "!*scratch*" doesn't'.
-                          (string-match negations-re buffer-name)
+                          (string-match excludes-re buffer-name)
                           (save-excursion
-                            (re-search-forward negations-re node-end t)))
+                            (re-search-forward excludes-re node-end t)))
                   (throw 'negated (goto-char node-end))))
 
               ;; Get beginning-of-line positions for matching lines in node
@@ -860,7 +860,7 @@ This is how the sausage is made."
                                         (concat (org-format-outline-path
                                                  ;; Replace links in path elements with plain text, otherwise
                                                  ;; they will be truncated by `org-format-outline-path' and only
-                                                 ;; show part of the URL
+                                                 ;; show part of the URL.  FIXME: Use org-link-display-format function
                                                  (-map 'helm-org-rifle-replace-links-in-string (append path (list heading))))
                                                 (if tags
                                                     (concat " " (helm-org-rifle-fontify-like-in-org-mode tags))
@@ -893,6 +893,28 @@ This is how the sausage is made."
               (goto-char node-end))))))
     ;; Return results in the order they appear in the org file
     (nreverse results)))
+
+(defun helm-org-rifle--parse-input (input)
+  "Return list of token types in INPUT string.
+Returns (INCLUDES EXCLUDES TAGS TODO-KEYWORDS)."
+  (let ((tags-regexp (rx bos (1+ ":" (1+ (char alnum "_"))) ":" eos))
+        includes excludes tags todo-keywords)
+    (dolist (token (split-string input " " t))
+      (pcase token
+        ;; Negation
+        ((pred (string-match "^!")
+               ;; Ignore bare "!"
+               (guard (> (length token) 1)))
+         (push (cl-subseq token 1) excludes))
+        ;; TODO keyword
+        ((guard (member token org-todo-keywords-1))
+         (push token todo-keywords))
+        ;; Tags
+        ((pred (string-match tags-regexp))
+         (setq tags (append tags (org-split-string token ":"))))
+        ;; Positive terms
+        (otherwise (push token includes))))
+    (list includes excludes tags todo-keywords)))
 
 ;;;;; Occur-style
 
@@ -1357,13 +1379,13 @@ From `helm-insert-header'."
   "Apply regexp prefix and suffix for TOKEN."
   (if (string-match helm-org-rifle-tags-re token)
       ;; Tag
-      (concat (concat "\\(" helm-org-rifle-tags-re "\\| \\)")
-              (regexp-quote token)
-              (concat "\\(" helm-org-rifle-tags-re "\\| \\|$\\)"))
+      (rx-to-string `(seq (optional (regexp ,helm-org-rifle-tags-re))
+                          ,token
+                          (or (regexp ,helm-org-rifle-tags-re) space eol)))
     ;; Not a tag; use normal prefix/suffix
-    (concat helm-org-rifle-re-prefix
-            (regexp-quote token)
-            helm-org-rifle-re-suffix)))
+    (rx-to-string `(seq (regexp ,helm-org-rifle-re-prefix)
+                        ,token
+                        (regexp ,helm-org-rifle-re-suffix)))))
 
 (defun helm-org-rifle-replace-links-in-string (string)
   "Replace `org-mode' links in STRING with their descriptions."
