@@ -739,8 +739,7 @@ This is how the sausage is made."
             (excludes-re (when excludes
                            ;; NOTE: Excludes only match against whole words.  This probably makes sense.
                            ;; TODO: Might be worth mentioning in docs.
-                           (rx-to-string `(seq (or ,@excludes))
-                                         t)))
+                           (rx-to-string `(seq (or ,@excludes)) t)))
             (include-tags (--map (s-wrap it ":") include-tags))  ; Wrap include-tags in ":" for the regexp
             (positive-re (rx-to-string `(seq (or ,@(append includes include-tags todo-keywords)))))
             ;; NOTE: We leave todo-keywords out of the required-positive-re-list,
