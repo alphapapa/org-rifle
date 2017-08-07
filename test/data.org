@@ -84,8 +84,13 @@ French fries are served hot, either soft or crispy, and are generally eaten as p
 Mashed potato (British English) or mashed potatoes (American English), is a dish prepared by mashing boiled potatoes. Recipes started appearing in 1747 with an entry in The Art of Cookery by Hannah Glasse. Dehydrated and frozen mashed potatoes are available in many supermarkets.
 #+END_QUOTE
 
-***** TODO Tater tots
+***** DONE Tater tots
 
 #+BEGIN_QUOTE
 Tater tots are pieces of deep-fried, grated potatoes served as a side dish.  They are recognized for their cylindrical shape and crispy exterior. "Tater Tots" is a registered trademark of Ore-Ida (a division of the H. J. Heinz Company) that is often used as a generic term.
 #+END_QUOTE
+
+***** TODO Potato pancakes
+
+These are best when they're not too done.  DONE, I say.
+

@@ -732,27 +732,30 @@ POSITION is the position in BUFFER where the candidate heading
 begins.
 
 This is how the sausage is made."
-  (-let* ((buffer-name (buffer-name buffer))
-          ((includes excludes tags todo-keywords) (helm-org-rifle--parse-input input))
-          (excludes-re (when excludes
-                         ;; NOTE: Excludes only match against whole
-                         ;; words.  This probably makes sense.
-                         ;; TODO: Might be worth mentioning in docs.
-                         (rx-to-string `(seq bow (or ,@excludes) eow) t)))
-          (tags (--map (s-wrap it ":") tags))  ; Wrap tags in ":" for the regexp
-          (positive-tokens (append includes tags todo-keywords))
-          (positive-re (rx-to-string `(seq (or ,@positive-tokens))))
-          (positive-re-list (mapcar #'regexp-quote positive-tokens))
-          (context-re (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
-                                          (or ,@positive-tokens)
-                                          (repeat 0 ,helm-org-rifle-context-characters not-newline))
-                                    t))
-          ;; TODO: Turn off case folding if tokens contains mixed case
-          (case-fold-search t)
-          (results nil))
-    (with-current-buffer buffer
+  (with-current-buffer buffer
+    ;; Run this in the buffer so we can get its todo-keywords (i.e. `org-todo-keywords-1')
+    (-let* ((buffer-name (buffer-name buffer))
+            ((includes excludes tags todo-keywords) (helm-org-rifle--parse-input input))
+            (excludes-re (when excludes
+                           ;; NOTE: Excludes only match against whole
+                           ;; words.  This probably makes sense.
+                           ;; TODO: Might be worth mentioning in docs.
+                           (rx-to-string `(seq bow (or ,@excludes) eow) t)))
+            (tags (--map (s-wrap it ":") tags))  ; Wrap tags in ":" for the regexp
+            (positive-re (rx-to-string `(seq (or ,@(append includes tags todo-keywords)))))
+            ;; NOTE: We leave todo-keywords out of the required-positive-re-list,
+            ;; because that is used to verify that all positive tokens
+            ;; are matched in an entry, and we want todo-keywords to
+            ;; match OR-wise.
+            (required-positive-re-list (mapcar #'regexp-quote (append includes tags)))
+            (context-re (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
+                                            (or ,@(append includes tags todo-keywords))
+                                            (repeat 0 ,helm-org-rifle-context-characters not-newline))
+                                      t))
+            ;; TODO: Turn off case folding if tokens contains mixed case
+            (case-fold-search t)
+            (results nil))
       (save-excursion
-
         ;; Go to first heading
         (goto-char (point-min))
         (when (org-before-first-heading-p)
@@ -761,33 +764,37 @@ This is how the sausage is made."
         ;; Search for matching nodes
         (while (re-search-forward positive-re nil t)
           (catch 'negated  ; Skip node if excludes found
-            (let* ((node-beg (or (save-excursion
-                                   (save-match-data
-                                     (outline-previous-heading)))
-                                 (point)))
-                   (node-end (or (save-match-data  ; HACK: This is confusing; should these be reversed here?  Does it matter?
-                                   (save-excursion
-                                     (outline-next-heading)))
-                                 (point-max)))
-                   (components (org-heading-components))
-                   (path (when helm-org-rifle-show-path
-                           (org-get-outline-path)))
-                   (priority (when (nth 3 components)
-                               ;; TODO: Is there a better way to do this?  The
-                               ;; s-join leaves an extra space when there's no
-                               ;; priority.
-                               (concat "[#" (char-to-string (nth 3 components)) "]")))
-                   (tags (nth 5 components))
-                   (heading (s-trim (if helm-org-rifle-show-todo-keywords
-                                        (s-join " " (list (nth 2 components) priority (nth 4 components)))
-                                      (nth 4 components))))
-                   matching-positions-in-node
-                   matching-lines-in-node
-                   matched-words-with-context)
+            (-let* ((node-beg (or (save-excursion
+                                    (save-match-data
+                                      (outline-previous-heading)))
+                                  (point)))
+                    (node-end (or (save-match-data  ; HACK: This is confusing; should these be reversed here?  Does it matter?
+                                    (save-excursion
+                                      (outline-next-heading)))
+                                  (point-max)))
+                    ((level reduced-level todo-keyword priority-char heading tags priority) (org-heading-components))
+                    (path (when helm-org-rifle-show-path
+                            (org-get-outline-path)))
+                    (priority (when priority-char
+                                ;; TODO: Is there a better way to do this?  The
+                                ;; s-join leaves an extra space when there's no
+                                ;; priority.
+                                (format "[#%c]" priority-char)))
+                    (heading (s-trim (if helm-org-rifle-show-todo-keywords
+                                         (s-join " " (list todo-keyword priority heading))
+                                       heading)))
+                    (matching-positions-in-node)
+                    (matching-lines-in-node)
+                    (matched-words-with-context))
 
               ;; Goto beginning of node
               (when node-beg
                 (goto-char node-beg))
+
+              ;; Check todo keyword
+              (when todo-keywords
+                (unless (member todo-keyword todo-keywords)
+                  (throw 'negated (goto-char node-end))))
 
               ;; Check excludes
               (when excludes
@@ -834,7 +841,7 @@ This is how the sausage is made."
                                                                     heading
                                                                     tags))
                                                     (mapcar 'car matching-lines-in-node))
-                             for re in positive-re-list
+                             for re in required-positive-re-list
                              always (cl-loop for target in targets
                                              thereis (s-matches? re target)))
 
@@ -872,11 +879,11 @@ This is how the sausage is made."
                                   ;; No path or not showing path
                                   (if helm-org-rifle-fontify-headings
                                       (helm-org-rifle-fontify-like-in-org-mode
-                                       (s-join " " (list (s-repeat (nth 0 components) "*")
+                                       (s-join " " (list (s-repeat level "*")
                                                          heading
                                                          (concat tags " "))))
                                     ;; Not fontifying
-                                    (s-join " " (list (s-repeat (nth 0 components) "*")
+                                    (s-join " " (list (s-repeat level "*")
                                                       heading
                                                       tags)))))
                        (entry (if helm-org-rifle-show-full-contents
@@ -890,9 +897,9 @@ This is how the sausage is made."
                   (push (cons entry (cons buffer node-beg))
                         results)))
               ;; Go to end of node
-              (goto-char node-end))))))
-    ;; Return results in the order they appear in the org file
-    (nreverse results)))
+              (goto-char node-end)))))
+      ;; Return results in the order they appear in the org file
+      (nreverse results))))
 
 (defun helm-org-rifle--parse-input (input)
   "Return list of token types in INPUT string.

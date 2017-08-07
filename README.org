@@ -76,6 +76,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Save all results in a Helm buffer to a =helm-org-rifle-occur= buffer by pressing =C-s= (like =helm-grep-save-results=).
 +  Show results from certain buffers by typing the name of the buffer (usually the filename).
 +  Show headings with certain to-do keywords by typing the keyword, e.g. =TODO= or =DONE=.
+     -  Multiple to-do keywords are matched with boolean OR.
 +  Show headings with certain priorities by typing, e.g. =#A= or =[#A]=.
 +  Show headings with certain tags by searching for, e.g. =:tag1:tag2:=.
 +  Negate matches with a =!=, e.g. =pepperoni !anchovies=.
@@ -90,6 +91,9 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 ** 1.5.0-pre
 
 *Additions*
++  Match to-do keywords specifically.
+     -  Previously, to-do keywords were matched as normal words, so searching for =WAITING something= would find any entry with the words =waiting= or =something= in it.  Now, to-do keywords are recognized as such and are compared to the actual to-do keyword of each entry, using the list of to-do keywords specific to each buffer.  So, searching for =WAITING something= will find entries containing the word =something= with the to-do status =WAITING=; searching for =waiting something= will search for =waiting= as a normal word, finding entries containing =waiting= or =something= without regard for their to-do status.
+     -  Multiple to-do keywords are matched with a boolean OR.  Since each entry can only have one to-do status, searching for multiple to-do keywords would logically exclude all entries and therefore match nothing.  To make it more useful (and less error-prone), multiple to-do keywords are matched with OR.  For example, searching for =TODO DONE something= will find entries containing the word =something= that are marked either =TODO= or =DONE=.
 +  In =occur= results:
      -  Show a header for each source buffer.
      -  Show separators between each result.

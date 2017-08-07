@@ -150,12 +150,42 @@ od, consuming both their meat and their eggs." "data.org" . 3114) ("**** Pork
 is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("***** Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
 
-    (it "Can match against TODO keywords"
-      (expect (helm-org-rifle--test-helper-process-candidates
-               (helm-org-rifle--get-candidates-in-buffer test-buffer "[#B]"))
-              :to-equal '(("***** [#B] Mashed potatoes  
+    (describe "Can match against TODO keywords..."
+      (it "...alone"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE"))
+                :to-equal '(("***** DONE  Tater tots  
 #+BEGIN_QUOTE
-Mashed potato (British English) o..." "data.org" . 5066))))
+Tater tots are pieces of deep-fri..." "data.org" . 5401))))
+
+      (it "...with multiple keywords alone"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE TODO"))
+                :to-equal '(("***** DONE  Tater tots  
+#+BEGIN_QUOTE
+Tater tots are pieces of deep-fri..." "data.org" . 5401)
+                            ("***** TODO  Potato pancakes  
+est when they're not too done.  DONE, I say." "data.org" . 5725))))
+
+      (it "...with a keyword and a normal term"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE tots"))
+                :to-equal '(("***** DONE  Tater tots  
+Tater tots are pieces of deep-fried...crispy exterior. \"Tater Tots\" is a registered tradema" "data.org" . 5401))))
+
+      (it "...with two keywords and a normal term"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE TODO potato"))
+                :to-equal '(("***** DONE  Tater tots  
+es of deep-fried, grated potatoes served as a side dish." "data.org" . 5401)
+                            ("***** TODO  Potato pancakes  
+est when they're not too done.  DONE, I say." "data.org" . 5725))))
+
+      (it "...with two keywords and two normal terms"
+        (expect (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "TODO DONE best pancakes"))
+                :to-equal '(("***** TODO  Potato pancakes  
+These are best when they're not too don...e.  DONE, I say." "data.org" . 5725)))))
 
     (it "Can match against priorities"
       (setq expected-result '(("***** [#B] Mashed potatoes  
