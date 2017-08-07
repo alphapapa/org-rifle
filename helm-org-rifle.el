@@ -740,7 +740,7 @@ This is how the sausage is made."
                          ;; TODO: Might be worth mentioning in docs.
                          (rx-to-string `(seq bow (or ,@excludes) eow) t)))
           (tags (--map (s-wrap it ":") tags))  ; Wrap tags in ":" for the regexp
-          (positive-tokens (append includes tags))
+          (positive-tokens (append includes tags todo-keywords))
           (positive-re (rx-to-string `(seq (or ,@positive-tokens))))
           (positive-re-list (mapcar #'regexp-quote positive-tokens))
           (context-re (rx-to-string `(seq (repeat 0 ,helm-org-rifle-context-characters not-newline)
