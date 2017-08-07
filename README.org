@@ -106,6 +106,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 *Internal*
 +  Rewrote input parsing.
++  Factored out entry-matching.
 
 ** 1.4.2
 
