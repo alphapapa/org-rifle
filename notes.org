@@ -998,11 +998,16 @@ It probably has some good techniques for doing it quickly.
 ** MAYBE flx sorting
 [[https://github.com/abo-abo/swiper/issues/207][This swiper issue]] may have some good info about caching and such.  It might be too slow for rifle, or at least it might be too slow with lots of results.  Hmm...
 
-** MAYBE Match only headings
+** UNDERWAY Match only headings
+:LOGBOOK:
+-  State "UNDERWAY"   from "MAYBE"      [2017-08-11 Fri 17:07]
+:END:
 
 It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
 
 This Org function might make this fairly easy: =org-goto-local-search-headings=
+
+Underway in the =heading-only-searches= branch.
 
 ** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
 
