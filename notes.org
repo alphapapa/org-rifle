@@ -998,12 +998,47 @@ It probably has some good techniques for doing it quickly.
 ** MAYBE flx sorting
 [[https://github.com/abo-abo/swiper/issues/207][This swiper issue]] may have some good info about caching and such.  It might be too slow for rifle, or at least it might be too slow with lots of results.  Hmm...
 
-** MAYBE Match only headings
+** UNDERWAY Match only headings
+:LOGBOOK:
+-  State "UNDERWAY"   from "MAYBE"      [2017-08-11 Fri 17:03]
+:END:
 
 It might be nice to only match against headings, but this is not as easy as it might seem.  This whole package is made to search both headings and content.
 
 This Org function might make this fairly easy: =org-goto-local-search-headings=
 
+*** Add heading-only searching to =helm-org-rifle=                :Emacs:Org:
+:PROPERTIES:
+:ID:       282c6cd7-5b96-4761-8d5e-9d376c42ad80
+:END:
+:LOGBOOK:
+-  State "TODO"       from "NOW"        [2017-08-11 Fri 17:00]
+CLOCK: [2017-08-11 Fri 16:14]--[2017-08-11 Fri 17:00] =>  0:46
+-  State "NOW"        from "TODAY"      [2017-08-11 Fri 16:05]
+-  State "TODAY"      from "TODO"       [2017-08-11 Fri 16:01]
+CLOCK: [2017-08-11 Fri 15:44]--[2017-08-11 Fri 16:05] =>  0:21
+CLOCK: [2017-08-11 Fri 15:41]--[2017-08-11 Fri 15:43] =>  0:02
+:END:
+
+[2017-08-11 Fri 15:41] I noticed that searching entire entries with =helm-org-rifle= is /much/ faster than searching only headings with =helm-org-agenda-files-headings=.  I should be able to add heading-only searching to =helm-org-rifle=, and then I should be able to get fast heading searches, even with displaying the full path (I think).  Then maybe I can show that to Thierry and talk about alternative ways to do fast searching in Org files with Helm.
+
+[2017-08-11 Fri 15:55]  I think the reason it's so much slower is that =helm-org--get-candidates-in-file= gets /all/ headings, not just ones that match the input; then Helm filters the headings to ones that match the input.  =helm-org-rifle= is faster because it only gets headings of interest.
+
+I'd like to make =helm-org--get-candidates-in-file= do this, but there are times when the user /wants/ to see all headings, like when navigating in a document structure.  In a document with fewer headings but lots of entry text between them, displaying just the headings is quick and makes for easy navigation.  So the ability to show all headings, without any input, needs to be preserved.
+
+The easiest thing to do would be to make a separate command that only shows matching headings, but that makes for a poor UI, the user having to decide between them in advance.
+
+One potential solution would be to make it show all headings when there is no input, and only retrieving matching headings when there is input; in other words, not using existing Helm functions for matching, but getting candidates directly from the source buffer, like =helm-org-rifle=.  I think this will work, but it may require some significant refactoring.
+
+[2017-08-11 Fri 16:40]  Yeah, I think some significant refactoring would be required.  I tried to use =helm-org-rifle--get-candidates-in-buffer= if =helm-pattern= is non-empty, but that doesn't work, of course, because the =helm-org-headings-class= is not a volatile source, so the candidates are not re-fetched when the input pattern changes.
+
+So we'd have to make it a volatile source, but only when there is input.  And then when the user clears the input, we'd have to return to the all-headings candidates, which might have been interrupted...?  Or if it can't be interrupted, because it's not an async source, then there wouldn't be any speedup in the first place, because it wouldn't use the rifle function to get matching headings until after it had already fetched all headings with the empty pattern.
+
+So it seems like the best option, at least for now, is a headings-only rifle command.  Refactoring the Helm commands seems like a lot of work for little benefit.  It would be slick to have it all in one hybrid command, but I think Helm isn't designed for this.
+
+[2017-08-11 Fri 16:58]  I was going to use the prefix arg as a way to set headings-only searches, but unfortunately I'm already using the prefix arg as a way to set the sorting method.  I guess I could use a double prefix arg, but I don't like that kind of UI.  But I also don't want to define a whole 'nother set of commands for searching headings in all buffers, current buffer, etc.  I'll have to think about it some more.i
+
+BTW, an interesting thing I noticed: If I display only headings in the results, Helm automatically sorts to the top entries whose headings contain the search terms, while entries that match but whose headings don't are sorted to the bottom.  That's actually really cool.
 ** MAYBE Testing with [[https://github.com/jorgenschaefer/emacs-buttercup][Buttercup]]
 
 Could be good for testing e.g. negation, to make sure I don't break it.

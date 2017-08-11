@@ -254,6 +254,12 @@ like \": \"."
   "Show and match against Org todo keywords."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-show-only-heading nil
+  "Show only headings in results.
+This is typically for overriding in specific commands, not for
+generally setting, but you can if you want."
+  :type 'boolean)
+
 (defcustom helm-org-rifle-show-path nil
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
@@ -354,9 +360,9 @@ Just in case this is a performance issue for anyone, it can be disabled."
 (cl-defmacro helm-org-rifle-define-command (name args docstring &key sources (let nil) (transformer nil))
   "Define interactive helm-org-rifle command, which will run the appropriate hooks.
 Helm will be called with vars in LET bound."
-  `(cl-defun ,(intern (concat "helm-org-rifle" (when (s-present? name) (concat "-" name)))) ,args
+  `(cl-defun ,(intern (concat "helm-org-rifle" (when (s-present? name) (concat "-" name)))) (prefix)
      ,docstring
-     (interactive)
+     (interactive "P")
      (unwind-protect
          (progn
            (run-hooks 'helm-org-rifle-before-command-hook)
@@ -371,7 +377,17 @@ Helm will be called with vars in LET bound."
                        ;; true.  Option B is less ugly.
                        `(helm-org-rifle-transformer ,transformer)
                      'ignore)
+                  ;; Make these variables local so we can override them if necessary
+                  (helm-org-rifle-show-only-heading helm-org-rifle-show-only-heading)
+                  (helm-org-rifle-show-path helm-org-rifle-show-path)
+                  (helm-org-rifle-multiline helm-org-rifle-multiline)
+                  ;; Macro :let bindings
                   ,@let)
+             (when prefix
+               ;; Headings-only mode
+               (setq helm-org-rifle-show-only-heading t
+                     helm-org-rifle-show-path t
+                     helm-org-rifle-multiline nil))
              (helm :sources ,sources)))
        (run-hooks 'helm-org-rifle-after-command-hook))))
 
@@ -885,19 +901,21 @@ because it uses variables in its outer scope."
                     (s-join " " (list (s-repeat level "*") heading tags)))))
 
           (setq entry
-                (if helm-org-rifle-show-full-contents
-                    (s-join helm-org-rifle-heading-contents-separator
-                            (list heading
-                                  (buffer-substring (save-excursion
-                                                      (goto-char node-beg)
-                                                      (org-end-of-meta-data)
-                                                      (point))
-                                                    node-end)))
-                  ;; Show context strings
-                  (s-join helm-org-rifle-heading-contents-separator
-                          (list heading
-                                (s-join helm-org-rifle-ellipsis-string
-                                        matched-words-with-context)))))
+                (cond (helm-org-rifle-show-full-contents
+                       (s-join helm-org-rifle-heading-contents-separator
+                               (list heading
+                                     (buffer-substring (save-excursion
+                                                         (goto-char node-beg)
+                                                         (org-end-of-meta-data)
+                                                         (point))
+                                                       node-end))))
+                      (helm-org-rifle-show-only-heading
+                       heading)
+                      (t ;; Show context strings
+                       (s-join helm-org-rifle-heading-contents-separator
+                               (list heading
+                                     (s-join helm-org-rifle-ellipsis-string
+                                             matched-words-with-context))))))
           ;; Return list in format: text-for-display node-beg
           (cons entry (cons buffer node-beg)))))))
 
@@ -1484,3 +1502,17 @@ Return sorting function corresponding to chosen description string."
 (provide 'helm-org-rifle)
 
 ;;; helm-org-rifle.el ends here
+
+(defun helm-org-rifle-headings-current-buffer ()
+  (interactive)
+  (let ((helm-org-rifle-show-only-heading t)
+        (helm-org-rifle-show-path t)
+        (helm-org-rifle-multiline nil))
+    (helm-org-rifle-current-buffer)))
+
+(defun helm-org-rifle-headings ()
+  (interactive)
+  (let ((helm-org-rifle-show-only-heading t)
+        (helm-org-rifle-show-path t)
+        (helm-org-rifle-multiline nil))
+    (helm-org-rifle-current-buffer)))
