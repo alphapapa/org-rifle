@@ -808,6 +808,13 @@ This helps for debugging, in case I need it in the future:
 
 I forgot to add this when I rewrote the input handling.
 
+** MAYBE async/deferred/concurrent?
+:LOGBOOK:
+-  State "MAYBE"      from              [2017-09-11 Mon 10:27]
+:END:
+
+Matus [[https://github.com/Fuco1/sallet/issues/22#issuecomment-328530801][mentioned]] that he's experimenting with [[https://github.com/kiwanami/emacs-deferred][emacs-deferred]] (which also has =concurrent.el= in it) for his Sallet project, that it's working well so far.  I wonder if I could use that to improve performance, maybe even use it with Helm (and/or Sallet eventually).
+
 ** TODO Try inserting outline paths into separators/overlays in occur buffers
 
 Using overlays should prevent Org itself from re-fontifying the paths.
