@@ -804,16 +804,27 @@ This helps for debugging, in case I need it in the future:
 :TOC:      ignore-children
 :END:
 
+** TODO [#A] Use lexical-binding
+
+[2017-10-30 Mon 18:37]  As suggested by Matus Goljer:
+
+#+BEGIN_QUOTE
+I looked at your code a bit and it looks quite good. I would try to enable lexical binding, I've noticed that you depend on dynamic lookup somewhere: instead pass the data as arguments, it's going to be much faster still (dynamic lookup can be awful slow)
+#+END_QUOTE
+
+I thought I had already done this, but apparently I forgot.  Might be an easy, nearly free speed boost.
+
 ** TODO To-do keyword negation
 
 I forgot to add this when I rewrote the input handling.
-
 ** MAYBE async/deferred/concurrent?
 :LOGBOOK:
 -  State "MAYBE"      from              [2017-09-11 Mon 10:27]
 :END:
 
 Matus [[https://github.com/Fuco1/sallet/issues/22#issuecomment-328530801][mentioned]] that he's experimenting with [[https://github.com/kiwanami/emacs-deferred][emacs-deferred]] (which also has =concurrent.el= in it) for his Sallet project, that it's working well so far.  I wonder if I could use that to improve performance, maybe even use it with Helm (and/or Sallet eventually).
+
+[2017-10-30 Mon 18:35]  More discussion [[https://github.com/Fuco1/sallet/issues/30][here]].
 
 ** TODO Try inserting outline paths into separators/overlays in occur buffers
 
