@@ -103,6 +103,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 *Fixes*
 +  Use =(org-agenda-files)= function instead of the =org-agenda-files= variable in =helm-org-rifle-agenda-files= and =helm-org-rifle-occur-agenda-files=.  This way, directory entries are expanded, and other Org customizations are respected.  Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]].
 +  Fix tag negation.  Negated tags were not actually being negated, and the test was wrong.  Oops.
++  When =helm-org-rifle-show-path= is on, match against path elements.  This only happens when that option is enabled, so WYSIWYG: if you can't see the paths, they aren't matched against.  Note, however, that they are always checked for excluded patterns, even if the option is off.  Thanks to [[https://github.com/georgewsinger][George Singer]].
 
 *Internal*
 +  Rewrote input parsing.

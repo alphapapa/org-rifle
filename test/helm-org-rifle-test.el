@@ -110,6 +110,13 @@ primarily as a source of food, consuming both their me" "data.org" . 3114)
                           ("***** Fries  
 he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4375))))
 
+    (it "Can match against multiple path elements"
+      (expect (let ((helm-org-rifle-show-path t))
+                (helm-org-rifle--test-helper-process-candidates
+                 (helm-org-rifle--get-candidates-in-buffer test-buffer "fresh meat")))
+              :to-equal '(("Food/Ingredients/Meat/Pork
+is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence...0 BC. Pork is eaten both freshly cooked and preserved." "data.org" . 3541))))
+
     (describe "Can match against tags..."
       (it "...in any order"
         (expect (helm-org-rifle--test-helper-process-candidates

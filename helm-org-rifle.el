@@ -838,10 +838,12 @@ because it uses variables in its outer scope."
                                      (cons buffer pos))))
 
         ;; Verify all tokens are contained in each matching node
-        (when (cl-loop with targets = (append (-non-nil (list buffer-name
+        (when (cl-loop with targets = (-non-nil (append (list buffer-name
                                                               heading
-                                                              tags))
-                                              (mapcar 'car matching-lines-in-node))
+                                                              tags)
+                                                        (when helm-org-rifle-show-path
+                                                          path)
+                                                        (mapcar 'car matching-lines-in-node)))
                        for re in required-positive-re-list
                        always (cl-loop for target in targets
                                        thereis (s-matches? re target)))
