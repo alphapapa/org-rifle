@@ -1088,11 +1088,17 @@ Nothing to do here AFAIK.
 
 All Buttercup tests pass.
 
-*** TODO Tag, sign, and push tag
+*** DONE Tag, sign, and push tag
 
 If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
 
-*** TODO GitHub release notes
+*** DONE GitHub release notes
+
+*** DONE Update version numbers for next pre-release
+
+**** DONE =helm-org-rifle.el=
+
+**** DONE =README.org=
 ** DONE Stable release 1.4.0
 
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
@@ -1390,3 +1396,9 @@ e.g. =:tag1:tag2:=
 If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
 
 *** TODO GitHub release notes
+
+*** TODO Update version numbers for next pre-release
+
+**** TODO =helm-org-rifle.el=
+
+**** TODO =README.org=

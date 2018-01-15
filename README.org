@@ -88,6 +88,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.6.0-pre
+
+Nothing yet.  Find me some more bugs to fix!
+
 ** 1.5.0
 
 *Additions*
