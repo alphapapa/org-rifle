@@ -1058,6 +1058,41 @@ When matching multiple tags in a string, the order of the tags matters, e.g. =:w
 :LOGGING:  nil
 :END:
 
+** Stable release 1.5.0
+
+Hmm, that seems like a long list.  But I want stable releases to actually be stable.
+
+*** DONE Try to get someone else to test it
+
+Last MELPA release was on December 2, with a fix from a user.  No problems since then, so I think it can be considered tested.
+
+*** DONE Set =Version:= header
+
+Use =x.y.0=, not =x.y=.
+
+**** DONE =helm-org-rifle.el=
+
+**** DONE =README.org=
+
+*** DONE Update changelog
+
+*** TODO Test in clean MELPA sandbox
+
+**** DONE Update test checklist from changelog for new features
+
+Nothing to do here AFAIK.
+
+**** DONE Install
+
+**** DONE Test functionality:
+
+All Buttercup tests pass.
+
+*** TODO Tag, sign, and push tag
+
+If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
+
+*** TODO GitHub release notes
 ** DONE Stable release 1.4.0
 
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
