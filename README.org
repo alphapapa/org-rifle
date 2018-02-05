@@ -90,6 +90,9 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.6.0-pre
 
+*Additions*
++ Add clock-in action.  Thanks to [[https://github.com/PrestanceDesign][Michael Salihi]].
+
 *Fixes*
 +  Use static autoload definitions for macro-defined commands, and delete autoloads for the macro definitions. This prevents =helm-org-rifle= from causing =org= to load unnecessarily.  Fixes #13.  Thanks to Anders Johansson (@andersjohansson) and Chris Ruegge (@cruegge).
 
@@ -185,6 +188,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 + Thanks to [[https://github.com/joonoro][Joonatan O'Rourke]] for suggesting the =(org-agenda-files)= function.
 + Thanks to [[https://github.com/zeltak][@zeltak]] for helping to test many changes.
 + Thanks to [[https://github.com/andersjohansson][Anders Johansson]] and [[https://github.com/cruegge][Chris Ruegge]] for investigating and fixing the [[https://github.com/alphapapa/helm-org-rifle/issues/13][command-macro autoloads]].
++ Thanks to [[https://github.com/PrestanceDesign][Michael Salihi]] for contributing the clock-in action.
 
 * Development                                                    :noexport_1:
 
