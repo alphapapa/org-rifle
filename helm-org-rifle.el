@@ -596,7 +596,8 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :action (helm-make-actions
                            "Show entry" 'helm-org-rifle--show-candidates
                            "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
-                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer)
+                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer
+			   "Clock in task" 'helm-org-rifle-clock-in-task)
                   :keymap helm-org-rifle-map)))
     (helm-attrset 'buffer buffer source)
     source))
@@ -715,6 +716,15 @@ source, so we must gather them manually."
   (interactive)
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-org-rifle-show-entry-in-indirect-buffer)))
+
+(defun helm-org-rifle-clock-in-task (candidate)
+  "Clock into the item at CANDIDATE"
+  (-let (((buffer . pos) candidate)
+         (original-buffer (current-buffer)))
+    (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
+    (switch-to-buffer buffer)
+    (goto-char pos)
+    (org-clock-in)))
 
 ;;;;; The meat
 
