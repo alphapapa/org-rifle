@@ -804,6 +804,10 @@ This helps for debugging, in case I need it in the future:
 :TOC:      ignore-children
 :END:
 
+** TODO [#A] Look into Helm updates
+
+See https://github.com/emacs-helm/helm/issues/1806#issuecomment-373329827
+
 ** TODO [#A] Use lexical-binding
 
 [2017-10-30 Mon 18:37]  As suggested by Matus Goljer:
