@@ -96,6 +96,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 *Fixes*
 +  Use static autoload definitions for macro-defined commands, and delete autoloads for the macro definitions. This prevents =helm-org-rifle= from causing =org= to load unnecessarily.  Fixes #13.  Thanks to Anders Johansson (@andersjohansson) and Chris Ruegge (@cruegge).
 
+** 1.5.1
+
+*Fixes*
++  Update for change to Helm.  Fixes [[https://github.com/alphapapa/helm-org-rifle/issues/23][#23]].  Thanks to [[https://github.com/adam52][@adam52]].
+
 ** 1.5.0
 
 *Additions*
