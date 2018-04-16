@@ -429,13 +429,13 @@ are searched; they are not filtered with
                               (if (= 0 helm-exit-status)
                                   ;; Candidate selected; close other new buffers
                                   (let ((candidate-source (helm-attr 'name (helm-get-current-source))))
-                                    (dolist (source (helm-get-sources))
+                                    (dolist (source helm-sources)
                                       (unless (or (equal (helm-attr 'name source)
                                                          candidate-source)
                                                   (not (helm-attr 'new-buffer source)))
                                         (kill-buffer (helm-attr 'buffer source)))))
                                 ;; No candidates; close all new buffers
-                                (dolist (source (helm-get-sources))
+                                (dolist (source helm-sources)
                                   (when (helm-attr 'new-buffer source)
                                     (kill-buffer (helm-attr 'buffer source))))))))))
 

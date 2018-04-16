@@ -88,6 +88,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.5.1
+
+*Fixes*
++  Update for change to Helm.  Fixes [[https://github.com/alphapapa/helm-org-rifle/issues/23][#23]].  Thanks to [[https://github.com/adam52][@adam52]].
+
 ** 1.5.0
 
 *Additions*
