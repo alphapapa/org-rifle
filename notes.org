@@ -808,6 +808,13 @@ This helps for debugging, in case I need it in the future:
 
 See https://github.com/emacs-helm/helm/issues/1806#issuecomment-373329827
 
+** SOMEDAY [#B] Look into using [[https://github.com/Fuco1/sallet/issues/22#issuecomment-328647175][Sallet]]
+:LOGBOOK:
+-  State "SOMEDAY"    from "TODO"       [2018-04-16 Mon 13:30]
+:END:
+
+Not as full-featured as Helm, but might be an interesting alternative approach.
+
 ** TODO [#A] Use lexical-binding
 
 [2017-10-30 Mon 18:37]  As suggested by Matus Goljer:
