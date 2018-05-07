@@ -20,7 +20,7 @@
 
 (defvar org-db (emacsql-sqlite (expand-file-name "org-db.sqlite" org-db-root)))
 
-(cl-defun org-db-create-db ((fts-type fts5))
+(cl-defun org-db-create-db (&optional (fts-type 'fts5))
   (emacsql org-db [:PRAGMA (= foreign_keys 1)])
 
 
@@ -58,8 +58,8 @@
 
   ;; no cascade delete ;(
 
-  (emacsql org-db [:create :virtual :table :if :not :exists headline-content :using fts-type
-                           ([headline-id content])])
+  (emacsql org-db (vector :create :virtual :table :if :not :exists 'headline-content :using fts-type
+                          '([headline-id content])))
 
 
   (emacsql org-db [:create-table :if :not :exists
@@ -195,9 +195,9 @@
 				      (buffer-file-name))))
 	  headline-ids)
       (when filename-id
-	(setq headline-ids (mapcar 'car (emacsql org-db [:select [rowid] :from headlines :where (= filename-id $s1)]
-                                                 filename-id)))
-	(cl-loop for hl-id in headline-ids
+	(cl-loop with headline-ids = (mapcar 'car (emacsql org-db [:select [rowid] :from headlines :where (= filename-id $s1)]
+                                                           filename-id))
+                 for hl-id in headline-ids
                  do (emacsql org-db [:delete :from headline-content
                                              :where (= headline-content:headline-id $s1)]
                              hl-id)))
@@ -215,21 +215,67 @@
 
     (message "done updating %s" (buffer-file-name))))
 
-(defun org-db-add-headline ()
-  "add a headline."
-  (interactive)
-  (let ((hl (org-element-context))
-	filename-id headline-id tag-id property-id)
+(defun org-db-update (&optional force)
+  "Update the database with the current buffer if needed."
+  (interactive "P")
+  (when (or force
+	    (not (string= (md5 (current-buffer))
+			  (caar (emacsql org-db [:select md5 :from files :where (= filename $s1)]
+					 (buffer-file-name))))))
+    (message "Updating database in %s" (buffer-file-name))
 
-    ;; filename
-    (setq filename-id (or (caar (emacsql org-db [:select rowid :from files
-                                                         :where (= filename $s1)]
-                                         (buffer-file-name)))
+    (emacsql org-db [:begin-transaction])
+
+    ;; no cascade delete in virtual tables, so we manually do it.
+
+    ;; FIXME: This seems extremely slow.  The time for indexing my main.org file went from 27
+    ;; seconds to 6 seconds when I commented out this part.
+
+    ;; Trying a subquery:
+    (let ((filename-id (caar (emacsql org-db [:select rowid :from files :where (= filename $s1)]
+				      (buffer-file-name))))
+	  headline-ids)
+      (when filename-id
+	(emacsql org-db [:delete :from headline-content
+                                 :where (in headline-content:headline-id
+                                            [:select [rowid] :from headlines :where (= filename-id $s1)])]
+                 filename-id))
+      ;; now delete the file, which should cascade delete the rest
+      (emacsql org-db [:delete :from files :where (= filename $s1)]
+               (buffer-file-name))
+
+      ;; Re-create file
+      (setq filename-id (progn
                           (emacsql org-db [:insert :into files :values [nil $s1 $s2]]
                                    (buffer-file-name)
                                    (md5 (current-buffer)))
                           (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
 
+      ;; now add each headline and link.
+      (org-with-wide-buffer
+       ;; (org-db-link-update)
+       ;; (org-db-keyword-update)
+       (org-map-entries (apply-partially #'org-db-add-headline filename-id))))
+
+    (emacsql org-db [:commit])
+
+    (message "done updating %s" (buffer-file-name))))
+
+(defun org-db-add-headline (&optional filename-id)
+  "add a headline."
+  (interactive)
+  (let ((hl (org-element-context))
+	headline-id tag-id property-id)
+
+    ;; filename
+    (unless filename-id
+      (setq filename-id (or (caar (emacsql org-db [:select rowid :from files
+                                                           :where (= filename $s1)]
+                                           (buffer-file-name)))
+                            (emacsql org-db [:insert :into files :values [nil $s1 $s2]]
+                                     (buffer-file-name)
+                                     (md5 (current-buffer)))
+                            (caar (emacsql org-db [:select (funcall last-insert-rowid)])))))
     ;; headline
     (emacsql org-db [:insert :into headlines :values [nil $s1 $s2 $s3 $s4 $s5 $s6 $s7 $s8 $s9]]
 	     filename-id

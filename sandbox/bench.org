@@ -1,0 +1,113 @@
+
+* 
+
+** Macro
+
+#+BEGIN_SRC elisp
+  (defmacro profile-rifle (times &rest body)
+    (declare (indent defun))
+    `(let (output)
+       (dolist (p '("emacsql" "helm-" "org-" "string-" "s-" "buffer-" "append" "delq" "map" "list" "car" "save-" "outline-" "delete-dups" "sort" "line-" "nth" "concat" "char-to-string" "rx-" "goto-" "when" "search-" "re-"))
+         (elp-instrument-package p))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       output))
+#+END_SRC
+
+** Updating
+
+#+BEGIN_SRC elisp
+  (profile-rifle 1
+    (with-current-buffer "main.org"
+      (org-db-update t)))
+#+END_SRC
+
+*** Avoiding repeated filename-id queries
+
+This reduces the number of queries and the runtime by almost a factor of 10.  I'd still like to reduce the number of queries, because in this test, there are only 1272 headings, but 3604 queries being run.
+
+#+RESULTS:
+#+begin_example
+org-db-update                                                 1           6.431651582   6.431651582
+org-map-entries                                               1           6.216220105   6.216220105
+org-scan-tags                                                 1           6.160496391   6.160496391
+org-db-add-headline                                           1272        5.0053239540  0.0039350031
+org-element-context                                           1272        2.9305744380  0.0023039107
+org-element-at-point                                          1273        2.7885684970  0.0021905487
+org-element-headline-parser                                   1272        2.6510704859  0.0020841749
+emacsql                                                       3604        2.1115470139  0.0005858898
+emacsql-wait                                                  3604        1.3434794030  0.0003727745
+org-agenda-skip                                               1272        0.8834146220  0.0006945083
+emacsql-compile                                               3604        0.4413179909  0.0001224522
+emacsql-format                                                3604        0.3948001690  0.0001095449
+emacsql-escape-scalar                                         13564       0.3418222399  2.520...e-05
+re-search-forward                                             6780        0.2488630150  3.670...e-05
+emacsql-waiting-p                                             10812       0.2309804420  2.136...e-05
+org-end-of-subtree                                            1280        0.162466437   0.0001269269
+emacsql-send-message                                          3604        0.1212884669  3.365...e-05
+emacsql-buffer                                                18020       0.1176558950  6.529...e-06
+emacsql-process                                               25228       0.1100215429  4.361...e-06
+emacsql-quote-scalar                                          3583        0.0904377349  2.524...e-05
+#+end_example
+
+*** Subquery-based headline deletion queries
+
+#+RESULTS:
+#+begin_example
+org-db-update                                                 1           56.628548801  56.628548801
+org-map-entries                                               1           55.327412506  55.327412506
+org-scan-tags                                                 1           55.265330381  55.265330381
+org-db-add-headline                                           1272        54.876918320  0.0431422313
+emacsql                                                       31766       31.092003574  0.0009787824
+org-entry-properties                                          2544        18.558056032  0.0072948333
+emacsql-wait                                                  31766       13.242383353  0.0004168728
+org-element-context                                           2925        9.9962602839  0.0034175248
+org-element-at-point                                          2926        9.6824433990  0.0033091057
+emacsql-compile                                               31766       9.6659204670  0.0003042850
+org-element--parse-to                                         1647        9.0345351829  0.0054854494
+org-up-heading-safe                                           13166       8.8393397679  0.0006713762
+org-element--current-element                                  16261       8.8224058779  0.0005425500
+emacsql-waiting-p                                             95298       8.7653115340  9.197...e-05
+emacsql-format                                                31766       7.9942717919  0.0002516612
+emacsql-buffer                                                158830      7.8123808379  4.918...e-05
+emacsql-escape-scalar                                         64871       7.7619725899  0.0001196524
+org-get-tags-at                                               2544        7.5955253449  0.0029856624
+re-search-backward                                            42810       6.5153218039  0.0001521915
+org-entry-blocked-p                                           1272        4.7706904640  0.0037505428
+#+end_example
+
+
+
+*** Emacs-based headline-iterating deletion queries
+
+#+RESULTS:
+#+begin_example
+org-db-update                                                 1           60.19214859   60.19214859
+org-map-entries                                               1           57.200009383  57.200009383
+org-scan-tags                                                 1           57.139158463  57.139158463
+org-db-add-headline                                           1272        56.754809907  0.0446185612
+emacsql                                                       33038       32.033465521  0.0009695945
+org-entry-properties                                          2544        18.482726789  0.0072652227
+emacsql-wait                                                  33038       12.578423440  0.0003807259
+org-element-context                                           2925        9.5288166630  0.0032577150
+org-element-at-point                                          2926        9.2079840569  0.0031469528
+org-get-tags-at                                               2544        9.0031110500  0.0035389587
+org-up-heading-safe                                           13166       8.7866312030  0.0006673728
+org-element--parse-to                                         1647        8.5913234459  0.0052163469
+org-element--current-element                                  16261       8.3806768679  0.0005153850
+re-search-backward                                            42810       6.5713369099  0.0001535000
+emacsql-waiting-p                                             99114       6.3301151769  6.386...e-05
+emacsql-compile                                               33038       5.8152778670  0.0001760178
+org-element-clock-parser                                      4993        5.4749073059  0.0010965165
+emacsql-format                                                33038       3.9353204390  0.0001191149
+emacsql-send-message                                          33038       3.9171430080  0.0001185647
+org-element-timestamp-parser                                  7552        3.9052783120  0.0005171184
+#+end_example
