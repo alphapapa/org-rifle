@@ -36,6 +36,8 @@ The indexer will index Org files in a SQLite database, probably using [[https://
 
 Indexing should take place in an external Emacs process using =emacs-async= or =deferred= or something like that.  EmacSQL is synchronous, and we don't want the main Emacs process blocking on indexing.
 
+The native threads in Emacs 26 may also be an option here.
+
 *** Indexing on save
 
 Org files will be (optionally) indexed upon save (async, in an external process) using a hook.
@@ -788,3 +790,107 @@ This is the file linked to in the article.
 ** [[https://github.com/alphapapa/sword-converter][sword-converter]]
 
 Some of the experimenting and benchmarking I did with SQLite FTS tables is documented here.
+
+* Scratch
+
+Code that's useful for developing.
+
+#+BEGIN_SRC elisp
+  (emacsql org-db [ :select (funcall count)  :from tags])
+
+  (emacsql org-db [:select :distinct [files:filename headlines:title]
+                           :from headlines  
+                           :inner-join files :on (= headlines:filename-id files:rowid)
+                           :where (like headlines:title "emacs") :limit 5])
+
+  (emacsql org-db [:select :distinct [files:filename headlines:title headlines:begin headline_content:content]
+                           :from headlines  
+                           :inner-join files :on (= headlines:filename-id files:rowid)
+                           :inner-join headline_content :on (= headlines:rowid headline_content:headline_id)
+                           :where (and (like headlines:title "%emacs%")
+                                       (like headlines:title "%org-mode%")
+                                       (like headline_content:content "%emacs%"))
+                           :limit 5])
+
+
+  (let* ((where-clause '(and (like headlines:title "%emacs%")
+                             (like headlines:title "%org-mode%")
+                             (like headline_content:content "%emacs%")))
+         (query (vector :select :distinct [files:filename headlines:title headlines:begin headline_content:content]
+                        :from 'headlines  
+                        :inner-join 'files :on '(= headlines:filename-id files:rowid)
+                        :inner-join 'headline_content :on '(= headlines:rowid headline_content:headline_id)
+                        :where where-clause
+                        :limit 5)))
+    (emacsql org-db query))
+
+  (-group-by #'car (let* ((fts-phrase (vector "emacs" "org-mode"))
+                          (where-clause `(match headline_content:content ,fts-phrase) )
+                          (query (vector :select :distinct [files:filename headlines:title headlines:begin headline_content:content]
+                                         :from 'headlines  
+                                         :inner-join 'files :on '(= headlines:filename-id files:rowid)
+                                         :inner-join 'headline_content :on '(= headlines:rowid headline_content:headline_id)
+                                         :where where-clause
+                                         :order-by 'rank)))
+                     (emacsql org-db query)))
+
+
+
+
+
+  (emacsql-prepare [:select :distinct [files:filename headlines:title headlines:begin headline_content:content]
+                            :from headlines  
+                            :inner-join files :on (= headlines:filename-id files:rowid)
+                            :inner-join headline_content :on (= headlines:rowid headline_content:headline_id)
+                            :where $s1
+                            :limit 5])
+
+  (let ((title-keyword "%emacs%")
+        (content-keyword "%emacs%"))
+    (emacsql org-db [:select :distinct [files:filename headlines:title headlines:begin headline_content:content]
+                             :from headlines  
+                             :inner-join files :on (= headlines:filename-id files:rowid)
+                             :inner-join headline_content :on (= headlines:rowid headline_content:headline_id)
+                             :where (or (like headlines:title $s1)
+                                        (like headline_content:content $s2))
+                             :limit 5]
+             title-keyword content-keyword))
+
+  (goto-char (org-element-property :contents-end (org-element-context)))
+
+  argh
+
+  (org-entry-get (org-element-property :begin (org-element-context)) :contents)
+
+  (emacsql org-db [:rollback])
+  (emacsql org-db [:begin-transaction])
+  (emacsql org-db [:vacuum])
+
+
+  (let* ((file (buffer-file-name))
+         (fn `(lambda ()
+                (setq load-path ',load-path)
+                (find-file "~/src/emacs/helm-org-rifle/sandbox/org-db.el")
+                (eval-buffer)
+                (find-file ,file)
+                (org-db-update t))))
+    (async-start fn
+                 (lambda (result)
+                   (message "DONE"))))
+
+  (let* ((files '("/home/me/org/main.org"))
+         (start-time (current-time))
+         (fn `(lambda ()
+                (setq load-path ',load-path)
+                (find-file "~/src/emacs/helm-org-rifle/sandbox/org-db.el")
+                (eval-buffer)
+                (dolist (file ',files)
+                  (find-file file)
+                  (org-db-update t)
+                  (kill-buffer))
+                (emacsql org-db [:vacuum]))))
+    (async-start fn
+                 `(lambda (result)
+                    (let ((elapsed (time-to-seconds (time-subtract nil ',start-time))))
+                      (message "Indexing complete.  Elapsed time: %s seconds" elapsed)))))
+#+END_SRC
