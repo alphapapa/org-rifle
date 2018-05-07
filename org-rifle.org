@@ -68,6 +68,55 @@ The =org-bookmark-heading= package has some code that may be useful here.
 
 The filename should probably be stored separately from the path, to make it easy to query on the filename.  There should probably be a table that maps filenames and paths to integers, which will be referenced from the main table.  John Kitchin's design should be referenced here.
 
+**** Deleting when updating
+
+The SQLite FTS virtual tables don't support constraints, so =ON DELETE CASCADE= doesn't appear to work.  That means that using a single FTS table for headings and heading content may not work.  Possible solutions:
+
++  Use triggers to handle deleting.  [[http://zarko-gajic.iz.hr/sqlite-referential-integrity-with-full-text-search-virtual-tables-used-in-a-delphi-application/][This article]] shows some examples:
+
+#+BEGIN_SRC sql
+  CREATE TABLE Document (
+  Id INTEGER PRIMARY KEY,
+  FileName TEXT NOT NULL,
+  );
+
+  CREATE TABLE FilePages(
+  DocumentId INTEGER REFERENCES Document(Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  Page INTEGER,
+  UNIQUE(DocumentId, Page)
+  );
+
+  CREATE VIRTUAL TABLE PageContent USING fts4();
+
+  CREATE TRIGGER FilePages_DELETE AFTER DELETE ON FilePages
+  BEGIN
+  /* required when ref. integrity deletes rows in FilePages as
+  a result of delete row(s) operation in Document */
+  DELETE FROM PageContent WHERE rowid = OLD.rowid;
+  END;
+
+  CREATE VIEW FTSData AS
+  SELECT FilePages.rowid AS rowid, FilePages.DocumentId, FilePages.Page, PageContent.Content
+  FROM FilePages JOIN PageContent ON FilePages.rowid = PageContent.rowid;
+
+  CREATE TRIGGER FTSData_INSERT INSTEAD OF INSERT ON FTSData
+  BEGIN
+  INSERT INTO FilePages(DocumentId, Page) VALUES (NEW.DocumentId, NEW.Page);
+  INSERT INTO PageContent (rowid, Content) VALUES (last_insert_rowid(), NEW.Content);
+  END;
+
+  CREATE TRIGGER FTSData_DELETE INSTEAD OF DELETE ON FTSData
+  BEGIN
+  DELETE FROM FilePages WHERE rowid = OLD.rowid;
+  DELETE FROM PageContent WHERE rowid = OLD.rowid;
+  END;
+#+END_SRC
+
++  Use the special FTS table types (external content, etc).  I need to re-read the docs on this.
++  Store content in a separate FTS table.  This is what John's design did.  It may be a bit slower to update, but maybe it's worth it if deleting is quicker.
+
+It's probably going to take some experimenting to figure out the best way.  Might need some kind of test framework...
+
 * References and Prior Art
 
 ** [[http://kitchingroup.cheme.cmu.edu/blog/2017/01/03/Find-stuff-in-org-mode-anywhere/][John Kitchin's blog article]]
