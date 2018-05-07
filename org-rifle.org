@@ -38,6 +38,12 @@ Indexing should take place in an external Emacs process using =emacs-async= or =
 
 The native threads in Emacs 26 may also be an option here.
 
+*** Avoiding conflicting indexing operations (daemon?)
+
+We need to avoid having more than one indexing operation going on at the same time, at least for the same files.  So in one Emacs process or another, we have to keep track of the indexing process and what files need to be indexed next.
+
+It might be possible to use an Emacs process as a daemon, which would receive a list of files to index, deduplicate them, index them, and then wait for more files.  I'm not sure if this would be a good idea, but it might help.
+
 *** Indexing on save
 
 Org files will be (optionally) indexed upon save (async, in an external process) using a hook.
