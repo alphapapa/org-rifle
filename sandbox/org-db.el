@@ -53,7 +53,8 @@
                                    archivedp
                                    commentedp
                                    footnote-section-p
-                                   begin]
+                                   begin
+                                   content]
                                   (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade))])
 
   ;; no cascade delete ;(
@@ -277,7 +278,7 @@
                                      (md5 (current-buffer)))
                             (caar (emacsql org-db [:select (funcall last-insert-rowid)])))))
     ;; headline
-    (emacsql org-db [:insert :into headlines :values [nil $s1 $s2 $s3 $s4 $s5 $s6 $s7 $s8 $s9]]
+    (emacsql org-db [:insert :into headlines :values [nil $s1 $s2 $s3 $s4 $s5 $s6 $s7 $s8 $s9 $s10]]
 	     filename-id
 	     (org-element-property :title hl)
 	     (org-element-property :level hl)
@@ -286,19 +287,26 @@
 	     (org-element-property :archivedp hl)
 	     (org-element-property :commentedp hl)
 	     (org-element-property :footnote-section-p hl)
-	     (org-element-property :begin hl))
-    (setq headline-id (caar (emacsql org-db [:select (funcall last-insert-rowid)])))
-
-    ;; content for searching
-    (when (and org-db-index-content
-               (org-element-property :contents-begin hl))
-      (emacsql org-db [:insert :into headline-content :values [$s1 $s2]]
-               headline-id
+	     (org-element-property :begin hl)
+             (when (and org-db-index-content
+                        (org-element-property :contents-begin hl))
                (s-trim (buffer-substring-no-properties (org-element-property :contents-begin hl)
                                                        (or (org-with-wide-buffer
                                                             (outline-next-heading)
                                                             (point))
                                                            (point-max))))))
+    (setq headline-id (caar (emacsql org-db [:select (funcall last-insert-rowid)])))
+
+    ;; content for searching
+    ;; (when (and org-db-index-content
+    ;;            (org-element-property :contents-begin hl))
+    ;;   (emacsql org-db [:insert :into headline-content :values [$s1 $s2]]
+    ;;            headline-id
+    ;;            (s-trim (buffer-substring-no-properties (org-element-property :contents-begin hl)
+    ;;                                                    (or (org-with-wide-buffer
+    ;;                                                         (outline-next-heading)
+    ;;                                                         (point))
+    ;;                                                        (point-max))))))
 
     ;; tags
     ;; (cl-loop for tag in (mapcar 'org-no-properties (org-get-tags-at))

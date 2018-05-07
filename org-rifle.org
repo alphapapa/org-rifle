@@ -888,7 +888,8 @@ Code that's useful for developing.
                   (find-file file)
                   (org-db-update t)
                   (kill-buffer))
-                (emacsql org-db [:vacuum]))))
+                ;; (emacsql org-db [:vacuum])
+                )))
     (async-start fn
                  `(lambda (result)
                     (let ((elapsed (time-to-seconds (time-subtract nil ',start-time))))

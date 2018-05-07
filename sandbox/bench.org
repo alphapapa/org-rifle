@@ -28,7 +28,70 @@
   (profile-rifle 1
     (with-current-buffer "main.org"
       (org-db-update t)))
+
+  (let* ((files '("/home/me/org/main.org" "/tmp/test.org" "/tmp/test2.org"
+                  ))
+         (start-time (current-time))
+         (fn `(lambda ()
+                (let (file-times)
+                  (setq load-path ',load-path)
+                  (find-file "~/src/emacs/helm-org-rifle/sandbox/org-db.el")
+                  (eval-buffer)
+                  (dolist (file ',files)
+                    (let ((start-time (current-time)))
+                      (find-file file)
+                      (org-db-update t)
+                      (kill-buffer)
+                      (push (cons file (time-to-seconds (time-subtract nil start-time))) file-times)))
+                  file-times)
+                ;; (emacsql org-db [:vacuum])
+                )))
+    (async-start fn
+                 `(lambda (result)
+                    (let ((elapsed (time-to-seconds (time-subtract nil ',start-time))))
+                      (message "Indexing complete. Elapsed time: %s seconds \nFILE TIMES: %s" elapsed result)))))
 #+END_SRC
+
+
+*** Storing heading content in main headings table
+
+I'm not sure if this will work correctly with FTS, but it does reduce the number of queries by about 1/3rd.  This might be a case for the other kinds of FTS tables, or this might be premature optimization.  
+
+#+RESULTS:
+#+begin_example
+org-db-update                                                 1           4.571649581   4.571649581
+org-map-entries                                               1           4.347358148   4.347358148
+org-scan-tags                                                 1           4.2885880929  4.2885880929
+org-db-add-headline                                           1272        3.9823617240  0.0031307875
+emacsql                                                       2551        3.2556172870  0.0012762121
+emacsql-compile                                               2551        2.3726841130  0.0009300996
+emacsql-format                                                2551        2.3388363360  0.0009168311
+emacsql-escape-scalar                                         12727       2.2924522499  0.0001801251
+emacsql-quote-scalar                                          3583        0.9408599810  0.0002625900
+org-element-context                                           1272        0.7853155989  0.0006173864
+org-element-at-point                                          1273        0.6458458939  0.0005073416
+emacsql-wait                                                  2551        0.6439078389  0.0002524138
+org-element-headline-parser                                   1272        0.5091077229  0.0004002419
+re-search-forward                                             6752        0.2453753940  3.634...e-05
+emacsql-waiting-p                                             7653        0.1643940889  2.148...e-05
+org-end-of-subtree                                            1280        0.1621759929  0.0001266999
+emacsql-send-message                                          2551        0.0903400049  3.541...e-05
+org-outline-level                                             2552        0.085914078   3.366...e-05
+emacsql-buffer                                                12755       0.0838524789  6.574...e-06
+emacsql-process                                               17857       0.0772701749  4.327...e-06
+#+end_example
+
+Let's test this without instrumentation...still not very good, it takes 4.6 seconds even without =elp=...which seems strange, so I wonder if something else is going on...
+
+Ok, some of that is startup time for the Emacs process.  There may be some tweaks we can make to Org settings to improve that, but that's for later.  In the meantime, here's what it looks like to index 3 copies of my =main.org=:
+
+#+BEGIN_EXAMPLE
+  FILE TIMES: ((/tmp/test2.org . 2.409067868) (/tmp/test.org . 2.383432511) (/home/me/org/main.org . 3.63768503))
+#+END_EXAMPLE
+
+=main.org= was indexed first, so that should include some of the startup time for Org.  So the actual time to index the file is about 2.4 seconds, and about 3.6-4 seconds including startup overhead.  I think that's acceptable for my needs.
+
+However, something I'm not sure about is ensuring that only one index process is running at one time.  If I save an Org file twice before the indexing finishes, I guess there's no guarantee that the first index run would finish first.  And I'm not sure it would work at all because of the transactions.  So I guess I need some kind of monitor to only allow one index process to run at a time.  And I guess that means sometimes queuing up more files for indexing
 
 *** Avoiding repeated filename-id queries
 
