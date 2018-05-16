@@ -1142,7 +1142,7 @@ the (DISPLAY . REAL) pair from
   "Return list of results for INPUT in BUFFER.
 Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (with-current-buffer buffer
-    (unless (eq major-mode 'org-mode)
+    (unless (derived-mode-p 'org-mode)
       (error "Buffer %s is not an Org buffer." buffer)))
   (cl-loop for (text . (_ .  pos)) in (helm-org-rifle--get-candidates-in-buffer buffer input)
            collect (list :text text :buffer buffer :node-beg pos)))

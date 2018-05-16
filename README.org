@@ -88,6 +88,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.5.2
+
+*Fixes*
++  Use =derived-mode-p= to check buffers' major mode.  This allows working with modes derived from Org, like =org-journal-mode=.  Thanks to [[https://github.com/akirak][Akira Komamura]].
+
 ** 1.5.1
 
 *Fixes*
