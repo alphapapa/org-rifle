@@ -1,0 +1,64 @@
+* Code
+** Testing
+
+#+BEGIN_SRC elisp
+  (let ((db-file (make-temp-file "org-rifle-indexer-test"))
+        (data-file "../test/data.org")
+        (create-main-table-query [:create-virtual-table entries :using fts5
+                                                        ([file
+                                                          position
+                                                          heading
+                                                          content])]))
+    (emacsql-with-connection (db (emacsql-sqlite db-file))
+      (emacsql-with-transaction db
+        (emacsql db create-main-table-query)
+        (org-rifle-indexer-index-file data-file)))
+    (message "Indexing of file %s complete. Database: %s" data-file db-file))
+
+  ;;;;; Store tags separately
+
+  (let ((db-file (make-temp-file "org-rifle-indexer-test"))
+        (data-file "../test/data.org")
+        (create-main-table-query [:create-virtual-table entries :using fts5
+                                                        ([file
+                                                          position
+                                                          heading
+                                                          tags
+                                                          content])]))
+    (emacsql-with-connection (db (emacsql-sqlite db-file))
+      (emacsql-with-transaction db
+        (emacsql db create-main-table-query)
+        (org-rifle-indexer-index-file-with-tags data-file)))
+    (message "Indexing of file %s complete. Database: %s" data-file db-file))
+
+  (defun test-query (db-file query)
+    (emacsql-with-connection (db (emacsql-sqlite db-file))
+      (emacsql db `[:select [file position heading tags content] :from entries
+                            :where (and (match entries:tags '"food")
+                                        (or (match entries:heading ',query)
+                                            (match entries:content ',query)))])))
+
+  (defun test-where (db-file where)
+    (emacsql-with-connection (db (emacsql-sqlite db-file))
+      (emacsql db `[:select [file position heading tags content] :from entries
+                            :where ,@where])))
+
+  (test-query "/tmp/org-rifle-indexer-test4776VQe" "straw*")
+  (test-query "/tmp/org-rifle-indexer-test4776VQe" "Ingred*")
+  (test-where "/tmp/org-rifle-indexer-test4776VQe"
+              '( (match entries '"entries:heading : heading AND entries:tags : food")))
+
+  (let ((where '((match entries '"entries:heading : heading AND entries:tags : food"))))
+    `[:select [file position heading tags content] :from entries
+              :where ,@where])
+
+  (emacsql-prepare [:select-from entries [entries:file]
+                                 :where (and (match entries:tags '"food")
+                                             (or (match entries:heading ',query)
+                                                 (match entries:content ',query)))])
+  (emacsql-prepare [:select * :from entries
+                            :where [entries:file] (match entries '"entries:heading : heading AND entries:tags : food")])
+
+  `[:select [file position heading content] :from entries
+            :where (match entries:content ,test)]
+#+END_SRC

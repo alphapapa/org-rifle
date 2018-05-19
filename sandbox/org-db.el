@@ -42,21 +42,55 @@
                                  ([(rowid integer :primary-key)
                                    (keyword :unique)])])
 
-  (emacsql org-db [:create-table :if :not :exists
-                                 headlines
-                                 ([(rowid integer :primary-key)
-                                   filename-id
-                                   title
-                                   level
-                                   todo-keyword
-                                   todo-type
-                                   archivedp
-                                   commentedp
-                                   footnote-section-p
-                                   begin
-                                   content]
-                                  (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade))])
+  ;; (emacsql org-db [:create-table :if :not :exists
+  ;;                                headlines
+  ;;                                ([(rowid integer :primary-key)
+  ;;                                  filename-id
+  ;;                                  title
+  ;;                                  level
+  ;;                                  todo-keyword
+  ;;                                  todo-type
+  ;;                                  archivedp
+  ;;                                  commentedp
+  ;;                                  footnote-section-p
+  ;;                                  begin
+  ;;                                  content]
+  ;;                                 (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade))])
 
+  (emacsql org-db (vector :create-virtual-table :if-not-exists 'headlines
+                          :using 'fts5
+                          '([filename-id
+                             title
+                             level
+                             todo-keyword
+                             todo-type
+                             archivedp
+                             commentedp
+                             footnote-section-p
+                             begin
+                             content]
+                            )))
+  (emacsql-format (emacsql-prepare (vector :create-virtual-table :if-not-exists 'headlines
+                                           :using 'fts5
+                                           '([filename-id
+                                              title
+                                              level
+                                              todo-keyword
+                                              todo-type
+                                              archivedp
+                                              commentedp
+                                              footnote-section-p
+                                              begin
+                                              content]
+                                             (:on-delete :cascade)))))
+
+  (emacsql-format (emacsql-prepare [:create-table :if :not :exists
+                                                  headline-tags
+                                                  ([(rowid integer :primary-key)
+                                                    headline-id
+                                                    tag-id]
+                                                   (:foreign-key [headline-id] :references headlines [rowid] :on-delete :cascade)
+                                                   (:foreign-key [tag-id] :references tags [rowid] :on-delete :cascade))]))
   ;; no cascade delete ;(
 
   (emacsql org-db (vector :create :virtual :table :if :not :exists 'headline-content :using fts-type

@@ -846,6 +846,18 @@ This is the file linked to in the article.
 
 Some of the experimenting and benchmarking I did with SQLite FTS tables is documented here.
 
+** [[https://www.reddit.com/r/emacs/comments/8hsykk/emacs_interfaces_to_sqlite/][Reddit thread]]
+
+This recent Reddit thread discusses some of the alternative SQLite interfaces for Emacs.  Chris Wellons (author of EmacSQL) mentions that the EmacSQL statement compiler has some limitations, and he probably will not be fixing them.  I have seemingly run into some of those limitations myself when trying to use more complex FTS5 =MATCH= queries, so maybe I need to either use a different SQLite interface, or use strings for the statements instead of the statement compiler.
+
+** [[https://www.reddit.com/r/emacs/comments/54abzt/emacs_sqlite_interface/][emacs SQLite interface : emacs]]
+
+This other Reddit thread mentions one of the other SQLite interface packages.
+
+** [[https://github.com/pekingduck/emacs-sqlite3-api][GitHub - pekingduck/emacs-sqlite3-api: SQLite3 API for GNU Emacs 25+]]
+
+This is a C-based dynamic module for Emacs 25.1+.  The readme says it's still in alpha and could cause crashes.  It's more primitive, a simple wrapper around some of the SQLite C API calls.  It also requires manual installation, which would be much less convenient for users.
+
 * Scratch
 
 Code that's useful for developing.
