@@ -92,6 +92,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 *Additions*
 + Add clock-in action.  Thanks to [[https://github.com/PrestanceDesign][Michael Salihi]].
++ Add refile action.  Thanks to [[https://github.com/Atreus-Tantalus][@Atreus-Tantalus]].
 
 *Fixes*
 +  Use static autoload definitions for macro-defined commands, and delete autoloads for the macro definitions. This prevents =helm-org-rifle= from causing =org= to load unnecessarily.  Fixes #13.  Thanks to Anders Johansson (@andersjohansson) and Chris Ruegge (@cruegge).

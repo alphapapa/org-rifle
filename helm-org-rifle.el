@@ -147,6 +147,7 @@
     ;; before being pressed, it's not bound in the keymap, but after
     ;; pressing it once, it is, and then it works.  Weird.
     (define-key new-map (kbd "C-s") 'helm-org-rifle--save-results)
+    (define-key new-map (kbd "C-c C-w") #'helm-org-rifle--refile)
     new-map)
   "Keymap for `helm-org-rifle'.")
 
@@ -316,6 +317,7 @@ Just in case this is a performance issue for anyone, it can be disabled."
                                    (define-key map [remap undo] (lambda () (interactive) (let ((inhibit-read-only t)) (undo))))
                                    (define-key map [mouse-1] 'helm-org-rifle-occur-goto-entry)
                                    (define-key map (kbd "<RET>") 'helm-org-rifle-occur-goto-entry)
+                                   (define-key map (kbd "C-c C-w") #'helm-org-rifle--refile)
                                    (define-key map (kbd "d") 'helm-org-rifle-occur-delete-entry)
                                    (define-key map (kbd "b") (lambda () (interactive) (helm-org-rifle--speed-command 'org-backward-heading-same-level)))
                                    (define-key map (kbd "f") (lambda () (interactive) (helm-org-rifle--speed-command 'org-forward-heading-same-level)))
@@ -597,7 +599,8 @@ Files are opened if necessary, and the resulting buffers are left open."
                            "Show entry" 'helm-org-rifle--show-candidates
                            "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
                            "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer
-			   "Clock in" 'helm-org-rifle--clock-in)
+			   "Clock in" 'helm-org-rifle--clock-in
+                           "Refile" #'helm-org-rifle--refile)
                   :keymap helm-org-rifle-map)))
     (helm-attrset 'buffer buffer source)
     source))
@@ -723,6 +726,13 @@ source, so we must gather them manually."
     (with-current-buffer buffer
       (goto-char pos)
       (org-clock-in))))
+
+(defun helm-org-rifle--refile (candidate)
+  "Refile CANDIDATE."
+  (-let (((buffer . pos) candidate))
+    (with-current-buffer buffer
+      (goto-char pos)
+      (org-refile))))
 
 ;;;;; The meat
 
