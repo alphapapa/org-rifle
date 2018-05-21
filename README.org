@@ -97,6 +97,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 *Fixes*
 +  Use static autoload definitions for macro-defined commands, and delete autoloads for the macro definitions. This prevents =helm-org-rifle= from causing =org= to load unnecessarily.  Fixes #13.  Thanks to Anders Johansson (@andersjohansson) and Chris Ruegge (@cruegge).
 
+** 1.5.2
+
+*Fixes*
++  Use =derived-mode-p= to check buffers' major mode.  This allows working with modes derived from Org, like =org-journal-mode=.  Thanks to [[https://github.com/akirak][Akira Komamura]].
+
 ** 1.5.1
 
 *Fixes*
