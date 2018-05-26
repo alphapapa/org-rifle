@@ -1,5 +1,7 @@
 ;; Experimenting with a different DB schema and functions
 
+;; TODO: Try using TXR to write an Org parser and indexer that can run outside of Emacs.
+
 ;;;; Functions
 
 (defun org-rifle-indexer-index-file (file &optional kill-file-buffer)
