@@ -1051,6 +1051,10 @@ Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-20451921
 :TOC:      ignore-children
 :END:
 
+** TODO [#A] Ensure inherited tags work
+
+[2018-05-26 Sat 00:38]  I'm not sure that it works correctly or is consistent.  Need a test for it.
+
 ** TODO [#C] Negation-only error
 
 If only a negation pattern is given, an error happens.  Not a big deal, doesn't interfere with anything, just change the pattern and it goes away.
