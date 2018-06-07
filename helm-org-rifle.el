@@ -816,7 +816,17 @@ because it uses variables in its outer scope."
                             :test #'string=))
          ;; Check normal excludes
          (when excludes
-           ;; TODO: Maybe match against a heading's inherited tags, if it's not too slow.
+           ;; NOTE: It would be nice to be able to match against inherited tags, but that would mean
+           ;; testing every node in the buffer, rather than using a regexp to go directly to
+           ;; potential matches.  It would also essentially require using the org tags cache,
+           ;; otherwise it would mean looking up the tree for the inherited tags for every node,
+           ;; repeating a lot of work.  So it would mean using a different "mode" of matching for
+           ;; queries that include inherited tags.  Maybe that mode could be using the Org Agenda
+           ;; searching code (which efficiently caches tags), and reprocessing its results into our
+           ;; form and presenting them with Helm.  Or maybe it could be just finding matches for
+           ;; inherited tags, and then searching those matches for other keywords.  In that case,
+           ;; maybe this function could remain the same, and simply be called from a different
+           ;; function than --get-candidates-in-buffer.
 
            ;; FIXME: Partial excludes seem to put the partially
            ;; negated entry at the end of results.  Not sure why.
