@@ -156,6 +156,17 @@
   :group 'helm
   :link '(url-link "http://github.com/alphapapa/helm-org-rifle"))
 
+(defcustom helm-org-rifle-actions
+  (helm-make-actions
+   "Show entry" 'helm-org-rifle--show-candidates
+   "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
+   "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer
+   "Clock in" 'helm-org-rifle--clock-in
+   "Refile" 'helm-org-rifle--refile)
+  "A customizable action list for helm-org-rifle."
+  :group 'helm-org-rifle
+  :type '(alist :key-type string :value-type function))
+
 (defcustom helm-org-rifle-after-init-hook '(helm-org-rifle-set-input-idle-delay)
   "`:after-init-hook' for the Helm buffer.
 If you're thinking about changing this, you probably know what you're doing."
@@ -595,12 +606,7 @@ Files are opened if necessary, and the resulting buffers are left open."
                   :match 'identity
                   :multiline helm-org-rifle-multiline
                   :volatile t
-                  :action (helm-make-actions
-                           "Show entry" 'helm-org-rifle--show-candidates
-                           "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
-                           "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer
-			   "Clock in" 'helm-org-rifle--clock-in
-                           "Refile" #'helm-org-rifle--refile)
+                  :action 'helm-org-rifle-actions
                   :keymap helm-org-rifle-map)))
     (helm-attrset 'buffer buffer source)
     source))
