@@ -709,15 +709,15 @@ source, so we must gather them manually."
   (-let (((buffer . pos) candidate)
          (original-buffer (current-buffer)))
     (helm-attrset 'new-buffer nil)  ; Prevent the buffer from being cleaned up
-    (switch-to-buffer buffer)
-    (goto-char pos)
-    (org-tree-to-indirect-buffer)
-    (unless (equal original-buffer (car (window-prev-buffers)))
-      ;; The selected bookmark was in a different buffer.  Put the
-      ;; non-indirect buffer at the bottom of the prev-buffers list
-      ;; so it won't be selected when the indirect buffer is killed.
-      (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
-                                           (car (window-prev-buffers)))))))
+    (with-current-buffer buffer
+      (goto-char pos)
+      (org-tree-to-indirect-buffer)
+      (unless (equal original-buffer (car (window-prev-buffers)))
+        ;; The selected bookmark was in a different buffer.  Put the
+        ;; non-indirect buffer at the bottom of the prev-buffers list
+        ;; so it won't be selected when the indirect buffer is killed.
+        (set-window-prev-buffers nil (append (cdr (window-prev-buffers))
+                                             (car (window-prev-buffers))))))))
 
 (defun helm-org-rifle-show-entry-in-indirect-buffer-map-action ()
   "Exit Helm buffer and call `helm-org-rifle-show-entry-in-indirect-buffer' with selected candidate."

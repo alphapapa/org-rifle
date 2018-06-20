@@ -99,6 +99,7 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 *Fixes*
 +  Use static autoload definitions for macro-defined commands, and delete autoloads for the macro definitions. This prevents =helm-org-rifle= from causing =org= to load unnecessarily.  Fixes #13.  Thanks to Anders Johansson (@andersjohansson) and Chris Ruegge (@cruegge).
++  When opening an item in an indirect buffer, respect the setting of =org-indirect-buffer-display=.  Thanks to [[https://github.com/akirak][Akira Komamura]].
 
 ** 1.5.2
 
