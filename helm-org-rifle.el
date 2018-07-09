@@ -776,18 +776,18 @@ This is how the sausage is made."
             ;; TODO: Turn off case folding if tokens contains mixed case
             (case-fold-search t)
             (results nil))
-      (save-excursion
-        ;; Go to first heading
-        (goto-char (point-min))
-        (when (org-before-first-heading-p)
-          (outline-next-heading))
-        ;; Search for matching nodes
-        (cl-loop while (re-search-forward positive-re nil t)
-                 for result = (save-excursion
-                                (helm-org-rifle--test-entry))
-                 when result
-                 collect result
-                 do (outline-next-heading))))))
+      (org-with-wide-buffer
+       ;; Go to first heading
+       (goto-char (point-min))
+       (when (org-before-first-heading-p)
+         (outline-next-heading))
+       ;; Search for matching nodes
+       (cl-loop while (re-search-forward positive-re nil t)
+                for result = (save-excursion
+                               (helm-org-rifle--test-entry))
+                when result
+                collect result
+                do (outline-next-heading))))))
 
 (defun helm-org-rifle--test-entry ()
   "Return list of entry data if entry at point matches.
