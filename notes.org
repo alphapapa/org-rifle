@@ -1052,6 +1052,10 @@ Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-20451921
 
 After reading about Emacs testing packages, it looks like the best way to test this package is with some combination of Assess, Buttercup, Ecukes, ERT, and Espuds.  Espuds's steps should help testing interactive things, like Helm (although this will still be difficult), and Buttercup should make unit testing easier, and Assess should help with everything.  Buttercup is intended as an alternative to ERT, but ERT might be useful too.
 
+** TODO [#B] Popup UI
+
+With all the options we have now, we need a ~magit-popup~-style UI, e.g. to temporarily enable an option like ~helm-org-rifle-test-against-path~.
+
 ** TODO [#B] jump-to-next/prev-match command for occur buffers
 
 It would be handy to have a built-in command to jump to the next match instance in the occur buffers, maybe something like =M-g n=.  Suggested by washy99999.
