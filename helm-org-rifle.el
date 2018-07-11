@@ -265,7 +265,7 @@ like \": \"."
   "Show and match against Org todo keywords."
   :group 'helm-org-rifle :type 'boolean)
 
-(defcustom helm-org-rifle-show-path nil
+(defcustom helm-org-rifle-show-path t
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
 
