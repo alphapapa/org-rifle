@@ -269,6 +269,38 @@ like \": \"."
   "Show the whole heading path instead of just the entry's heading."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-reverse-paths nil
+  "When showing outline paths, show them in reverse order.
+For example, with this outline tree:
+
+* Computers
+** Software
+*** Emacs
+**** Development
+***** Libraries
+****** HTML-related
+******* elfeed
+
+The path of that entry would normally be displayed as:
+
+Computers/Software/Emacs/Development/Libraries/HTML-related/elfeed
+
+And that might be fine.  But if there were a lot of other matches
+around that place in the tree, seeing the first several elements
+of the paths repeated might make the results appear more similar
+than they are, and when the path is long, the most unique
+part (the last element) might be obscured by wrapping (depending
+on Org faces).  So it might be better to show the paths reversed,
+like:
+
+elfeed\\HTML-related\\Libraries\\Development\\Emacs\\Software\\Computers
+
+Note that the separator is also \"reversed\" to indicate that the
+paths are reversed.  Also, when `helm-org-rifle-fontify-headings'
+is enabled, the fontification typically makes it obvious that the
+paths are reversed, depending on your Org faces."
+  :type 'boolean)
+
 (defcustom helm-org-rifle-re-prefix
   "\\(\\_<\\|[[:punct:]]\\)"
   "Regexp matched immediately before each search term.
@@ -987,26 +1019,41 @@ because it uses variables in its outer scope."
                       ;; Trim the heading here.  Trying to avoid calling trim too much, to avoid slowing down.
                       (setq heading (s-trim heading))
                       (if helm-org-rifle-fontify-headings
-                          (let ((path (org-format-outline-path
-                                       ;; Replace links in path elements with plain text, otherwise
-                                       ;; they will be truncated by `org-format-outline-path' and only
-                                       ;; show part of the URL.  FIXME: Use org-link-display-format function
-                                       (-map 'helm-org-rifle-replace-links-in-string
-                                             (append (or path (org-get-outline-path))
-                                                     (list heading)))))
+                          (let ((path (if helm-org-rifle-reverse-paths
+                                          (--> (org-get-outline-path t)
+                                               (-map #'org-link-display-format it)
+                                               (org-format-outline-path it 1000 nil "")
+                                               (org-split-string it "")
+                                               (nreverse it)
+                                               (s-join "\\" it)
+                                               (if (> (length it) (window-width))
+                                                   (concat (substring it 0 (- (window-width) 2))
+                                                           "..")
+                                                 it))
+                                        (--> (or path (org-get-outline-path))
+                                             (append it (list heading))
+                                             (-map #'org-link-display-format it)
+                                             (org-format-outline-path it))))
                                 (tags (if tags
                                           (concat " " (helm-org-rifle-fontify-like-in-org-mode tags))
                                         "")))
                             (when (and helm-org-rifle-show-todo-keywords
                                        todo-keyword)
-                              ;; FIXME: This is ugly, but we don't seem to have much choice.  Hopefully it's not too slow...
-                              (let* ((parts (s-split "/" path))
-                                     (last (car (last parts)))
-                                     (parts (butlast parts))
-                                     (keyword (propertize todo-keyword
-                                                          'face (org-get-todo-face todo-keyword)))
-                                     (last (concat keyword " " last)))
-                                (setq path (s-join "/" (-snoc parts last)))))
+                              (if helm-org-rifle-reverse-paths
+                                  ;; Funnily enough, the "else" block works almost completely
+                                  ;; correctly in both cases, but we might as well do it "correctly"
+                                  ;; in this case, which should also be slightly faster.
+                                  (setq path (concat (propertize todo-keyword 'face (org-get-todo-face todo-keyword))
+                                                     " " path))
+                                ;; This is kind of ugly, but we don't seem to have much choice.  It
+                                ;; seems fast enough, though.
+                                (let* ((parts (s-split "/" path))
+                                       (last (car (last parts)))
+                                       (parts (butlast parts))
+                                       (keyword (propertize todo-keyword 'face (org-get-todo-face todo-keyword)))
+                                       (last (concat keyword " " last)))
+                                  ;; `-snoc' is cool.
+                                  (setq path (s-join "/" (-snoc parts last))))))
                             (concat path tags))
                         ;; Not fontifying
                         (s-join "/" (list (or path (org-get-outline-path)) heading))))

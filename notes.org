@@ -1056,6 +1056,10 @@ After reading about Emacs testing packages, it looks like the best way to test t
 
 With all the options we have now, we need a ~magit-popup~-style UI, e.g. to temporarily enable an option like ~helm-org-rifle-test-against-path~.
 
+** TODO [#A] Use cache with ~org-get-outline-path~
+
+I'm not sure if we can, but if so, it should help performance.
+
 ** TODO [#B] jump-to-next/prev-match command for occur buffers
 
 It would be handy to have a built-in command to jump to the next match instance in the occur buffers, maybe something like =M-g n=.  Suggested by washy99999.
