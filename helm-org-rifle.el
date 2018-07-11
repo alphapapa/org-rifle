@@ -137,7 +137,7 @@
 (defconst helm-org-rifle-occur-results-buffer-name "*helm-org-rifle-occur*"
   "The name of the results buffer for `helm-org-rifle-occur' commands.")
 
-(defconst helm-org-rifle-tags-re (org-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?")
+(defconst helm-org-rifle-tags-re "\\(?:[ \t]+\\(:[[:alnum:]_@#%%:]+:\\)\\)?"
   "Regexp used to match Org tag strings.  From org.el.")
 
 (defvar helm-org-rifle-map
