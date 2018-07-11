@@ -1330,6 +1330,7 @@ Objects are those provided by `org-element-timestamp-parser'."
   (save-excursion
     (goto-char (or node-start (org-entry-beginning-position)))
     (let ((node-end (or node-end (org-entry-end-position))))
+      ;; FIXME: `org-element-timestamp-successor' doesn't exist anymore?
       (cl-loop for ts-start = (cdr (org-element-timestamp-successor))
                while (and ts-start (< ts-start node-end))
                collect (progn
@@ -1465,6 +1466,8 @@ created."
       (erase-buffer)
       (insert s)
       (let ((org-odd-levels-only odd-levels))
+        ;; FIXME: "Warning: ‘font-lock-fontify-buffer’ is for interactive use only; use
+        ;; ‘font-lock-ensure’ or ‘font-lock-flush’ instead."
         (font-lock-fontify-buffer)
         (buffer-string)))))
 
