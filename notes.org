@@ -1138,6 +1138,10 @@ It would be nice to have a regexp mode...maybe.
 
 [2018-05-26 Sat 00:38]  I'm not sure that it works correctly or is consistent.  Need a test for it.
 
+** TODO [#B] Helm overrides to-do keyword face in headings
+
+When a search term is a to-do keyword, Helm overrides the face of the keyword in headings with the Helm highlight face.  I'm not sure if this can be fixed outside of Helm.  I wish we could remove the keyword from a list of terms that Helm would highlight, but there doesn't seem to be such a list.
+
 ** TODO [#C] Negation-only error
 
 If only a negation pattern is given, an error happens.  Not a big deal, doesn't interfere with anything, just change the pattern and it goes away.

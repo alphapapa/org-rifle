@@ -96,6 +96,9 @@ Run one of the rifle commands, type some words, and results will be displayed, g
      -  ~helm-org-rifle-test-against-path~ :: When enabled, search terms are tested against against each element of entries' outline paths.  This significantly decreases performance, so it is disabled by default.  The addition of this option does not change default behavior.  Users who have had ~helm-org-rifle-show-path~ enabled (which is not the default) will either be happy to see a performance improvement and want to leave this option disabled, or be disappointed by not seeing as many search results and want to enable it.
      -  ~helm-org-rifle-always-test-excludes-against-path~ :: When enabled, even if ~helm-org-rifle-test-against-path~ is disabled, excluded terms (ones beginning with =!=) will always be tested against entries' outline paths.  Unlike that option, this one is enabled by default to preserve the existing, default behavior, and to hopefully provide the most useful behavior by default.  Users who want to optimize for maximum performance may want to disable this option at the cost of excluded terms not being as effective at excluding entries from results.
 
+*Fixes*
++  Fontify to-do keywords when ~helm-org-rifle-show-path~ is enabled.
+
 ** 1.6.0
 
 *Additions*

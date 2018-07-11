@@ -92,28 +92,30 @@ them."
     (it "Can match against headings"
       (expect (helm-org-rifle--test-helper-process-candidates
                (helm-org-rifle--get-candidates-in-buffer test-buffer "berry"))
-              :to-equal '(("**** Banana  
+              :to-equal '(("****  Banana  
 le fruit – botanically a berry^[1]^[2] – produced by se" "data.org" . 174)
-                          ("**** Blueberry  
+                          ("****  Blueberry  
 #+BEGIN_QUOTE
 Blueberries are perennial floweri..." "data.org" . 1143)
-                          ("**** Strawberry  
+                          ("****  Strawberry  
 The garden strawberry (or simply strawberry; F...which is not a botanical berry, but an aggregate access...colates. Artificial strawberry flavorings and aromas ar" "data.org" . 1640))))
 
     (it "Can match against entry text"
       (expect (helm-org-rifle--test-helper-process-candidates
                (helm-org-rifle--get-candidates-in-buffer test-buffer "food"))
-              :to-equal '(("* Food :food: 
+              :to-equal '(("*  Food :food: 
 " "data.org" . 2)
-                          ("**** Strawberry  
+                          ("****  Strawberry  
 resh or in such prepared foods as preserves, fruit jui" "data.org" . 1640)
-                          ("**** Chicken :barbecue:fowl: 
+                          ("****  Chicken :barbecue:fowl: 
 primarily as a source of food, consuming both their me" "data.org" . 3114)
-                          ("***** Fries  
+                          ("*****  Fries  
 he menus of diners, fast food restaurants, pubs, and b" "data.org" . 4375))))
 
     (it "Can match against multiple path elements"
-      (expect (let ((helm-org-rifle-show-path t))
+      (expect (let ((helm-org-rifle-show-path t)
+                    ;; (helm-org-rifle-test-against-path t)
+                    )
                 (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "fresh meat")))
               :to-equal '(("Food/Ingredients/Meat/Pork
@@ -123,7 +125,7 @@ is the culinary name for meat from the domestic pig (S...e most commonly consume
       (it "...in any order"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer ":fowl:barbecue:"))
-                :to-equal '(("**** Chicken :barbecue:fowl: 
+                :to-equal '(("****  Chicken :barbecue:fowl: 
 #+BEGIN_QUOTE
 The chicken (Gallus gallus domest..." "data.org" . 3114)))))
 
@@ -131,40 +133,41 @@ The chicken (Gallus gallus domest..." "data.org" . 3114)))))
       (it "...on headings"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !chicken"))
-                :to-equal '(("*** Meat :meat: 
+                :to-equal '(("***  Meat :meat: 
 " "data.org" . 2400)
-                            ("***** Brisket :barbecue: 
+                            ("*****  Brisket :barbecue: 
 Brisket is a cut of meat from the breast or lower...tissue, so the resulting meat must be cooked correctly" "data.org" . 2488)
-                            ("**** Pork  
+                            ("****  Pork  
 is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541)
-                            ("***** Pulled pork :barbecue: 
+                            ("*****  Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942))))
 
       (it "...on entry text"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "fruit !edible"))
-                :to-equal '(("*** Fruit :fruit: 
+                :to-equal '(("***  Fruit :fruit: 
 " "data.org" . 97)
-                            ("**** Blueberry  
+                            ("****  Blueberry  
 are the most common^[1] fruits sold as \"blueberries\" a" "data.org" . 1143)
-                            ("**** Strawberry  
+                            ("****  Strawberry  
 ivated worldwide for its fruit. The fruit (which is not...t an aggregate accessory fruit) is widely appreciated f...ared foods as preserves, fruit juice, pies, ice creams," "data.org" . 1640))))
 
       (it "...on tags in individual headings"
         (expect (helm-org-rifle--test-helper-process-candidates
                  (helm-org-rifle--get-candidates-in-buffer test-buffer "meat !:fowl:"))
-                :to-equal '(("*** Meat :meat: 
+                :to-equal '(("***  Meat :meat: 
 " "data.org" . 2400)
-                            ("***** Brisket :barbecue: 
+                            ("*****  Brisket :barbecue: 
 Brisket is a cut of meat from the breast or lower...tissue, so the resulting meat must be cooked correctly" "data.org" . 2488)
-                            ("**** Pork  
-is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("***** Pulled pork :barbecue: 
+                            ("****  Pork  
+is the culinary name for meat from the domestic pig (S...e most commonly consumed meat worldwide, with evidence" "data.org" . 3541) ("*****  Pulled pork :barbecue: 
 erwise be a tough cut of meat is cooked slowly at low...mperatures, allowing the meat to become tender enough" "data.org" . 3942)))))
 
     (describe "Can match against TODO keywords..."
       (it "...alone"
-        (expect (helm-org-rifle--test-helper-process-candidates
-                 (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE"))
+        (expect (let ((helm-org-rifle-show-todo-keywords t))
+                  (helm-org-rifle--test-helper-process-candidates
+                   (helm-org-rifle--get-candidates-in-buffer test-buffer "DONE")))
                 :to-equal '(("***** DONE  Tater tots  
 #+BEGIN_QUOTE
 Tater tots are pieces of deep-fri..." "data.org" . 5401))))
