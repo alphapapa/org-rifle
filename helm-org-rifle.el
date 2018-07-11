@@ -310,6 +310,82 @@ Just in case this is a performance issue for anyone, it can be disabled."
   "When non-nil, keep the sort order setting when it is changed by calling a command with a universal prefix."
   :group 'helm-org-rifle :type 'boolean)
 
+(defcustom helm-org-rifle-test-against-path nil
+  "Test search terms against entries' outline paths.
+When non-nil, search terms will be tested against each element of
+each entry's outline path.  This requires looking up the outline
+path of every entry that might be a match.  This significantly
+slows down searching, so it is disabled by default, and most
+users will probably prefer to leave it disabled.  Also, when it
+is disabled, the outline paths of matching entries can still be
+displayed (if `helm-org-rifle-show-path' is enabled), without the
+performance penalty of looking up the outline paths of even
+non-matching entries.
+
+However, enabling it may provide more comprehensive results.  For
+example, consider the following outline:
+
+* Emacs
+** Org-mode
+** Tips
+*** Foo
+Bar baz.
+
+If the search terms were \"Org foo\", and this option were
+disabled, the entry \"Bar baz\" would not be found, because the
+term \"Org\" would not be tested against the path element
+\"Org-mode\".  With this option enabled, the entry would be
+found, because \"Org\" is part of the entry's outline path.
+
+In comparison, consider this outline:
+
+* Emacs
+** Org-mode
+** Tips
+*** Foo
+Bar baz Org-mode.
+
+With the same search terms and this option disabled, the entry
+\"Bar baz Org-mode\" would be found, because it contains \"Org\".
+
+Perhaps a helpful way to think about this option is to think of
+it as a search engine testing against a Web page's URL.  When
+disabled, search terms must be contained in pages' contents.
+When enabled, the URL itself is considered as part of pages'
+contents.  Of course, one would usually want to leave it enabled
+for a Web search--but imagine that looking up pages' URLs
+required an additional, very slow database query: it might be
+better to leave it disabled by default."
+  :type 'boolean)
+
+(defcustom helm-org-rifle-always-test-excludes-against-path t
+  "Always test excluded terms against entries' outline paths.
+Similarly to `helm-org-rifle-test-against-path', this option may
+cause a significant performance penalty.  However, unlike that
+option, this one only takes effect when exclude patterns are
+used (ones starting with \"!\") to negate potential matches.  It
+is probably more important to check excluded terms against all
+possible parts of an entry, and excluded terms are not used most
+of the time, so this option is enabled by default, in the hope
+that it will provide the most useful behavior by default.
+
+Consider this outline:
+
+* Food
+** Fruits
+*** Strawberry
+Sweet and red in color.
+** Vegetables
+*** Chili pepper
+Spicy and red in color.
+
+If the search terms were \"red !fruit\", and this option were
+enabled, the entry \"Strawberry\" would be excluded, because the
+word \"Fruit\" is in its outline path.  But if this option were
+disabled, the entry would be included, because its outline path
+would be ignored."
+  :type 'boolean)
+
 (defface helm-org-rifle-separator
   ;; FIXME: Pick better default color.  Black is probably too harsh.
   '((((background dark))
@@ -797,8 +873,7 @@ because it uses variables in its outer scope."
   (-let* ((node-beg (org-entry-beginning-position))
           (node-end (org-entry-end-position))
           ((level reduced-level todo-keyword priority-char heading tags priority) (org-heading-components))
-          (path (when helm-org-rifle-show-path
-                  (org-get-outline-path)))
+          (path nil)
           (priority (when priority-char
                       ;; TODO: Is there a better way to do this?  The
                       ;; s-join leaves an extra space when there's no
@@ -837,7 +912,9 @@ because it uses variables in its outer scope."
            ;; FIXME: Partial excludes seem to put the partially
            ;; negated entry at the end of results.  Not sure why.
            ;; Could it actually be a good feature, though?
-           (or (cl-loop for elem in (or path (org-get-outline-path))
+           (or (cl-loop for elem in (when (or helm-org-rifle-test-against-path
+                                              helm-org-rifle-always-test-excludes-against-path)
+                                      (setq path (org-get-outline-path)))
                         thereis (string-match-p excludes-re elem))
                ;; FIXME: Doesn't quite match properly with
                ;; special chars, e.g. negating "!scratch"
@@ -874,8 +951,8 @@ because it uses variables in its outer scope."
         (when (cl-loop with targets = (-non-nil (append (list buffer-name
                                                               heading
                                                               tags)
-                                                        (when helm-org-rifle-show-path
-                                                          path)
+                                                        (when helm-org-rifle-test-against-path
+                                                          (or path (setq path (org-get-outline-path))))
                                                         (mapcar 'car matching-lines-in-node)))
                        for re in required-positive-re-list
                        always (cl-loop for target in targets
@@ -900,18 +977,19 @@ because it uses variables in its outer scope."
                                           (helm-org-rifle--get-entry-text buffer node-beg)))))))
 
           (setq heading
-                (if path
+                (if helm-org-rifle-show-path
                     (if helm-org-rifle-fontify-headings
                         (concat (org-format-outline-path
                                  ;; Replace links in path elements with plain text, otherwise
                                  ;; they will be truncated by `org-format-outline-path' and only
                                  ;; show part of the URL.  FIXME: Use org-link-display-format function
-                                 (-map 'helm-org-rifle-replace-links-in-string (append path (list heading))))
+                                 (-map 'helm-org-rifle-replace-links-in-string (append (or path (org-get-outline-path))
+                                                                                       (list heading))))
                                 (if tags
                                     (concat " " (helm-org-rifle-fontify-like-in-org-mode tags))
                                   ""))
                       ;; Not fontifying
-                      (s-join "/" (append path (list heading) tags)))
+                      (s-join "/" (list (or path (org-get-outline-path)) heading)))
                   ;; No path or not showing path
                   (if helm-org-rifle-fontify-headings
                       (helm-org-rifle-fontify-like-in-org-mode

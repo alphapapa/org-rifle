@@ -33,6 +33,8 @@ them."
 
 ;;;; Tests
 
+;; TODO: Test variations of `helm-org-rifle-test-against-path' and `helm-org-rifle-always-test-excludes-against-path'.
+
 (describe "helm-org-rifle"
 
   (before-all
