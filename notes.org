@@ -1156,6 +1156,78 @@ When matching multiple tags in a string, the order of the tags matters, e.g. =:w
 :LOGGING:  nil
 :END:
 
+** Stable release 1.6.0
+
+Hmm, that seems like a long list.  But I want stable releases to actually be stable.
+
+*** DONE Try to get someone else to test it
+
+It's been used for a while now.
+
+*** DONE Set =Version:= header
+
+Use =x.y.0=, not =x.y=.
+
+**** DONE =helm-org-rifle.el=
+
+**** DONE =README.org=
+
+*** DONE Update changelog
+
+*** TODO Test in clean MELPA sandbox
+
+**** TODO Update test checklist from changelog for new features
+
+**** TODO Install
+
+**** TODO Test functionality:
+
+***** TODO Positive terms
+
+***** TODO Negation
+
+***** TODO TODO keywords
+
+***** TODO Priorities
+
+***** TODO Tags
+
+****** TODO Positive
+
+****** TODO Negative
+
+****** TODO Multiple tags
+
+****** TODO Multiple tags in a single string
+e.g. =:tag1:tag2:=
+
+******* TODO Positive
+
+******* TODO Negative
+
+***** TODO Context
+
+***** TODO Ellipses customization
+
+***** TODO Searching with show-path enabled
+
+***** TODO =helm-org-rifle-files=
+
+***** TODO =helm-org-rifle-directories=
+
+*** DONE Tag, sign, and push tag
+
+If a new minor version (not new patch version), make new =x.x= branch.  Then tag the new branch, using  =x.x.0= for the first release in a minor version branch, not =x.x=.
+
+*** DONE GitHub release notes
+
+*** DONE Update version numbers for next pre-release
+
+**** DONE =helm-org-rifle.el=
+
+**** DONE =README.org=
+
+
 ** Stable release 1.5.0
 
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
