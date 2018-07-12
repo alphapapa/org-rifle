@@ -1021,19 +1021,19 @@ because it uses variables in its outer scope."
                       (if helm-org-rifle-fontify-headings
                           (let ((path (if helm-org-rifle-reverse-paths
                                           (--> (org-get-outline-path t)
-                                               (-map #'org-link-display-format it)
                                                (org-format-outline-path it 1000 nil "")
                                                (org-split-string it "")
                                                (nreverse it)
                                                (s-join "\\" it)
+                                               (org-link-display-format it)
                                                (if (> (length it) (window-width))
                                                    (concat (substring it 0 (- (window-width) 2))
                                                            "..")
                                                  it))
                                         (--> (or path (org-get-outline-path))
                                              (append it (list heading))
-                                             (-map #'org-link-display-format it)
-                                             (org-format-outline-path it))))
+                                             (org-format-outline-path it)
+                                             (org-link-display-format it))))
                                 (tags (if tags
                                           (concat " " (helm-org-rifle-fontify-like-in-org-mode tags))
                                         "")))
