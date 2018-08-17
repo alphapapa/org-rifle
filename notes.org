@@ -1060,6 +1060,13 @@ With all the options we have now, we need a ~magit-popup~-style UI, e.g. to temp
 
 I'm not sure if we can, but if so, it should help performance.
 
+** MAYBE Use [[http://www.lesbonscomptes.com/recoll/][recoll]] for indexing
+:LOGBOOK:
+-  State "MAYBE"      from              [2018-08-17 Fri 07:53]
+:END:
+
+It's in Debian/Ubuntu, and there's already a =helm-recoll= package.  Maybe support for Org files could even be added to Recoll so it could present results as Org nodes.
+
 ** TODO [#B] jump-to-next/prev-match command for occur buffers
 
 It would be handy to have a built-in command to jump to the next match instance in the occur buffers, maybe something like =M-g n=.  Suggested by washy99999.
