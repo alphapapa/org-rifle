@@ -843,6 +843,8 @@ source, so we must gather them manually."
 
 (defun helm-org-rifle--refile (candidate)
   "Refile CANDIDATE."
+  ;; This needs to be an interactive command because it's bound in `helm-org-rifle-map'.
+  (interactive)
   (-let (((buffer . pos) candidate))
     (with-current-buffer buffer
       (goto-char pos)

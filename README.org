@@ -103,6 +103,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 *Fixes*
 +  Fontify to-do keywords when ~helm-org-rifle-show-path~ is enabled.
 
+** 1.6.1
+
+*Fixes*
++  Make ~helm-org-rifle--refile~ an interactive command, allowing it to be called from ~helm-org-rifle-map~.  (Fixes [[https://github.com/alphapapa/helm-org-rifle/issues/33][#33]].  Thanks to [[https://github.com/holocronweaver][Jesse Johnson]].)
+
 ** 1.6.0
 
 *Additions*
