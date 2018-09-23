@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
-;; Version: 1.6.0
+;; Version: 1.6.1
 ;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
@@ -735,6 +735,8 @@ source, so we must gather them manually."
 
 (defun helm-org-rifle--refile (candidate)
   "Refile CANDIDATE."
+  ;; This needs to be an interactive command because it's bound in `helm-org-rifle-map'.
+  (interactive)
   (-let (((buffer . pos) candidate))
     (with-current-buffer buffer
       (goto-char pos)

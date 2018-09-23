@@ -88,6 +88,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.6.1
+
+*Fixes*
++  Make ~helm-org-rifle--refile~ an interactive command, allowing it to be called from ~helm-org-rifle-map~.  (Fixes [[https://github.com/alphapapa/helm-org-rifle/issues/33][#33]].  Thanks to [[https://github.com/holocronweaver][Jesse Johnson]].)
+
 ** 1.6.0
 
 *Additions*
