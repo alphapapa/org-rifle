@@ -951,6 +951,7 @@ because it uses variables in its outer scope."
            ;; FIXME: Partial excludes seem to put the partially
            ;; negated entry at the end of results.  Not sure why.
            ;; Could it actually be a good feature, though?
+           ;; TODO: Collect outline paths recursively in stages to avoid calling `org-get-outline-path' on every node.
            (or (cl-loop for elem in (when (or helm-org-rifle-test-against-path
                                               helm-org-rifle-always-test-excludes-against-path)
                                       (setq path (org-get-outline-path)))
