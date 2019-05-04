@@ -162,7 +162,9 @@
    "Show entry in indirect buffer" 'helm-org-rifle-show-entry-in-indirect-buffer
    "Show entry in real buffer" 'helm-org-rifle-show-entry-in-real-buffer
    "Clock in" 'helm-org-rifle--clock-in
-   "Refile" 'helm-org-rifle--refile)
+   "Refile" 'helm-org-rifle--refile
+   "Priority up" 'helm-org-rifle--priority-up
+   "Priority down" 'helm-org-rifle--priority-down)
   "Helm actions for `helm-org-rifle' commands."
   :type '(alist :key-type string :value-type function))
 
@@ -849,6 +851,20 @@ source, so we must gather them manually."
     (with-current-buffer buffer
       (goto-char pos)
       (org-refile))))
+
+(defun helm-org-rifle--priority-up (candidate)
+  "Increase priority of CANDIDATE"
+  (-let (((buffer . pos) candidate))
+    (with-current-buffer buffer
+      (goto-char pos)
+      (org-priority-up))))
+
+(defun helm-org-rifle--priority-down (candidate)
+  "Decrease priority of CANDIDATE"
+  (-let (((buffer . pos) candidate))
+    (with-current-buffer buffer
+      (goto-char pos)
+      (org-priority-down))))
 
 ;;;;; The meat
 
