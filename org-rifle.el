@@ -9,7 +9,7 @@
 ;;; Commentary:
 
 ;; This is my rifle.  There are many like it, but this one is mine.
-;; My rifle is my best friend. It is my life.  I must master it as I
+;; My rifle is my best friend.  It is my life.  I must master it as I
 ;; must master my life.
 
 ;; What does my rifle do?  It searches rapidly through my Org files,
@@ -150,8 +150,10 @@ buffer list."
   :type 'boolean)
 
 (defcustom org-rifle-unlinkify-entry-links t
-  "Turn Org links in entry text into plain text so they look nicer in results buffers.
-Just in case this is a performance issue for anyone, it can be disabled."
+  "Unlinkify Org links in entry text text.
+This makes them look nicer in results buffers, because it avoids
+truncating the link syntax.  In case this is a performance issue,
+it can be disabled."
   ;; TODO: Make this an org-rifle option.
   :type 'boolean)
 
@@ -230,9 +232,11 @@ because you can always revert your changes).)"
 
 (defcustom org-rifle-sort-order nil
   "Sort results in this order by default.
-The sort order may be changed temporarily by calling a command with a universal prefix (C-u).
+The sort order may be changed temporarily by calling a command
+with a universal prefix.
 
-This is a list of functions which may be called to transform results, typically by sorting them."
+This is a list of functions which may be called to transform
+results, typically by sorting them."
   ;; There seems to be a bug or at least inconsistency in the Emacs
   ;; customize system.  Setting :tag in an item in a choice or radio
   ;; list does not allow you to read the :tag from the choice as a
@@ -560,7 +564,7 @@ This is how the sausage is made."
                  do (outline-next-heading))))))
 
 (defun org-rifle--test-entry ()
-  "Return list of entry data if entry at point matches.
+  "Return list of entry data if entry at point is a match.
 This is to be called from `org-rifle--get-candidates-in-buffer',
 because it uses variables in its outer scope."
   (-let* ((node-beg (org-entry-beginning-position))
@@ -784,9 +788,9 @@ Returns (INCLUDES EXCLUDES INCLUDE-TAGS EXCLUDE-TAGS TODO-KEYWORDS)."
 
 (defun org-rifle--org-cycle (&optional arg)
   "Cycle folding of Org entries in a results buffer.
-This folds first at boundaries defined by `helm-header' and
-`org-rifle-result-separator' text-properties, and then
-normally, by outline headings."
+ARG is passed to `org-cycle'.  This folds first at boundaries
+defined by `helm-header' and `org-rifle-result-separator'
+text-properties, and then normally, by outline headings."
   ;; FIXME: Shouldn't be using `helm-header' in this.
   (interactive)
   (cl-letf (((symbol-function 'org-end-of-subtree)
@@ -816,9 +820,10 @@ normally, by outline headings."
       (org-cycle arg))))
 
 (defun org-rifle--outline-next-heading ()
-  "Move to the next header, result separator, outline heading, or point-max, whichever is smallest.
-This is intended to override `outline-next-heading' in occur
-results buffers."
+  "Move to the next heading.
+Moves to the next header, result separator, outline heading, or
+`point-max', whichever is smallest.  This is intended to override
+`outline-next-heading' in occur results buffers."
   (interactive)
   (cl-flet ((min (&rest args)
                  (apply 'min (-non-nil args)))
@@ -848,8 +853,9 @@ results buffers."
 
 (defun org-rifle--org-end-of-subtree (&optional invisible-ok to-heading)
   "Goto to the end of a subtree.
-This function is a copy of `org-end-of-subtree', but it respects
-headers and separators."
+Arguments INVISIBLE-OK and TO-HEADING are like in
+`org-end-of-subtree'.  This is a copy of `org-end-of-subtree',
+but it respects headers and separators."
   ;; This contains an exact copy of the original function, but it uses
   ;; `org-back-to-heading', to make it work also in invisible
   ;; trees.  And is uses an invisible-ok argument.
@@ -982,7 +988,7 @@ headers and separators."
 Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
   (with-current-buffer buffer
     (unless (derived-mode-p 'org-mode)
-      (error "Buffer %s is not an Org buffer." buffer)))
+      (error "Buffer %s is not an Org buffer" buffer)))
   (cl-loop for (text . (_ .  pos)) in (org-rifle--get-candidates-in-buffer buffer input)
            collect (list :text text :buffer buffer :node-beg pos)))
 
@@ -1053,7 +1059,8 @@ This helps the user remove unwanted results from the buffer."
 ;;;;; Timestamp functions
 
 (defun org-rifle-timestamps-in-node (&optional node-start node-end)
-  "Return list of Org timestamp objects in node that begins at NODE-START or current point.
+  "Return list of Org timestamp objects in node.
+Node begins at NODE-START or current point and ends at NODE-END.
 Objects are those provided by `org-element-timestamp-parser'."
   ;; TODO: Use ts.el.
   (save-excursion
@@ -1085,7 +1092,8 @@ NODES is a list of plists as returned by `org-rifle-transform-candidates-to-list
                                                 (list 0))))))))
 
 (defun org-rifle-sort-nodes-by-latest-timestamp (nodes)
-  "Sort list of node plists by latest timestamp in each node."
+  "Sort NODES by latest timestamp in each node.
+NODES is a list of node plists."
   (sort nodes
         (lambda (a b)
           (> (seq-max (plist-get a :timestamp-floats))
@@ -1162,6 +1170,7 @@ That is, if its name does not start with a space."
 
 (defun org-rifle-fontify-like-in-org-mode (s &optional odd-levels)
   "Fontify string S like in Org-mode.
+`org-odd-levels-only' is bound to ODD-LEVELS.
 
 `org-fontify-like-in-org-mode' is a very, very slow function
 because it creates a new temporary buffer and runs `org-mode' for
@@ -1238,8 +1247,9 @@ From `helm-insert-header'."
     string))
 
 (defun org-rifle-split-tags-in-input-list (input)
-  "Split strings containing multiple Org tags in INPUT into separate tag strings.
-i.e. a string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and \":tag2:\"."
+  "Split strings containing multiple Org tags in INPUT.
+A string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and
+\":tag2:\"."
   (cl-loop for string in input
            for tags = (org-rifle-split-tag-string string)
            if tags append tags into result
@@ -1247,8 +1257,9 @@ i.e. a string like \":tag1:tag2:\" becomes two strings, \":tag1:\" and \":tag2:\
            finally return result))
 
 (defun org-rifle-split-tag-string (s)
-  "Return list containing Org tag strings for input string S containing Org tags.
-i.e. for S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is returned."
+  "Return list containing Org tag strings for input string S.
+For S \":tag1:tag2:\" a list '(\":tag1:\" \":tag2:\") is
+returned."
   (cl-loop with skip
            ;; FIXME: There is probably a nicer way to handle negated
            ;; tags.  `s-match-strings-all' returns a list containing
