@@ -973,7 +973,7 @@ results in buffer."
       (with-current-buffer results-buffer
         (erase-buffer)
         (cl-loop for results-list in results-by-buffer
-                 do (-let (((&plist :buffer buffer :results results) results-list))
+                 do (-let (((&keys :buffer :results) results-list))
                       (when results
                         (org-rifle-insert-source-header (buffer-name buffer))
                         (cl-loop for entry in results
