@@ -336,35 +336,30 @@ would be ignored."
   :type 'boolean)
 
 (defvar org-rifle-map
-  (let ((map (copy-keymap org-mode-map)))
-    (define-key map [remap org-cycle] 'org-rifle--org-cycle)
-    (define-key map [remap undo] (lambda () (interactive) (let ((inhibit-read-only t)) (undo))))
+  (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'org-rifle-goto-entry)
     (define-key map (kbd "<RET>") 'org-rifle-goto-entry)
     (define-key map (kbd "C-c C-w") #'org-rifle--refile)
     (define-key map (kbd "d") 'org-rifle-delete-entry)
-    (define-key map (kbd "b") (lambda () (interactive) (org-rifle--speed-command 'org-backward-heading-same-level)))
-    (define-key map (kbd "f") (lambda () (interactive) (org-rifle--speed-command 'org-forward-heading-same-level)))
-    (define-key map (kbd "p") (lambda () (interactive) (org-rifle--speed-command 'outline-previous-visible-heading)))
-    (define-key map (kbd "n") (lambda () (interactive) (org-rifle--speed-command 'outline-next-visible-heading)))
-    (define-key map (kbd "u") (lambda () (interactive) (org-rifle--speed-command 'outline-up-heading)))
-    (define-key map (kbd "o") (lambda () (interactive) (org-rifle--speed-command 'org-open-at-point)))
-    (define-key map (kbd "c") (lambda () (interactive) (org-rifle--speed-command 'org-cycle)))
-    (define-key map (kbd "C") (lambda () (interactive) (org-rifle--speed-command 'org-shifttab)))
+    (define-key map (kbd "n") #'org-rifle-next)
+    (define-key map (kbd "p") #'org-rifle-prev)
+    (define-key map (kbd "N") #'org-rifle-next-source)
+    (define-key map (kbd "P") #'org-rifle-previous-source)
     (define-key map (kbd "q") 'quit-window)
     map)
-  "Keymap for `org-rifle' results buffers.  Imitates `org-speed' keys.")
+  "Keymap for `org-rifle' results buffers.")
 
-(defvar org-rifle-minibuffer-map (let ((map (copy-keymap minibuffer-local-map)))
-                                   (define-key map (kbd "C-g") 'org-rifle-cleanup-buffer)
-                                   map)
+(defvar org-rifle-minibuffer-map
+  (let ((map (copy-keymap minibuffer-local-map)))
+    (define-key map (kbd "C-g") 'org-rifle-cleanup-buffer)
+    map)
   "Keymap for `org-rifle' mini buffers.")
 
 (defvar org-rifle-last-input nil
   "Last input given, used to avoid re-running search when input hasn't changed.")
 
 (defvar org-rifle-separator
-  (let ((text "\n"))
+  (let ((text "\n\n"))
     (set-text-properties 0 (length text) '(org-rifle-result-separator t font-lock-face org-rifle-separator) text)
     text)
   "Propertized separator for results.")
@@ -515,6 +510,64 @@ Files are opened if necessary, and the resulting buffers are left open."
     (with-current-buffer buffer
       (goto-char pos)
       (org-refile))))
+
+(defun org-rifle-next ()
+  "Go to next entry in results buffer."
+  (interactive)
+  (let ((pos (cond ((get-text-property (point) 'org-rifle-source-header)
+                    (or (next-single-property-change (point) 'org-rifle-source-header)
+                        (point-max)))
+                   ;; Not on a header.
+                   (t (or (-some--> (point)
+                                    (next-single-property-change it 'org-rifle-result-separator)
+                                    (next-single-property-change it 'org-rifle-result-separator))
+                          (point-max))))))
+    (goto-char pos)
+    (beginning-of-line)))
+
+(defun org-rifle-prev ()
+  "Go to previous entry in results buffer."
+  (interactive)
+  ;; This code is kind of ugly, but navigating by text properties always is.
+  (let ((pos (if (get-text-property (point) 'org-rifle-source-header)
+                 (or (-some--> (point)
+                               (previous-single-property-change it 'org-rifle-result-separator)
+                               (previous-single-property-change it 'org-rifle-result-separator))
+                     (point-min))
+               ;; Not on a header.
+               (apply #'max
+                      (-non-nil
+                       (list (previous-single-property-change (point) 'org-rifle-source-header)
+                             (or (-some--> (point)
+                                           (previous-single-property-change it 'org-rifle-result-separator)
+                                           (previous-single-property-change it 'org-rifle-result-separator))
+                                 (point-min))))))))
+    (goto-char pos)
+    (beginning-of-line)))
+
+(defun org-rifle-next-source ()
+  "Go to next source in results buffer."
+  (interactive)
+  (let ((pos (cond ((get-text-property (point) 'org-rifle-source-header)
+                    (or (-some--> (point)
+                                  (next-single-property-change it 'org-rifle-source-header)
+                                  (next-single-property-change it 'org-rifle-source-header))
+                        (point-max)))
+                   ;; Not on a header.
+                   (t (or (next-single-property-change (point) 'org-rifle-source-header)
+                          (point-max))))))
+    (goto-char pos)
+    (beginning-of-line)))
+
+(defun org-rifle-previous-source ()
+  "Go to previous source in results buffer."
+  (interactive)
+  (let ((pos (or (-some--> (point)
+                           (previous-single-property-change it 'org-rifle-source-header)
+                           (previous-single-property-change it 'org-rifle-source-header))
+                 (point-min))))
+    (goto-char pos)
+    (beginning-of-line)))
 
 ;;;;; The meat
 
@@ -916,18 +969,19 @@ results in buffer."
     (unwind-protect
         (minibuffer-with-setup-hook
             (lambda ()
-              (setq timer (run-with-idle-timer
-                           ;; FIXME: helm-org-rifle-input-idle-delay
-                           ;; doesn't seem to work the same as in a
-                           ;; Helm session, so a longer value is
-                           ;; needed.  It'd be good to make this work
-                           ;; with the same value...
-                           0.25
-                           'repeat
-                           (lambda ()
-                             (org-rifle-process-input (s-trim (minibuffer-contents)) buffers results-buffer)))))
-          (read-from-minibuffer "pattern: " nil org-rifle-minibuffer-map nil nil nil nil))
-      (when timer (cancel-timer timer) (setq timer nil)))))
+              (setq timer
+                    ;; FIXME: helm-org-rifle-input-idle-delay doesn't seem to work the same as in a Helm session,
+                    ;; so a longer value is needed.  It'd be good to make this work with the same value...
+                    (run-with-idle-timer
+                     0.25 'repeat (lambda ()
+                                    (org-rifle-process-input
+                                     (s-trim (minibuffer-contents)) buffers results-buffer)))))
+          (read-from-minibuffer "pattern: " nil org-rifle-minibuffer-map nil nil nil nil)
+          (with-current-buffer (get-buffer org-rifle-results-buffer-name)
+            (goto-char (point-min))))
+      (when timer
+        (cancel-timer timer)
+        (setq timer nil)))))
 
 (defun org-rifle--prepare-results-buffer ()
   "Prepare and return results buffer."
@@ -940,7 +994,7 @@ results in buffer."
       (unless (eq major-mode 'org-mode)
         (read-only-mode)
         (visual-line-mode)
-        (org-mode)
+        (text-mode)
         (hi-lock-mode 1)
         (use-local-map org-rifle-map))
       (erase-buffer)
@@ -958,29 +1012,27 @@ results in buffer."
     (setq org-rifle-last-input input)
     (let ((inhibit-read-only t)
           (results-by-buffer (cl-loop for source-buffer in buffers
-                                      collect (list :buffer source-buffer
-                                                    :results (org-rifle-get-results-in-buffer source-buffer input)))))
+                                      collect (cons source-buffer
+                                                    (org-rifle-get-results-in-buffer source-buffer input)))))
       (when (eq org-rifle-transformer 'org-rifle-transformer-sort-by-latest-timestamp)
         ;; FIXME: Ugly hack.  Need to refactor a consistent way to set sorting and transformers.
-        (setq results-by-buffer (cl-loop for results-list in results-by-buffer
-                                         collect (-let (((plist &as :buffer buffer :results results) results-list))
-                                                   (list :buffer buffer
-                                                         :results (with-current-buffer buffer
-                                                                    (->> results
-                                                                         (org-rifle-add-timestamps-to-nodes)
-                                                                         (org-rifle-sort-nodes-by-latest-timestamp))))))))
+        (setq results-by-buffer (cl-loop for (buffer . results) in results-by-buffer
+                                         collect (cons buffer (with-current-buffer buffer
+                                                                (->> results
+                                                                     (org-rifle-add-timestamps-to-nodes)
+                                                                     (org-rifle-sort-nodes-by-latest-timestamp)))))))
       (with-current-buffer results-buffer
         (erase-buffer)
-        (cl-loop for results-list in results-by-buffer
-                 do (-let (((&keys :buffer :results) results-list))
-                      (when results
-                        (org-rifle-insert-source-header (buffer-name buffer))
-                        (cl-loop for entry in results
-                                 do (-let (((plist &as :text text . rest) entry))
-                                      (add-text-properties 0 (length text) rest text)
-                                      (insert org-rifle-separator)
-                                      (insert text))))))
-        (org-rifle-highlight-matches-in-buffer results-buffer input)))))
+        (cl-loop for (buffer . results) in results-by-buffer
+                 do (when results
+                      (org-rifle-insert-source-header (buffer-name buffer))
+                      (cl-loop for entry in results
+                               do (-let (((plist &as :display display . rest) entry))
+                                    (add-text-properties 0 (length display) rest display)
+                                    (insert display)
+                                    (insert org-rifle-separator)))))
+        (org-rifle-highlight-matches-in-buffer results-buffer input)
+        (goto-char (point-min))))))
 
 (defun org-rifle-highlight-matches-in-buffer (buffer input)
   "Highlight matches for INPUT in BUFFER using hi-lock-mode."
@@ -990,13 +1042,12 @@ results in buffer."
       (highlight-regexp token))))
 
 (defun org-rifle-get-results-in-buffer (buffer input)
-  "Return list of results for INPUT in BUFFER.
-Results is a list of strings with text-properties :NODE-BEG and :BUFFER."
+  "Return list of results for INPUT in BUFFER."
   (with-current-buffer buffer
     (unless (derived-mode-p 'org-mode)
       (error "Buffer %s is not an Org buffer" buffer)))
-  (cl-loop for (text . (_ .  pos)) in (org-rifle--get-candidates-in-buffer buffer input)
-           collect (list :text text :buffer buffer :node-beg pos)))
+  (cl-loop for (display . (_ .  pos)) in (org-rifle--get-candidates-in-buffer buffer input)
+           collect (list :display display :buffer buffer :node-beg pos)))
 
 (defun org-rifle-goto-entry ()
   "Go to node in source buffer that point in occur buffer is in."
@@ -1200,18 +1251,12 @@ created."
 (defun org-rifle-insert-source-header (text)
   "Insert header containing TEXT into the current buffer.
 From `helm-insert-header'."
-  (unless (bobp)
-    (let ((start (point)))
-      (insert "\n")
-      ;; FIXME: Shouldn't be using helm-header stuff here.
-      (set-text-properties start (point) '(helm-header-separator t))))
   (setq text (concat " " text "\n"))
   ;; Only set the font-lock-face on a single line
   (add-text-properties 0 (length text) '(font-lock-face helm-source-header) text)
   ;; Apply the `helm-header' property to the whole thing, including
   ;; newlines
-  (setq text (concat "\n" text ))
-  (add-text-properties 0 (length text) '(helm-header t) text)
+  (add-text-properties 0 (length text) '(helm-header t org-rifle-source-header t) text)
   (insert text))
 
 (defun org-rifle-cleanup-buffer ()
