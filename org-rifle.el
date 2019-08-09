@@ -1069,11 +1069,11 @@ This helps the user remove unwanted results from the buffer."
   "Return list of Org timestamp objects in node.
 Node begins at NODE-START or current point and ends at NODE-END.
 Objects are those provided by `org-element-timestamp-parser'."
-  ;; TODO: Use ts.el.
   (save-excursion
     (goto-char (or node-start (org-entry-beginning-position)))
     (let ((node-end (or node-end (org-entry-end-position))))
       ;; FIXME: `org-element-timestamp-successor' doesn't exist anymore?
+      ;; TODO: Use ts.el.
       (cl-loop for ts-start = (cdr (org-element-timestamp-successor))
                while (and ts-start (< ts-start node-end))
                collect (progn
