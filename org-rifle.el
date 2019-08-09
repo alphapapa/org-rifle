@@ -410,6 +410,10 @@ each result can be displayed on a single line."
   ;; TODO: Make this an org-rifle option.
   :type 'face)
 
+(defcustom org-rifle-show-full-contents nil
+  "Show all of each result's contents instead of just context around each matching word."
+  :type 'boolean)
+
 ;;;; Functions
 
 ;;;;; Commands

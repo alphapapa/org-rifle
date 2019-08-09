@@ -198,10 +198,6 @@ like \": \"."
                 (function :tag "Show entries in indirect buffers." helm-org-rifle-show-entry-in-indirect-buffer)
                 (function :tag "Custom function")))
 
-(defcustom helm-org-rifle-show-full-contents nil
-  "Show all of each result's contents instead of just context around each matching word."
-  :type 'boolean)
-
 ;;;; Functions
 
 ;;;;; Commands
