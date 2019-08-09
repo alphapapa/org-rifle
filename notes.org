@@ -805,10 +805,806 @@ This helps for debugging, in case I need it in the future:
 :TOC:      ignore-children
 :END:
 
+** UNDERWAY org-rifle refactor
+:LOGBOOK:
+-  State "UNDERWAY"   from              [2019-08-09 Fri 07:35]
+:END:
+
+[2019-08-09 Fri 07:37]  Copying subtrees from =org-rifle.org= file, cherry picked from branch =wip/org-rifle-old=, which is the obsolete WIP branch.
+
+New plan is to refactor, split up the packages, and /then/ look at adding SQLite indexing separately.
+
+*** Design
+
+**** Packages
+
+All of these packages should probably be developed in a single repository, and split into separate packages by the packaging.
+
+***** =org-rifle=
+
+This will be the main package.  It will include the file-based backend and the non-Helm frontend.
+
+***** =org-rifle-indexer=
+
+This package will depend on =emacsql= and will include the SQLite-based indexer and backend.  The backend will need to integrate somehow with the file-based backend so that they can be used together for each file (e.g. query the database if possible, otherwise use the file-based backend).
+
+For fun, maybe it could be called =org-rifle-magazine=, but that wouldn't be as descriptive...
+
+***** =helm-org-rifle=
+
+This package will depend on =org-rifle=.  The file-based backend and non-Helm-based front end will be split off and put into =org-rifle=.
+
+**** Front ends
+
+There will be at least two front ends: =helm-org-rifle=, and plain =org-rifle= (which will be the existing =helm-org-rifle-occur= commands).  Other front ends may come later (e.g. Ivy/Counsel).
+
+**** Back ends
+
+There will be at least two back ends: the EmacSQL-based one, and the existing file/buffer-based one in =helm-org-rifle=.
+
+**** Indexer
+
+The indexer will index Org files in a SQLite database, probably using [[https://github.com/skeeto/emacsql][EmacSQL]].
+
+***** Asynchronous indexing
+
+Indexing should take place in an external Emacs process using =emacs-async= or =deferred= or something like that.  EmacSQL is synchronous, and we don't want the main Emacs process blocking on indexing.
+
+***** Indexing on save
+
+Org files will be (optionally) indexed upon save (async, in an external process) using a hook.
+
+***** Indexing on demand
+
+Org files will be indexed on-demand, including recursing into directories of Org files.
+
+It may also be desirable to make this scriptable from outside Emacs.
+
+***** Table design
+
+****** Locating headlines in files
+
+At least in the first iterations, we will probably reindex entire files at once, rather than only changed headings.  So storing the position of the heading within the file should be accurate and sufficient.
+
+However, it would be interesting to reindex only changed entries.  I don't know if that is possible or feasible, because Emacs would have to know which entries had changed since the file was last saved.  But if that ever became possible, it would mean that heading positions within files would change, so we'd need to locate headings by a different method.  One obvious way is the "OLP" (outline path) using the appropriate Org functions.  That should be sufficient, although those are not guaranteed to be unique, and I don't see any way around that.  Another way is to use the built-in Org heading ID functions.  Those are (or should be) unique, especially within a file.
+
+The =org-bookmark-heading= package has some code that may be useful here.
+
+****** Filename
+
+The filename should probably be stored separately from the path, to make it easy to query on the filename.  There should probably be a table that maps filenames and paths to integers, which will be referenced from the main table.  John Kitchin's design should be referenced here.
+*** References and Prior Art
+
+**** [[http://kitchingroup.cheme.cmu.edu/blog/2017/01/03/Find-stuff-in-org-mode-anywhere/][John Kitchin's blog article]]
+
+John already invested a lot of time into a project like this.  I should definitely study it.
+
+***** [[http://kitchingroup.cheme.cmu.edu/blog/2017/01/03/Find-stuff-in-org-mode-anywhere/][Find stuff in org-mode anywhere]]                           :website:
+
+[2018-05-07 Mon 09:01]
+
+****** Article
+
+******* Table of Contents
+
+-  [[#org961d2be][1. The database design]]
+-  [[#orgbda3471][2. Querying the link table]]
+-  [[#org8284133][3. Headline queries]]
+-  [[#org7d75505][4. Keyword queries]]
+-  [[#org08feb51][5. Full text search]]
+-  [[#orgbb3d71f][6. Summary]]
+
+I use org-mode /extensively/. I write scientific papers, keep notes on meetings, write letters of recommendation, notes on scientific articles, keep TODO lists in projects, help files for software, write lecture notes, students send me homework solutions in it, it is a contact database, ... Some files are on Dropbox, Google Drive, Box, some in git repos, etc. The problem is that leads to org-files everywhere on my hard drive. At this point I have several thousand org-files that span about five years of work.
+
+It is not that easy after a while to find them. Yes there are things like recent-files, bookmarks, counsel-find-file, helm-for-files, counsel/helm-locate, helm/counsel-grep/ag/pt, projectile for searching within a project, a slew of tools to search open buffers, there is [[https://www.lesbonscomptes.com/recoll/][recoll]], etc... There are desktop search tools, and of course, good organization habits. Over a five year time span though, these change, and I have yet to find a solution to finding what I want. What about a file I made a year ago that is not in the current directory or this project, and not in my org-agenda-files list? How do I get a dynamic todo list across all these files? Or find all the files that cite a particular bibtex entry, or that were authored by a particular student?
+
+Previously, [[http://kitchingroup.cheme.cmu.edu/blog/2015/07/06/Indexing-headlines-in-org-files-with-swish-e-with-laser-sharp-results/][I indexed org files with Swish-e]] to make it easy to search them, with an ability to search just headlines, or paragraphs, etc. The problem with that is the nightly indexing was slow since I basically had to regenerate the database each time due to limitations in Swish-e. Finally I have gotten around to the next iteration of this idea, which is a better database. In this post, I explore using sqlite to store headlines and links in org-files.
+
+The idea is that anytime I open or save /any/ org file, it will be added/updated in the database. The database will store the headlines and its properties and content, as well as the location and properties of all links and file keywords. That means I should be able to efficiently query all org files I have ever visited to find TODO headlines, tagged headlines, different types of links, etc. Here we try it out and see if it is useful.
+
+******* 1 The database design
+
+I used [[https://github.com/skeeto/emacsql][emacsql]] to create and interact with a sqlite3 database. It is a lispy way to generate SQL queries. I will not talk about the code much here, you can see this version [[/media/org-db.el][org-db.el]] . The database design consists of several tables that contain the filenames, headlines, tags, properties, (optionally) headline-content, headline-tags, headline-properties, and links. The lisp code is a work in progress, and not something I use on a daily basis yet. This post is a proof of concept to see how well this approach works.
+
+I use hooks to update the database when an org-file is opened (only if it is different than what is in the database based on an md5 hash) and when it is saved. Basically, these functions delete the current entries in the database for a file, then use regular expressions to go to each headline or link in the file, and add data back to the database. I found this to be faster than parsing the org-file with org-element especially for large files. Since this is all done by a hook, anytime I open an org-file anywhere it gets added/updated to the database. The performance of this is ok. This approach will not guarantee the database is 100% accurate all the time (e.g. if something modifies the file outside of emacs, like a git pull), but it doesn't need to be. Most of the files do not change often, the database gets updated each time you open a file, and you can always reindex the database from files it knows about. Time will tell how often that seems necessary.
+
+emacsql lets you use lisp code to generate SQL that is sent to the database. Here is an example:
+
+#+BEGIN_EXAMPLE
+    (emacsql-flatten-sql [ :select [name]  :from main:sqlite_master  :where (= type table)])
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+    SELECT name FROM main.sqlite_master WHERE type = "table";
+#+END_EXAMPLE
+
+There are some nuances, for example, main:sqlite\_master gets converted to main.sqlite\_master. You use vectors, keywords, and sexps to setup the command. emacsql will turn a name like filename-id into filename\_id. It was not too difficulty to figure out, and the author of emacsql was really helpful on a few points. I will be referring to this post in the future to remember some of these nuances!
+
+Here is a list of tables in the database. There are a few primary tables, and then some that store tags, properties, and keywords on the headlines. This is typical of emacsql code; it is a lisp expression that generates SQL. In this next expression org-db is a variable that stores the database connection created in org-db.el.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select [name]  :from main:sqlite_master  :where (= type table)])
+#+END_EXAMPLE
+
+| files                         |
+| tags                          |
+| properties                    |
+| keywords                      |
+| headlines                     |
+| headline\_content             |
+| headline\_content\_content    |
+| headline\_content\_segments   |
+| headline\_content\_segdir     |
+| headline\_content\_docsize    |
+| headline\_content\_stat       |
+| headline\_tags                |
+| headline\_properties          |
+| file\_keywords                |
+| links                         |
+
+Here is a description of the columns in the files table:
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :pragma (funcall table_info files)])
+#+END_EXAMPLE
+
+| 0   | rowid      | INTEGER   | 0     | nil   | 1   |
+| 1   | filename   | 0         | nil   | 0     |     |
+| 2   | md5        | 0         | nil   | 0     |     |
+
+and the headlines table.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :pragma (funcall table_info headlines)])
+#+END_EXAMPLE
+
+| 0   | rowid                  | INTEGER   | 0     | nil   | 1   |
+| 1   | filename\_id           | 0         | nil   | 0     |     |
+| 2   | title                  | 0         | nil   | 0     |     |
+| 3   | level                  | 0         | nil   | 0     |     |
+| 4   | todo\_keyword          | 0         | nil   | 0     |     |
+| 5   | todo\_type             | 0         | nil   | 0     |     |
+| 6   | archivedp              | 0         | nil   | 0     |     |
+| 7   | commentedp             | 0         | nil   | 0     |     |
+| 8   | footnote\_section\_p   | 0         | nil   | 0     |     |
+| 9   | begin                  | 0         | nil   | 0     |     |
+
+Tags and properties on a headline are stored in headline-tags and headline-properties.
+
+The database is not large if all it has is headlines and links (no content). It got up to half a GB with content, and seemed a little slow, so for this post I leave the content out.
+
+#+BEGIN_EXAMPLE
+    du -hs ~/org-db/org-db.sqlite
+#+END_EXAMPLE
+
+| 56M   | /Users/jkitchin/org-db/org-db.sqlite   |
+
+Here we count how many files are in the database. These are just the org-files in my Dropbox folder. There are a lot of them! If I include all the org-files from my research and teaching projects this number grows to about 10,000! You do not want to run org-map-entries on that. Note this also includes all of the org\_archive files.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from files])
+#+END_EXAMPLE
+
+| 1569   |
+
+Here is the headlines count. You can see there is no chance of remembering where these are because there are so many!
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from headlines])
+#+END_EXAMPLE
+
+| 38587   |
+
+And the links. So many links!
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from links])
+#+END_EXAMPLE
+
+| 303739   |
+
+That is a surprising number of links.
+
+******* 2 Querying the link table
+
+Let's see how many are cite links from org-ref there are.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from links  :where (= type  "cite")])
+#+END_EXAMPLE
+
+| 14766   |
+
+Wow, I find that to also be surprisingly large! I make a living writing proposals and scientific papers, and I wrote org-ref to make that easier, so maybe it should not be so surprising. We can search the link database for files containing citations of "kitchin-2015-examp" like this. The links table only stores the filename-id, so we join it with the files table to get useful information. Here we show the list of files that contain a citation of that reference. It is a mix of manuscripts, proposals, presentations, documentation files and notes.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select  :distinct [files:filename]
+                      :from links  :inner  :join files  :on (= links:filename-id files:rowid) 
+                      :where ( and (= type  "cite") (like path  "%kitchin-2015-examp%"))])
+#+END_EXAMPLE
+
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/Research\_Data\_Publishing\_Paper/manuscript.org                                  |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/Research\_Data\_Publishing\_Paper/manuscript-2015-06-29/manuscript.org            |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/Research\_Data\_Publishing\_Paper/manuscript-2015-10-10/manuscript.org            |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/Research\_Data\_Publishing\_Paper/manuscript-2016-03-09/manuscript.org            |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/Research\_Data\_Publishing\_Paper/manuscript-2016-04-18/manuscript.org            |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/2015/human-readable-data/manuscript.org                                                |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/Research\_Data\_Publishing\_Paper/manuscript.org                         |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/Research\_Data\_Publishing\_Paper/manuscript-2015-06-29/manuscript.org   |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/Research\_Data\_Publishing\_Paper/manuscript-2015-10-10/manuscript.org   |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/Research\_Data\_Publishing\_Paper/manuscript-2016-03-09/manuscript.org   |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/Research\_Data\_Publishing\_Paper/manuscript-2016-04-18/manuscript.org   |
+| /Users/jkitchin/Dropbox/CMU/manuscripts/@archive/2015/human-readable-data/manuscript.org                                       |
+| /Users/jkitchin/Dropbox/CMU/meetings/@archive/2015/BES-2015/doe-bes-wed-data-briefing/doe-bes-wed-data-sharing.org             |
+| /Users/jkitchin/Dropbox/CMU/meetings/@archive/2015/NIST-july-2015/data-sharing.org                                             |
+| /Users/jkitchin/Dropbox/CMU/meetings/@archive/2015/UD-webinar/ud-webinar.org                                                   |
+| /Users/jkitchin/Dropbox/CMU/meetings/@archive/2016/AICHE/data-sharing/data-sharing.org                                         |
+| /Users/jkitchin/Dropbox/CMU/meetings/@archive/2016/Spring-ACS/data-sharing/data-sharing.org                                    |
+| /Users/jkitchin/Dropbox/CMU/projects/DOE-Early-Career/annual-reports/final-report/kitchin-DESC0004031-final-report.org         |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2015/DOE-renewal/proposal-v2.org                                                |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2015/DOE-renewal/archive/proposal.org                                           |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/DOE-single-atom-alloy/proposal.org                                         |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/MRSEC/MRSEC-IRG-metastable-materials-preproposal/IRG-concept.org           |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/ljaf-open-science/kitchin-proposal.org                                     |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/nsf-germination/project-description.org                                    |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/nsf-reu-supplement/project-description.org                                 |
+| /Users/jkitchin/Dropbox/CMU/proposals/@archive/2016/proctor-and-gamble-education/proposal.org                                  |
+| /Users/jkitchin/Dropbox/bibliography/notes.org                                                                                 |
+| /Users/jkitchin/Dropbox/kitchingroup/jmax/org-ref/citeproc/readme.org                                                          |
+| /Users/jkitchin/Dropbox/kitchingroup/jmax/org-ref/citeproc/readme-unsrt.org                                                    |
+| /Users/jkitchin/Dropbox/kitchingroup/jmax/org-ref/citeproc/readme-author-year.org                                              |
+| /Users/jkitchin/Dropbox/kitchingroup/jmax/org-ref/tests/test-1.org                                                             |
+| /Users/jkitchin/Dropbox/kitchingroup/jmax/org-ref/tests/sandbox/elpa/org-ref-20160122.1725/citeproc/readme.org                 |
+
+Obviously we could use this to generate candidates for something like helm or ivy like this.
+
+#+BEGIN_EXAMPLE
+    (ivy-read  "Open: " (emacsql org-db [ :select [files:filename links:begin]
+                                         :from links  :inner  :join files  :on (= links:filename-id files:rowid) 
+                                         :where ( and (= type  "cite") (like path  "%kitchin-2015-examp%"))])
+               :action '(1 ( "o"
+                           ( lambda (c)
+                             (find-file (car c))
+                             (goto-char (nth 1 c))
+                             (org-show-entry)))))
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+    /Users/jkitchin/Dropbox/CMU/manuscripts/2015/human-readable-data/manuscript.org
+#+END_EXAMPLE
+
+Now, you can find every org-file containing any bibtex key as a citation. Since SQL is the query language, you should be able to build really sophisticated queries that combine filters for multiple citations, different kinds of citations, etc.
+
+******* 3 Headline queries
+
+Every headline is stored, along with its location, tags and properties. We can use the database to find headlines that are tagged or with certain properties. You can see here I have 293 tags in the database.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from tags])
+#+END_EXAMPLE
+
+| 293   |
+
+Here we find headlines tagged with electrolyte. I tagged some papers I read with this at some point.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select  :distinct [files:filename headlines:title]
+                      :from headlines  :inner  :join headline-tags  :on (=  headlines:rowid headline-tags:headline-id)
+                      :inner  :join tags  :on (= tags:rowid headline-tags:tag-id)
+                      :inner  :join files  :on (= headlines:filename-id files:rowid)
+                      :where (= tags:tag  "electrolyte")  :limit 5])
+#+END_EXAMPLE
+
+| /Users/jkitchin/Dropbox/org-mode/prj-doe-early-career.org   | 2010 - Nickel-borate oxygen-evolving catalyst that functions under benign conditions                                                                     |
+| /Users/jkitchin/Dropbox/bibliography/notes.org              | 1971 - A Correlation of the Solution Properties and the Electrochemical Behavior of the Nickel Hydroxide Electrode in Binary Aqueous Alkali Hydroxides   |
+| /Users/jkitchin/Dropbox/bibliography/notes.org              | 1981 - Studies concerning charged nickel hydroxide electrodes IV. Reversible potentials in LiOH, NaOH, RbOH and CsOH                                     |
+| /Users/jkitchin/Dropbox/bibliography/notes.org              | 1986 - The effect of lithium in preventing iron poisoning in the nickel hydroxide electrode                                                              |
+| /Users/jkitchin/Dropbox/bibliography/notes.org              | 1996 - The role of lithium in preventing the detrimental effect of iron on alkaline battery nickel hydroxide electrode: A mechanistic aspect             |
+
+Here we see how many entries have an EMAIL property. These could serve as contacts to send email to.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select [(funcall count)]  :from
+                     headlines  :inner  :join headline-properties  :on (=  headlines:rowid headline-properties:headline-id)
+                      :inner  :join properties  :on (= properties:rowid headline-properties:property-id)
+                      :where ( and (= properties:property  "EMAIL") (not (null headline-properties:value)))])
+#+END_EXAMPLE
+
+| 7452   |
+
+If you want to see the ones that match "jkitchin", here they are.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select  :distinct [headlines:title headline-properties:value]  :from
+                 headlines  :inner  :join headline-properties  :on (=  headlines:rowid headline-properties:headline-id)
+                  :inner  :join properties  :on (= properties:rowid headline-properties:property-id)
+                  :where ( and (= properties:property  "EMAIL") (like headline-properties:value  "%jkitchin%"))])
+#+END_EXAMPLE
+
+| John Kitchin    | jkitchin@andrew.cmu.edu   |
+| John Kitchin    | jkitchin@cmu.edu          |
+| Kitchin, John   | jkitchin@andrew.cmu.edu   |
+
+Here is a query to find the number of headlines where the deadline matches 2017. Looks like I am already busy!
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select (funcall count)  :from
+                 headlines  :inner  :join headline-properties  :on (=  headlines:rowid headline-properties:headline-id)
+                  :inner  :join properties  :on (= properties:rowid headline-properties:property-id)
+                  :where ( and (= properties:property  "DEADLINE") (glob headline-properties:value  "*2017*"))])
+#+END_EXAMPLE
+
+| 50   |
+
+******* 4 Keyword queries
+
+We also store file keywords, so we can search on document titles, authors, etc. Here are five documents with titles longer than 35 characters sorted in descending order.
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select  :distinct [value]  :from
+                     file-keywords  :inner  :join keywords  :on (= file-keywords:keyword-id keywords:rowid)
+                      :where ( and (> (funcall length value) 35) (= keywords:keyword  "TITLE"))
+                      :order  :by value  :desc
+                      :limit 5])
+#+END_EXAMPLE
+
+| pycse - Python3 Computations in Science and Engineering                                                              |
+| org-show - simple presentations in org-mode                                                                          |
+| org-mode - A Human Readable, Machine Addressable Approach to Data Archiving and Sharing in Science and Engineering   |
+| modifying emacs to make typing easier.                                                                               |
+| jmax - John's customizations to maximize Emacs                                                                       |
+
+It is possible to search on AUTHOR, and others. My memos have a #+SUBJECT keyword, so I can find memos on a subject. They also use the LATEX\_CLASS of cmu-memo, so I can find all of them easily too:
+
+#+BEGIN_EXAMPLE
+    (emacsql org-db [ :select [(funcall count)]  :from
+                     file-keywords  :inner  :join keywords  :on (= file-keywords:keyword-id keywords:rowid)
+                      :where ( and (= value  "cmu-memo") (= keywords:keyword  "LATEX_CLASS"))
+                      :limit 5])
+#+END_EXAMPLE
+
+| 119   |
+
+How about that, 119 memos... Still it sure is nice to be able to find them.
+
+******* 5 Full text search
+
+In theory, the database has a table for the headline content, and it should be fully searchable. I found the database got a little sluggish, and nearly 1/2 a GB in size when using it so I am leaving it out for now.
+
+******* 6 Summary
+
+The foundation for something really good is here. It is still a little tedious to wrote the queries with all the table joins, but some of that could be wrapped into a function for a query. I like the lispy style of the queries, although it can be tricky to map all the concepts onto SQL. A function that might wrap this could look like this:
+
+#+BEGIN_EXAMPLE
+    (org-db-query ( and (= properties:property  "DEADLINE") (glob headline-properties:value  "*2017*")))
+#+END_EXAMPLE
+
+This is what it would ideally look like using the org tag/property match syntax. Somehow that string would have to get expanded to generate the code above. I do not have a sense for how difficult that would be. It might not be hard with [[https://github.com/skeeto/rdp][a recursive descent parser]], written by the same author as emacsql.
+
+#+BEGIN_EXAMPLE
+    (org-db-query  "DEADLINE={2017}")
+#+END_EXAMPLE
+
+The performance is only ok. For large org files there is a notable lag in updating the database, which is notable because while updating, Emacs is blocked. I could try using an idle timer for updates with a queue, or get more clever about when to update. It is not essential that the updates be real-time, only that they are reasonably accurate or done by the time I next search. For now, it is not too annoying though. As a better database, I have had my eye on [[https://xapian.org][xapian]] since that is what mu4e (and notmuch) uses. It might be good to have an external library for parsing org-files, i.e. not through emacs, for this. It would certainly be faster. It seems like a big project though, maybe next summer ;)
+
+Another feature this might benefit from is ignore patterns, or some file feature that prevents it from being indexed. For example, I keep an encrypted password file in org-mode, but as soon as I opened it, it got indexed right into the database, in plain text. If you walk your file system, it might make sense to avoid some directories, like .dropbox.cache. Otherwise, this still looks like a promising approach.
+
+Copyright (C) 2017 by John Kitchin. See the [[/copying.html][License]] for information about copying.
+
+[[/org/2017/01/03/Find-stuff-in-org-mode-anywhere.org][org-mode source]]
+
+Org-mode version = 9.0.3
+
+***** [[http://kitchingroup.cheme.cmu.edu/media/org-db.el][org-db.el]]
+
+This is the file linked to in the article.
+
+#+BEGIN_SRC elisp
+  ;;; org-db.el --- An org database
+
+  ;;; Commentary:
+  ;;
+
+  (require 'emacsql-sqlite)
+
+  (defcustom org-db-root "~/org-db/"
+    "Root directory for db files."
+    :group 'org-db)
+
+  (defcustom org-db-index-content nil
+    "Controls if the content of headlines is saved.")
+
+  (unless (file-directory-p org-db-root)
+    (make-directory org-db-root t))
+
+  (defvar org-db (emacsql-sqlite (expand-file-name "org-db.sqlite" org-db-root)))
+
+  (emacsql org-db [:PRAGMA (= foreign_keys 1)])
+
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 files
+                                 ([(rowid integer :primary-key)
+                                   (filename :unique)
+                                   md5])])
+
+  (emacsql org-db [:create-table :if :not :exists tags
+                                 ([(rowid integer :primary-key)
+                                   (tag :unique)])])
+
+  (emacsql org-db [:create-table :if :not :exists properties
+                                 ([(rowid integer :primary-key)
+                                   (property :unique)])])
+
+  (emacsql org-db [:create-table :if :not :exists keywords
+                                 ([(rowid integer :primary-key)
+                                   (keyword :unique)])])
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 headlines
+                                 ([(rowid integer :primary-key)
+                                   filename-id
+                                   title
+                                   level
+                                   todo-keyword
+                                   todo-type
+                                   archivedp
+                                   commentedp
+                                   footnote-section-p
+                                   begin]
+                                  (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade))])
+
+  ;; no cascade delete ;(
+  (emacsql org-db [:create :virtual :table :if :not :exists headline-content :using fts4
+                           ([headline-id content])])
+
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 headline-tags
+                                 ([(rowid integer :primary-key)
+                                   headline-id
+                                   tag-id]
+                                  (:foreign-key [headline-id] :references headlines [rowid] :on-delete :cascade)
+                                  (:foreign-key [tag-id] :references tags [rowid] :on-delete :cascade))])
+
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 headline-properties
+                                 ([(rowid integer :primary-key)
+                                   headline-id
+                                   property-id
+                                   value]
+                                  (:foreign-key [headline-id] :references headlines [rowid] :on-delete :cascade)
+                                  (:foreign-key [property-id] :references properties [rowid] :on-delete :cascade))])
+
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 file-keywords
+                                 ([(rowid integer :primary-key)
+                                   filename-id
+                                   keyword-id
+                                   value]
+                                  (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade)
+                                  (:foreign-key [keyword-id] :references keywords [rowid] :on-delete :cascade))])
+
+
+  (emacsql org-db [:create-table :if :not :exists
+                                 links
+                                 ([(rowid integer :primary-key)
+                                   filename-id
+                                   type
+                                   path
+                                   raw-link
+                                   description
+                                   search-option
+                                   begin]
+                                  (:foreign-key [filename-id] :references files [rowid] :on-delete :cascade))])
+
+
+  (defun org-db-link-update ()
+    "Update the database with links in the current buffer."
+    (interactive)
+    (message "Updating links in %s" (buffer-file-name))
+    (setq filename-id
+          (or (caar (emacsql org-db [:select rowid :from files
+                                             :where (= filename $s1)]
+                             (buffer-file-name)))
+              (emacsql org-db [:insert :into files :values [nil $s1 $s2]]
+                       (buffer-file-name)
+                       (md5 (current-buffer)))
+              (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward org-any-link-re nil t)
+        (let ((link (save-excursion (goto-char (match-beginning 0)) (org-element-context))))
+          (emacsql org-db [:insert :into links :values $v1]
+                   (list (vector
+                          nil
+                          filename-id
+                          (org-element-property :type link)
+                          (org-element-property :path link)
+                          (org-element-property :raw-link link)
+                          (if (org-element-property :contents-begin link)
+                              (buffer-substring-no-properties
+                               (org-element-property :contents-begin link)
+                               (org-element-property :contents-end link))
+                            "")
+                          (org-element-property :search-option link)
+                          (org-element-property :begin link))))))))
+
+
+  (defun org-db-keyword-update ()
+    "Update the database with keyword-values for the current buffer."
+    (message "Updating keywords in %s" (buffer-file-name))
+    (save-excursion
+      (goto-char (point-min))
+      (save-restriction
+        (widen)
+        (let ((keywords '())
+              filename-id keyword-id
+              key val)
+          (while (re-search-forward "^#\\+\\([^ ]*\\): +\\(.*\\)")
+            (setq key (match-string-no-properties 1)
+                  val (match-string-no-properties 2))
+            (add-to-list 'keywords (cons (upcase key) val)))
+
+          (setq filename-id
+                (or (caar (emacsql org-db [:select rowid :from files
+                                                   :where (= filename $s1)]
+                                   (buffer-file-name)))
+                    (emacsql org-db [:insert :into files :values [nil $s1 $s2]]
+                             (buffer-file-name)
+                             (md5 (current-buffer)))
+                    (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+
+          (loop for (keyword . value) in keywords
+                do
+                (message "keyword: %s %s" keyword value)
+                (setq keyword-id
+                      (or (caar (emacsql org-db [:select rowid :from keywords
+                                                         :where (= keyword $s1)]
+                                         keyword))
+                          (emacsql org-db [:insert :into keywords :values [nil $s1]]
+                                   keyword)
+                          (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+                (emacsql org-db [:insert :into file-keywords :values [nil $s1 $s2 $s3]]
+                         filename-id keyword-id value))))))
+
+
+  (defun org-db-add-headline ()
+    "add a headline."
+    (interactive)
+    (let ((hl (org-element-context))
+          filename-id headline-id tag-id property-id)
+
+      ;; filename
+      (setq filename-id
+            (or (caar (emacsql org-db [:select rowid :from files
+                                               :where (= filename $s1)]
+                               (buffer-file-name)))
+                (emacsql org-db [:insert :into files :values [nil $s1 $s2]]
+                         (buffer-file-name)
+                         (md5 (current-buffer)))
+                (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+
+      ;; headline
+      (emacsql org-db [:insert :into headlines :values
+                               [nil $s1 $s2 $s3 $s4 $s5 $s6 $s7 $s8 $s9]]
+               filename-id
+               (org-element-property :title hl)
+               (org-element-property :level hl)
+               (org-element-property :todo-keyword hl)
+               (org-element-property :todo-type hl)
+               (org-element-property :archivedp hl)
+               (org-element-property :commentedp hl)
+               (org-element-property :footnote-section-p hl)
+               (org-element-property :begin hl))
+      (setq headline-id (caar (emacsql org-db [:select (funcall last-insert-rowid)])))
+
+      ;; content for searching
+      (when org-db-index-content (org-element-property :contents-begin hl)
+            (emacsql org-db [:insert :into headline-content :values
+                                     [$s1 $s2]]
+                     headline-id
+                     (buffer-substring-no-properties
+                      (org-element-property :contents-begin hl)
+                      (org-element-property :contents-end hl))))
+
+      ;; tags
+      (loop for tag in (mapcar 'org-no-properties (org-get-tags-at))
+            do
+            (setq tag-id
+                  (or
+                   (caar (emacsql org-db [:select rowid :from tags :where (= tag $s1)] tag))
+                   (emacsql org-db [:insert :into tags :values [nil $s1]] tag)
+                   (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+
+            ;; Now add entries to headline_tags
+
+            (emacsql org-db [:insert :into headline-tags :values [nil $s1 $s2]]
+                     headline-id tag-id))
+      ;; properties
+      (loop for (property . value) in (org-entry-properties)
+            do
+            (setq property-id
+                  (or
+                   (caar (emacsql org-db [:select rowid :from properties :where (= property $s1)] property))
+                   (emacsql org-db [:insert :into properties :values [nil $s1]] property)
+                   (caar (emacsql org-db [:select (funcall last-insert-rowid)]))))
+
+            ;; and the values
+            (emacsql org-db [:insert :into headline-properties :values [nil $s1 $s2 $s3]]
+                     headline-id
+                     property-id
+                     (org-no-properties value)))))
+
+
+  (defun org-db-update (&optional force)
+    "Update the database with the current buffer if needed."
+    (interactive "P")
+    (when (or force
+              (not (string= (md5 (current-buffer))
+                            (caar (emacsql org-db [:select md5 :from files
+                                                           :where (= filename $s1)]
+                                           (buffer-file-name))))))
+      (message "Updating database in %s" (buffer-file-name))
+      ;; no cascade delete in virtual tables, so we manually do it.
+      (let ((filename-id (caar (emacsql org-db [:select rowid :from files
+                                                        :where (= filename $s1)]
+                                        (buffer-file-name))))
+            headline-ids)
+        (when filename-id
+          (setq headline-ids
+                (mapcar 'car (emacsql org-db [:select [rowid] :from headlines
+                                                      :where (= filename-id $s1)]
+                                      filename-id)))
+          (loop for hl-id in headline-ids do
+                (emacsql org-db [:delete :from headline-content
+                                         :where (= headline-content:headline-id $s1)]
+                         hl-id)))
+        ;; now delete the file, which should cascade delete the rest
+        (emacsql org-db [:delete :from files :where (= filename $s1)] (buffer-file-name)))
+
+      ;; now add each headline and link.
+      (org-with-wide-buffer
+       (org-db-link-update)
+       (org-db-keyword-update)
+       (org-map-entries 'org-db-add-headline))
+
+      (message "done updating %s" (buffer-file-name))))
+
+  (defun org-db-refresh ()
+    "Update all the files in the database."
+    (interactive)
+    (let* ((files (emacsql org-db [:select [filename] :from files]))
+           (N (length files))
+           (enable-local-variables nil)
+           (org-mode-hook '())
+           buf)
+      (loop for (fname) in files for i from 0 to N
+            do
+            (if (and fname (file-exists-p fname))
+                (progn
+                  (message "Refreshing %s of %s" i N)
+                  (setq buf (find-file-noselect fname))
+                  (with-current-buffer buf
+                    (condition-case nil
+                        (org-db-update t)
+                      (error (message "Error updating %s" fname))))
+                  (kill-buffer buf))
+              ;; no fname exists. We need to delete it.
+              (message "removing %s from database" fname)
+              (let ((filename-id (caar (emacsql org-db [:select rowid :from files
+                                                                :where (= filename $s1)]
+                                                fname)))
+                    headline-ids)
+                (when filename-id
+                  (setq headline-ids
+                        (mapcar 'car (emacsql org-db [:select [rowid] :from headlines
+                                                              :where (= filename-id $s1)]
+                                              filename-id)))
+                  (loop for hl-id in headline-ids do
+                        (emacsql org-db [:delete :from headline-content
+                                                 :where (= headline-content:headline-id $s1)]
+                                 hl-id)))
+                ;; now delete the file, which should cascade delete the rest
+                (emacsql org-db [:delete :from files :where (= filename $s1)] fname))))))
+
+
+  (defun org-db-index (path &optional recursive)
+    "Index all the org-files in PATH."
+    (interactive (list (read-directory-name "Path: ")
+                       current-prefix-arg))
+    (let ((enable-local-variables nil))
+      (loop for f in (f-files path (lambda (f) (and (or (f-ext? f "org")
+                                                        (f-ext? f "org_archive"))
+                                                    (not (string-match "\\.dropbox" f))))
+                              recursive)
+            do
+            (let ((buf (find-file-noselect f)))
+              (kill-buffer buf)))))
+
+  (add-hook
+   'org-mode-hook
+   (lambda ()
+     ;; update on opening, in case it changed externally
+     (org-db-update)
+     (add-hook 'after-save-hook
+               ;; update on saving.
+               (lambda ()
+                 (org-db-update))
+               nil t)))
+
+
+  (defun org-db-clean-db ()
+    "Check all files in the db exist and delete those that don't."
+    (loop for (fname) in (emacsql org-db [:select :distinct [filename] :from links])
+          do
+          (unless (file-exists-p fname)
+            ;; the headline content does not cascade delete, so we do it manually
+            ;; here.
+            (let ((filename-id (caar (emacsql org-db [:select rowid :from files
+                                                              :where (= filename $s1)]
+                                              fname)))
+                  headline-ids)
+              (when filename-id
+                (setq headline-ids
+                      (mapcar 'car (emacsql org-db [:select [rowid] :from headlines
+                                                            :where (= filename-id $s1)]
+                                            filename-id)))
+                (loop for hl-id in headline-ids do
+                      (emacsql org-db [:delete :from headline-content
+                                               :where (= headline-content:headline-id $s1)]
+                               hl-id)))
+              ;; now delete the file, which should cascade delete the rest
+              (emacsql org-db [:delete :from files :where (= filename $s1)] fname)))))
+
+
+  (defun org-db-link-query (query)
+    "Search for and open links using QUERY.
+  QUERY is an unquoted form that is used in a where clause of the
+  query. Here are some examples:
+   (= type \"cite\") find all links of type cite
+   (glob path \"*kitchin*\") find all links whose path matches *kitchin*
+   (and (= type \"cite\") (glob path \"mathias*\"))
+
+  Note: this function only works interactively. I don't know how to
+  enter the query as an unevaluated sexp in code.
+  "
+    (interactive "xQuery: ")
+    (let* ((results (eval `(emacsql org-db [:select [filename raw-link description begin]
+                                                    :from links :where ,query])))
+           (candidates (loop for result in results
+                             collect
+                             (list (format "%s | %s" (nth 1 result) (nth 0 result))
+                                   (nth 0 result)
+                                   (nth 3 result))))
+           (choice (completing-read "Open: " candidates))
+           (data (assoc choice candidates))
+           (fname (nth 1 data))
+           (pos (nth 2 data)))
+      (find-file fname)
+      (goto-char pos)))
+
+  (defun org-db-quit ()
+    "Quit the database."
+    (interactive)
+    (emacsql-close org-db))
+
+  ;; * End
+  (provide 'org-db)
+
+  ;;; org-db.el ends here
+#+END_SRC
+
+**** [[https://github.com/alphapapa/sword-converter][sword-converter]]
+
+Some of the experimenting and benchmarking I did with SQLite FTS tables is documented here.
+
 ** TODO [#A] Look into Helm updates
 
 See https://github.com/emacs-helm/helm/issues/1806#issuecomment-373329827
-
 ** SOMEDAY [#B] Look into using [[https://github.com/Fuco1/sallet/issues/22#issuecomment-328647175][Sallet]]
 :LOGBOOK:
 -  State "SOMEDAY"    from "TODO"       [2018-04-16 Mon 13:30]
