@@ -1304,8 +1304,8 @@ Return sorting function corresponding to chosen description string."
   ;; defcustom.
   (let* ((choices (--remove (stringp (-last-item it)) ; Filter empty "Custom function"
                             (cdr (get 'org-rifle-sort-order 'custom-type))))
-         (choice-tag (comp-read "Sort by: " (--map (third it)
-                                                   choices))))
+         (choice-tag (completing-read "Sort by: " (--map (third it)
+                                                         choices))))
     (cl-loop for choice in choices
              when (string= (third choice) choice-tag)
              return (-last-item choice))))
