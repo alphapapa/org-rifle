@@ -458,8 +458,7 @@ each result can be displayed on a single line."
              ,(when buffers
                 ;; Is there a nicer way to do this?
                 `(setq buffers-collected (append buffers-collected ,buffers)))
-             (let ((org-rifle-show-full-contents t))
-               (org-rifle-begin buffers-collected))))
+             (org-rifle-begin buffers-collected)))
        (run-hooks 'org-rifle-after-command-hook))))
 
 ;; FIXME: All these autoloads.
