@@ -567,6 +567,7 @@ This is how the sausage is made."
   "Return list of entry data if entry at point is a match.
 This is to be called from `org-rifle--get-candidates-in-buffer',
 because it uses variables in its outer scope."
+  ;; TODO: Separate matching and entry-data-gathering.
   (-let* ((node-beg (org-entry-beginning-position))
           (node-end (org-entry-end-position))
           ((level reduced-level todo-keyword priority-char heading tags priority) (org-heading-components))
