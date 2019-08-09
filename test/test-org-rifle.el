@@ -1,8 +1,12 @@
-;;; test-helm-org-rifle.el --- Tests for helm-org-rifle  -*- lexical-binding: t -*-
+;;; test-helm-org-rifle.el --- Tests for helm-org-rifle
+
+;; MAYBE: Make it work with lexical-binding.
 
 ;;; Code:
 
 ;;;; Requirements
+
+(require 'buttercup)
 
 (require 'org-rifle)
 
@@ -27,7 +31,7 @@ them."
   "Convert buffer objects to buffer names in CANDIDATES."
   ;; FIXME: Is there a way to represent buffer objects directly to
   ;; avoid having to do this?
-  (cl-loop for (display . real) in candidates
+  (cl-loop for (_display . real) in candidates
            do (setf (car real) (buffer-name (car real)))
            finally return candidates))
 
