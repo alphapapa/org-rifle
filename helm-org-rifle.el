@@ -76,6 +76,7 @@
 
 (defgroup helm-org-rifle nil
   "Settings for `helm-org-rifle'."
+  :group 'org-rifle
   :group 'helm
   :link '(url-link "https://github.com/alphapapa/org-rifle"))
 
@@ -133,7 +134,7 @@ like \": \"."
 ;;;;; Commands
 
 (cl-defmacro helm-org-rifle-defcommand (name args docstring &key sources (let nil) (transformer nil))
-  "Define interactive helm-org-rifle command, which will run the appropriate hooks.
+  "Define interactive `helm-org-rifle' command, which will run the appropriate hooks.
 Helm will be called with vars in LET bound."
   `(cl-defun ,(intern (concat "helm-org-rifle" (when (s-present? name) (concat "-" name)))) ,args
      ,docstring
