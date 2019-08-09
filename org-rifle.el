@@ -46,7 +46,8 @@
 ;; displayed, grouped by buffer.  Hit "RET" to show the selected
 ;; entry, or <C-return> to show it in an indirect buffer.
 
-;; Occur commands: show results in an occur-like, persistent buffer
+;; Commands:
+
 ;; + `org-rifle': Show results from all open Org buffers
 ;; + `org-rifle-agenda-files': Show results from Org agenda files
 ;; + `org-rifle-current-buffer': Show results from current buffer
@@ -56,34 +57,25 @@
 
 ;;;; Tips
 
-;; FIXME: Update tips for org-rifle refactor.
+;; Install the package `helm-org-rifle' for Helm versions of the commands.
 
 ;; + Select multiple entries in the Helm buffer to display selected
-;;   entries in a read-only, `occur`-style buffer.
-;; + Save all results in a Helm buffer to a `org-rifle`
-;;   buffer by pressing `C-s` (like `helm-grep-save-results`).
-;; + Show results from certain buffers by typing the name of the
-;;   buffer (usually the filename).
-;; + Show headings with certain to-do keywords by typing the keyword,
-;;   e.g. `TODO` or `DONE`.
-;; + Show headings with certain priorities by typing, e.g. `#A` or
-;;   `[#A]`.
-;; + Show headings with certain tags by searching for,
-;;   e.g. `:tag1:tag2:`.
-;; + Negate matches with a `!`, e.g. `pepperoni !anchovies`.
+;;   entries in a regular `org-rifle' results buffer.
+
+;; + Save all results in a Helm buffer to a regular `org-rifle'
+;;   results buffer by pressing C-s (like `helm-grep-save-results').
+
 ;; + Sort results by timestamp or buffer-order (the default) by
-;;   calling commands with a universal prefix (`C-u`).
+;;   calling commands with a universal prefix (C-u).
+
 ;; + Show entries in an indirect buffer by selecting that action from
-;;   the Helm actions list, or by pressing `<C-return>`.
-;; + The keymap for `org-rifle` results buffers imitates
-;;   the `org-speed` keys, making it quicker to navigate. You can also
-;;   collapse and expand headings and drawers with `TAB` and `S-TAB`,
-;;   just like in regular Org buffers.  Results buffers are marked
-;;   read-only so you cannot modify them by accidental keypresses.
-;; + Delete the result at point in `org-rifle` buffers by
+;;   the Helm actions list, or by pressing <C-return>.
+
+;; + Delete the result at point in `org-rifle' results buffers by
 ;;   pressing `d`.  This does not alter the source buffers but simply
 ;;   removes uninteresting results from view.
-;; +  You can customize the `org-rifle` group if you like.
+
+;; +  You can customize the `org-rifle' group if you like.
 
 ;;; Credits:
 

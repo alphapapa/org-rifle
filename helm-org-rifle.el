@@ -1,104 +1,34 @@
-;;; helm-org-rifle.el --- Rifle through your Org files
+;;; helm-org-rifle.el --- Rifle through your Org files with Helm
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/org-rifle
 ;; Version: 2.0-pre
-;; FIXME: Add Helm version to requires.
 ;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
 ;;; Commentary:
 
-;; This is my rifle.  There are many like it, but this one is mine.
-;; My rifle is my best friend.  It is my life.  I must master it as I
-;; must master my life.
-
-;; What does my rifle do?  It searches rapidly through my Org files,
-;; quickly bringing me the information I need to defeat the enemy.
-
-;; This package is inspired by org-search-goto/org-search-goto-ml.  It
-;; searches both headings and contents of entries in Org buffers, and
-;; it displays entries that match all search terms, whether the terms
-;; appear in the heading, the contents, or both.  Matching portions of
-;; entries' contents are displayed with surrounding context to make it
-;; easy to acquire your target.
-
-;; Entries are fontified by default to match the appearance of an Org
-;; buffer, and optionally the entire path can be displayed for each
-;; entry, rather than just its own heading.
-
-;;; Installation:
-
-;;;; MELPA
-
-;; If you installed from MELPA, your rifle is ready.  Just run one of
-;; the commands below.
-
-;;;; Manual
-
-;; Install packages `dash', `f', and `s'.  Then require
-;; this package in your init file:
-
-;;   (require 'org-rifle)
+;; Helm commands for `org-rifle'.
 
 ;;; Usage:
 
-;; Run one of the rifle commands, type some words, and results will be
-;; displayed, grouped by buffer.  Hit "RET" to show the selected
-;; entry, or <C-return> to show it in an indirect buffer.
+;; Commands:
 
-;; FIXME: Update command list for Helm.
-
-;; Occur commands: show results in an occur-like, persistent buffer
-;; + `org-rifle': Show results from all open Org buffers
-;; + `org-rifle-agenda-files': Show results from Org agenda files
-;; + `org-rifle-current-buffer': Show results from current buffer
+;; + `helm-org-rifle': Show results from all open Org buffers
+;; + `helm-org-rifle-agenda-files': Show results from Org agenda files
+;; + `helm-org-rifle-current-buffer': Show results from current buffer
 ;; + `helm-org-rifle-directories': Show results from selected directories; with prefix, recursively
 ;; + `helm-org-rifle-files': Show results from selected files
-;; + `org-rifle-org-directory': Show results from Org files in `org-directory'
+;; + `helm-org-rifle-org-directory': Show results from Org files in `org-directory'
 
 ;;;; Tips
-
-;; FIXME: Update tips for org-rifle refactor.
 
 ;; + Select multiple entries in the Helm buffer to display selected
 ;;   entries in a read-only, `occur`-style buffer.
 ;; + Save all results in a Helm buffer to a `org-rifle`
 ;;   buffer by pressing `C-s` (like `helm-grep-save-results`).
-;; + Show results from certain buffers by typing the name of the
-;;   buffer (usually the filename).
-;; + Show headings with certain to-do keywords by typing the keyword,
-;;   e.g. `TODO` or `DONE`.
-;; + Show headings with certain priorities by typing, e.g. `#A` or
-;;   `[#A]`.
-;; + Show headings with certain tags by searching for,
-;;   e.g. `:tag1:tag2:`.
-;; + Negate matches with a `!`, e.g. `pepperoni !anchovies`.
-;; + Sort results by timestamp or buffer-order (the default) by
-;;   calling commands with a universal prefix (`C-u`).
 ;; + Show entries in an indirect buffer by selecting that action from
 ;;   the Helm actions list, or by pressing `<C-return>`.
-;; + The keymap for `org-rifle` results buffers imitates
-;;   the `org-speed` keys, making it quicker to navigate. You can also
-;;   collapse and expand headings and drawers with `TAB` and `S-TAB`,
-;;   just like in regular Org buffers.  Results buffers are marked
-;;   read-only so you cannot modify them by accidental keypresses.
-;; + Delete the result at point in `org-rifle` buffers by
-;;   pressing `d`.  This does not alter the source buffers but simply
-;;   removes uninteresting results from view.
-;; +  You can customize the `org-rifle` group if you like.
-
-;;; Credits:
-
-;; This package is inspired by org-search-goto (specifically,
-;; org-search-goto-ml).  Its unofficial-official home is on
-;; EmacsWiki[1] but I've mirrored it on GitHub[2].  It's a really
-;; great package, and the only thing that could make it better is to
-;; make it work with Helm.  To avoid confusion, this package has a
-;; completely different name.
-;;
-;;  [1] https://www.emacswiki.org/emacs/org-search-goto-ml.el
-;;  [2] https://github.com/alphapapa/org-search-goto
 
 ;;; License:
 
