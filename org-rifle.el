@@ -1142,6 +1142,7 @@ created."
 From `helm-insert-header'."
   (setq text (concat " " text "\n"))
   ;; Only set the font-lock-face on a single line
+  ;; FIXME: Not helm-header.
   (add-text-properties 0 (length text) '(font-lock-face helm-source-header) text)
   ;; Apply the `helm-header' property to the whole thing, including
   ;; newlines
