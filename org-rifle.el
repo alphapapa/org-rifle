@@ -458,7 +458,7 @@ each result can be displayed on a single line."
 
 ;; FIXME: All these autoloads.
 
-;;;###autoload (autoload 'org-rifle "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle "org-rifle" nil t)
 (org-rifle-defcommand
  nil ()
  "Search all Org buffers."
@@ -466,13 +466,13 @@ each result can be displayed on a single line."
                     (-select #'org-rifle-buffer-visible-p
                              (org-buffer-list nil t))))
 
-;;;###autoload (autoload 'org-rifle-current-buffer "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle-current-buffer "org-rifle" nil t)
 (org-rifle-defcommand
  "current-buffer" ()
  "Search current Org buffer."
  :buffers (list (current-buffer)))
 
-;;;###autoload (autoload 'org-rifle-directories "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle-directories "org-rifle" nil t)
 (org-rifle-defcommand
  "directories" (&optional directories)
  "Search Org files in DIRECTORIES.
@@ -480,7 +480,7 @@ Files are opened if necessary, and the resulting buffers are left open."
  :directories (or directories
                   (read-file-name "Directories: " :marked-candidates t)))
 
-;;;###autoload (autoload 'org-rifle-files "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle-files "org-rifle" nil t)
 (org-rifle-defcommand
  "files" (&optional files)
  "Search Org FILES.
@@ -488,14 +488,14 @@ Files are opened if necessary, and the resulting buffers are left open."
  :files (or files
             (read-file-name "Files: " :marked-candidates t)))
 
-;;;###autoload (autoload 'org-rifle-agenda-files "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle-agenda-files "org-rifle" nil t)
 (org-rifle-defcommand
  "agenda-files" ()
  "Search Org agenda files.
 Files are opened if necessary, and the resulting buffers are left open."
  :files (org-agenda-files))
 
-;;;###autoload (autoload 'org-rifle-org-directory "helm-org-rifle" nil t)
+;;;###autoload (autoload 'org-rifle-org-directory "org-rifle" nil t)
 (org-rifle-defcommand
  "org-directory" ()
  "Search Org files in `org-directory'.
@@ -504,7 +504,7 @@ Files are opened if necessary, and the resulting buffers are left open."
 
 (defun org-rifle--refile (candidate)
   "Refile CANDIDATE."
-  ;; This needs to be an interactive command because it's bound in `helm-org-rifle-map'.
+  ;; This needs to be an interactive command because it's bound in `org-rifle-map'.
   (interactive)
   (-let (((buffer . pos) candidate))
     (with-current-buffer buffer
