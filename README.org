@@ -1,10 +1,10 @@
+#+TITLE: org-rifle
+
 #+PROPERTY: LOGGING nil
 
 #+BEGIN_HTML
 <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
 #+END_HTML
-
-* helm-org-rifle                                                   :noexport:
 
 [[https://melpa.org/#/helm-org-rifle][file:https://melpa.org/packages/helm-org-rifle-badge.svg]] [[https://stable.melpa.org/#/helm-org-rifle][file:https://stable.melpa.org/packages/helm-org-rifle-badge.svg]]
 
@@ -14,23 +14,26 @@ What does my rifle do?  It searches rapidly through my Org files, quickly bringi
 
 This package is inspired by [[https://github.com/alphapapa/org-search-goto][org-search-goto/org-search-goto-ml]].  It searches both headings and contents of entries in Org buffers, and it displays entries that match all search terms, whether the terms appear in the heading, the contents, or both.  Matching portions of entries' contents are displayed with surrounding context and grouped by buffer to make it easy to acquire your target.
 
-In contrast with =org-occur= and similar commands, =helm-org-rifle= is entry-based (i.e. a heading and all of its contents, not including subheadings), while =org-occur= is line-based.  So =org-occur= will show you entire lines that contain matching words, without any reference to the heading the line is under, while =helm-org-rifle= will show the heading of the entry that matches, followed by context around each matching word in the entry.  In other words, =helm-org-rifle= is sort of like Google, while =org-occur= is sort of like =grep=.
+In contrast with =org-occur= and similar commands, =org-rifle= is entry-based (i.e. a heading and all of its contents, not including subheadings), while =org-occur= is line-based.  So =org-occur= will show you entire lines that contain matching words, without any reference to the heading the line is under, while =org-rifle= will show the heading of the entry that matches, followed by context around each matching word in the entry.  In other words, =org-rifle= is sort of like Google, while =org-occur= is sort of like =grep=.
 
 Entries are fontified by default to match the appearance of an Org buffer, and optionally the entire path can be displayed for each entry, rather than just its own heading.
 
-** Screenshots
+*Helm support*: [[https://github.com/emacs-helm/helm][Helm]] support is available in the package =helm-org-rifle=.  It is recommended, because Helm provides features that significantly improve search speed and convenience.
+
+* Screenshots
 
 An animation is worth...a million words?
 
 [[images/screencast.gif]]
 
-With =helm-org-rifle-show-path= set to =t=, the whole path to each heading is shown:
+With =org-rifle-show-path= set to =t=, the whole path to each heading is shown:
 
 [[images/screenshot-path.png]]
 
 *Note:* These screenshots were taken with =solarized-theme= and =spacemacs-dark=, and these =org-level= face styles are part of those themes, not part of this package.  If you install this, they will be fontified according to your own theme and faces.
 
 * Contents                                                              :TOC:
+
  - [[#installation][Installation]]
  - [[#usage][Usage]]
  - [[#changelog][Changelog]]
@@ -45,16 +48,27 @@ If you installed from MELPA, your rifle is ready.  Just run one of the [[*Usage]
 
 ** Manual
 
-Install [[https://github.com/emacs-helm/helm][Helm]], [[https://github.com/magnars/dash.el][dash.el]], [[https://github.com/rejeep/f.el][f.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
+Install [[https://github.com/magnars/dash.el][dash.el]], [[https://github.com/rejeep/f.el][f.el]], and [[https://github.com/magnars/s.el][s.el]].  Then require this package in your init file:
 
 #+BEGIN_SRC elisp
-(require 'helm-org-rifle)
+  (require 'org-rifle)
 #+END_SRC
+
 * Usage                                                          :noexport_1:
 
 Run one of the rifle commands, type some words, and results will be displayed, grouped by buffer.  Hit =RET= to show the selected entry, or =<C-return>= to show it in an indirect buffer.
 
-*Helm commands:* show results in a Helm buffer
+** Commands
+
++  =org-rifle=: Show results from all open Org buffers
++  =org-rifle-agenda-files=: Show results from Org agenda files
++  =org-rifle-current-buffer=: Show results from current buffer
++  =org-rifle-directories=: Show results from selected directories; with prefix, recursively
++  =org-rifle-files=: Show results from selected files
++  =org-rifle-org-directory=: Show results from Org files in =org-directory=
+
+*Helm commands:*
+
 +  =helm-org-rifle=: Show results from all open Org buffers
 +  =helm-org-rifle-agenda-files=: Show results from Org agenda files
 +  =helm-org-rifle-current-buffer=: Show results from current buffer
@@ -62,18 +76,10 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  =helm-org-rifle-files=: Show results from selected files
 +  =helm-org-rifle-org-directory=: Show results from Org files in =org-directory=
 
-*Occur commands:* show results in an =occur=-like, persistent buffer
-+  =helm-org-rifle-occur=: Show results from all open Org buffers
-+  =helm-org-rifle-occur-agenda-files=: Show results from Org agenda files
-+  =helm-org-rifle-occur-current-buffer=: Show results from current buffer
-+  =helm-org-rifle-occur-directories=: Show results from selected directories; with prefix, recursively
-+  =helm-org-rifle-occur-files=: Show results from selected files
-+  =helm-org-rifle-occur-org-directory=: Show results from Org files in =org-directory=
-
 ** Tips
 
-+  Select multiple entries in the Helm buffer to display selected entries in a read-only, =occur=-style buffer.
-+  Save all results in a Helm buffer to a =helm-org-rifle-occur= buffer by pressing =C-s= (like =helm-grep-save-results=).
++  Select multiple entries in the Helm buffer to display selected entries in a persistent, read-only results buffer.
++  Save all results in a Helm buffer to a persistent results buffer by pressing =C-s= (like =helm-grep-save-results=).
 +  Show results from certain buffers by typing the name of the buffer (usually the filename).
 +  Show headings with certain to-do keywords by typing the keyword, e.g. =TODO= or =DONE=.
      -  Multiple to-do keywords are matched with boolean OR.
@@ -82,11 +88,14 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 +  Negate matches with a =!=, e.g. =pepperoni !anchovies=.
 +  Sort results by timestamp or buffer-order (the default) by calling commands with a universal prefix (=C-u=).
 +  Show entries in an indirect buffer by selecting that action from the Helm actions list, or by pressing =<C-return>=.
-+  The keymap for =helm-org-rifle-occur= results buffers imitates the =org-speed= keys, making it quicker to navigate. You can also collapse and expand headings and drawers with =TAB= and =S-TAB=, just like in regular Org buffers.  Results buffers are marked read-only so you cannot modify them by accidental keypresses.
-+  Delete the result at point in =helm-org-rifle-occur= buffers by pressing =d=.  This does not alter the source buffers but simply removes uninteresting results from view.
-+  You can customize the =helm-org-rifle= group if you like.
++  Delete the result at point in =org-rifle= results buffers by pressing =d=.  This does not alter the source buffers but simply removes uninteresting results from view.
++  You can customize options in the =org-rifle= group.
 
 * Changelog                                                      :noexport_1:
+
+** 2.0-pre
+
+The package has been renamed to =org-rifle=, and Helm support has been factored out into a separate package, =helm-org-rifle=.
 
 ** 1.7.0
 
