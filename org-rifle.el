@@ -898,8 +898,10 @@ but it respects headers and separators."
 	  (forward-char -1)))))
   (point))
 
-(defun org-rifle-begin (source-buffers)
-  "Begin occur-style command searching BUFFERS, opening results buffer, focusing minibuffer, and running timer to put results in buffer."
+(defun org-rifle-begin (buffers)
+  "Begin command searching BUFFERS.
+Open results buffer, focus minibuffer, and run timer to put
+results in buffer."
   (let ((inhibit-read-only t)
         ;; I can't figure out why the asterisks are causing the buffer
         ;; to not show up in my Helm buffer list, but it does show up
@@ -920,7 +922,7 @@ but it respects headers and separators."
                            0.25
                            'repeat
                            (lambda ()
-                             (org-rifle-process-input (s-trim (minibuffer-contents)) source-buffers results-buffer)))))
+                             (org-rifle-process-input (s-trim (minibuffer-contents)) buffers results-buffer)))))
           (read-from-minibuffer "pattern: " nil org-rifle-minibuffer-map nil nil nil nil))
       (when timer (cancel-timer timer) (setq timer nil)))))
 
@@ -942,8 +944,8 @@ but it respects headers and separators."
       (pop-to-buffer buffer))
     buffer))
 
-(defun org-rifle-process-input (input source-buffers results-buffer)
-  "Find results in SOURCE-BUFFERS for INPUT and insert into RESULTS-BUFFER."
+(defun org-rifle-process-input (input buffers results-buffer)
+  "Find results in BUFFERS for INPUT and insert into RESULTS-BUFFER."
   (when (and (not (s-blank-str? input))
              (not (string= input org-rifle-last-input))
              ;; Very short input strings can return so many results
@@ -952,7 +954,7 @@ but it respects headers and separators."
              (>= (length input) 3))
     (setq org-rifle-last-input input)
     (let ((inhibit-read-only t)
-          (results-by-buffer (cl-loop for source-buffer in source-buffers
+          (results-by-buffer (cl-loop for source-buffer in buffers
                                       collect (list :buffer source-buffer
                                                     :results (org-rifle-get-results-in-buffer source-buffer input)))))
       (when (eq org-rifle-transformer 'org-rifle-transformer-sort-by-latest-timestamp)
