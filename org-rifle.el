@@ -133,6 +133,17 @@
   :group 'org
   :link '(url-link "https://github.com/alphapapa/org-rifle"))
 
+(defface org-rifle-source-header
+  '((((background dark))
+     :background "#22083397778B"
+     :foreground "white"
+     :weight bold :height 1.3 :family "Sans Serif")
+    (((background light))
+     :background "#abd7f0"
+     :foreground "black"
+     :weight bold :height 1.3 :family "Sans Serif"))
+  "Face for source header in results buffers.")
+
 (defcustom org-rifle-close-unopened-file-buffers t
   "Close buffers that were not already open.
 After rifling through Org files that are not already open, close
@@ -1128,14 +1139,9 @@ created."
 (defun org-rifle-insert-source-header (text)
   "Insert header containing TEXT into the current buffer.
 From `helm-insert-header'."
-  (setq text (concat " " text "\n"))
-  ;; Only set the font-lock-face on a single line
-  ;; FIXME: Not helm-header.
-  (add-text-properties 0 (length text) '(font-lock-face helm-source-header) text)
-  ;; Apply the `helm-header' property to the whole thing, including
-  ;; newlines
-  (add-text-properties 0 (length text) '(helm-header t org-rifle-source-header t) text)
-  (insert text))
+  (insert (propertize (concat " " text "\n")
+                      'font-lock-face 'org-rifle-source-header
+                      'org-rifle-source-header t)))
 
 (defun org-rifle-cleanup-buffer ()
   "Cleanup occur results buffer when search is aborted."
