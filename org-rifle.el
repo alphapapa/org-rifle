@@ -1097,10 +1097,6 @@ trimmed."
       (s-trim
        (buffer-substring (point-min) (point-max))))))
 
-(defun org-rifle--speed-command (command)
-  "Call COMMAND with `org-speed-move-safe', ignoring any errors."
-  (ignore-errors (org-speed-move-safe command)))
-
 (defun org-rifle-buffer-visible-p (buffer)
   "Return non-nil if BUFFER is visible.
 That is, if its name does not start with a space."
