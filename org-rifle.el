@@ -743,7 +743,7 @@ because it uses variables in its outer scope."
                 (if org-rifle-show-path
                     (progn
                       ;; Trim the heading here.  Trying to avoid calling trim too much, to avoid slowing down.
-                      (setq heading (s-trim heading))
+                      (setq heading (s-trim (org-link-display-format heading)))
                       (if org-rifle-fontify-headings
                           (let ((path (if org-rifle-reverse-paths
                                           (--> (org-get-outline-path t)
