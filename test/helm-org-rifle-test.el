@@ -1,10 +1,14 @@
 ;;; -*- lexical-binding: t -*-
 
+;; Package-Requires: ((buttercup))
+
 ;;; Code:
 
 ;;;; Requirements
 
 (require 'helm-org-rifle)
+
+(require 'buttercup)
 
 ;;;; Helper functions
 
