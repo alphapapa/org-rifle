@@ -1,4 +1,7 @@
+
+
 * Contents :TOC:
+
  - [[#code][Code]]
      - [[#profiling][Profiling]]
      - [[#context-splitting][Context-splitting]]
@@ -829,6 +832,7 @@ I thought I had already done this, but apparently I forgot.  Might be an easy, n
 ** TODO To-do keyword negation
 
 I forgot to add this when I rewrote the input handling.
+
 ** MAYBE async/deferred/concurrent?
 :LOGBOOK:
 -  State "MAYBE"      from              [2017-09-11 Mon 10:27]
@@ -1026,6 +1030,7 @@ It might be faster, especially for unopened files, to use =grep -b= to get match
 It probably has some good techniques for doing it quickly.
 
 ** MAYBE flx sorting
+
 [[https://github.com/abo-abo/swiper/issues/207][This swiper issue]] may have some good info about caching and such.  It might be too slow for rifle, or at least it might be too slow with lots of results.  Hmm...
 
 ** UNDERWAY Match only headings
@@ -1046,6 +1051,7 @@ Could be good for testing e.g. negation, to make sure I don't break it.
 ** DONE Support new Helm with input-idle-delay
 
 Thanks to [[https://github.com/emacs-helm/helm/issues/1454#issuecomment-204519216][Thierry's help]], this should help prevent flickering.  This will be available in Helm 1.9.4 or commits after [2016-04-01 Fri].
+
 * Ideas
 
 ** TODO [#B] Testing
@@ -1224,6 +1230,7 @@ Use =x.y.0=, not =x.y=.
 ****** TODO Multiple tags
 
 ****** TODO Multiple tags in a single string
+
 e.g. =:tag1:tag2:=
 
 ******* TODO Positive
@@ -1294,6 +1301,7 @@ If a new minor version (not new patch version), make new =x.x= branch.  Then tag
 **** DONE =helm-org-rifle.el=
 
 **** DONE =README.org=
+
 ** DONE Stable release 1.4.0
 
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
@@ -1339,6 +1347,7 @@ The =buttercup= tests handle the important stuff, and the other stuff hasn't cha
 ****** CANCELED Multiple tags
 
 ****** CANCELED Multiple tags in a single string
+
 e.g. =:tag1:tag2:=
 
 ******* CANCELED Positive
@@ -1404,6 +1413,7 @@ Nothing's changed that should affect this; only added two commands and they work
 ****** CANCELED Multiple tags
 
 ****** CANCELED Multiple tags in a single string
+
 e.g. =:tag1:tag2:=
 
 ******* CANCELED Positive
@@ -1469,6 +1479,7 @@ Use =x.y.0=, not =x.y=.
 ****** DONE Multiple tags
 
 ****** DONE Multiple tags in a single string
+
 e.g. =:tag1:tag2:=
 
 ******* DONE Positive
@@ -1503,26 +1514,47 @@ If a new minor version (not new patch version), make new =x.x= branch.  Then tag
 Hmm, that seems like a long list.  But I want stable releases to actually be stable.
 
 *** CANCELED Try to get someone else to test it
+
 I tried.
+
 *** DONE Set =Version:= header
+
 *** DONE Update changelog
+
 *** DONE Test in clean MELPA sandbox
+
 **** DONE Update test checklist from changelog for new features
+
 **** DONE Install
+
 **** DONE Test functionality:
+
 ***** DONE Positive terms
+
 ***** DONE Negation
+
 ***** DONE TODO keywords
+
 ***** DONE Priorities
+
 ***** DONE Tags
+
 ****** DONE Positive
+
 ****** DONE Negative
+
 ****** DONE Multiple tags
+
 ****** DONE Multiple tags in a single string 
+
 (=:tag1:tag2:=)
+
 ******* DONE Positive
+
 ******* DONE Negative
+
 ***** DONE Context
+
 ***** CANCELED Ellipses customization
 
 Pushing this back to 1.2.
@@ -1570,6 +1602,7 @@ Use =x.y.0=, not =x.y=.
 ****** TODO Multiple tags
 
 ****** TODO Multiple tags in a single string
+
 e.g. =:tag1:tag2:=
 
 ******* TODO Positive
