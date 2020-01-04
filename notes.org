@@ -1144,6 +1144,12 @@ It would be nice to have a regexp mode...maybe.
 
 =s-truncate= truncates and adds =...=, which means that the chosen length of entry text gets reduced by 3.  Could fix this by using a setter for the =defcustom= that adds 3.
 
+* References
+
+** [[https://github.com/ndwarshuis/org-sql][GitHub - ndwarshuis/org-sql: SQL backend for Emacs Org-Mode]]
+
+[2020-01-04 Sat 09:04]
+
 * Bugs
 :PROPERTIES:
 :TOC:      ignore-children
