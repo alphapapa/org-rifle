@@ -88,6 +88,11 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 * Changelog                                                      :noexport_1:
 
+** 1.7.1
+
+*Fixes*
++  Results in =helm-org-rifle-occur= results buffers are now prefixed with =*= to make them appear like Org headings, which enables heading-based navigation commands to work again.  (Thanks to [[https://github.com/guibor][Michael-David Fiszer]] for reporting.)
+
 ** 1.7.0
 
 *Additions*

@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/helm-org-rifle
-;; Version: 1.7.0
+;; Version: 1.7.1
 ;; Package-Requires: ((emacs "24.4") (dash "2.12") (f "0.18.1") (helm "1.9.4") (s "1.10.0"))
 ;; Keywords: hypermedia, outlines
 
@@ -1305,7 +1305,10 @@ headers and separators."
                                  do (-let (((plist &as :text text . rest) entry))
                                       (add-text-properties 0 (length text) rest text)
                                       (insert helm-org-rifle-occur-separator)
-                                      (insert text))))))
+                                      ;; Insert the heading prefix so heading-based navigation commands
+                                      ;; work.  Note that this makes every entry appear to be a top-level
+                                      ;; heading, which may not be the case in the source buffers.
+                                      (insert "* " text))))))
         (helm-org-rifle-occur-highlight-matches-in-buffer results-buffer input)))))
 
 (defun helm-org-rifle--show-entries-as-occur (entries)
@@ -1320,7 +1323,7 @@ the (DISPLAY . REAL) pair from
                for text = (helm-org-rifle--get-entry-text buffer node-beg :include-heading t :full-path helm-org-rifle-show-path)
                do (progn (add-text-properties 0 (length text) (list :buffer buffer :node-beg node-beg) text)
                          (insert helm-org-rifle-occur-separator)
-                         (insert text)))
+                         (insert "* " text)))
       (helm-org-rifle-occur-highlight-matches-in-buffer (current-buffer) helm-input))))
 
 (defun helm-org-rifle-occur-highlight-matches-in-buffer (buffer input)
