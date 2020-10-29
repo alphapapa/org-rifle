@@ -418,6 +418,23 @@ disabled, the entry would be included, because its outline path
 would be ignored."
   :type 'boolean)
 
+(defcustom helm-org-rifle-match-headings-only nil
+  "If true, search terms match headings only.
+
+Consider this outline:
+
+* Food
+** Chili Pepper
+Spicy and red in color.
+* Agenda Tomorrow
+Red Hot Chili Peppers concert
+
+If `helm-org-rifle-match-headings-only' is nil, searching \"Chili
+Pepper\" in this outline will match both the \"Chili Pepper\" and
+\"Agenda Tomorrow\" headings. If this variable is t, the same
+search will only match the \"Chili Pepper\" heading."
+  :type 'boolean)
+
 (defface helm-org-rifle-separator
   ;; FIXME: Pick better default color.  Black is probably too harsh.
   '((((background dark))
@@ -904,7 +921,8 @@ This is how the sausage is made."
   "Return list of entry data if entry at point matches.
 This is to be called from `helm-org-rifle--get-candidates-in-buffer',
 because it uses variables in its outer scope."
-  (-let* ((node-beg (org-entry-beginning-position))
+  (-let* ((search-beg (point))
+          (node-beg (org-entry-beginning-position))
           (node-end (org-entry-end-position))
           ((level reduced-level todo-keyword priority-char heading tags priority) (org-heading-components))
           (path nil)
@@ -962,7 +980,13 @@ because it uses variables in its outer scope."
                ;; but negating "!*scratch*" doesn't'.
                (string-match excludes-re buffer-name)
                (save-excursion
-                 (re-search-forward excludes-re node-end t)))))
+                 (re-search-forward excludes-re node-end t))))
+
+         (when helm-org-rifle-match-headings-only
+           (save-excursion
+             (goto-char search-beg)
+             (not (org-at-heading-p))))
+         )
 
       ;; No excludes match; collect entry data
       (let (matching-positions-in-node matching-lines-in-node matched-words-with-context entry)
