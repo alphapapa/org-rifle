@@ -1116,6 +1116,8 @@ By setting a custom =xfuncname= for a git repo containing org files (see =man 5 
 
 [[http://blog.burntsushi.net/ripgrep/][ripgrep]] might also be useful, although I don't think it supports multi-line yet.
 
+[2020-11-26 Thu 02:20]  It [[https://github.com/BurntSushi/ripgrep/issues/176][supports multiline search now]], so it might be suitable now.
+
 ** MAYBE async matching
 
 It might be interesting to use [[https://github.com/jwiegley/emacs-async][emacs-async]] to do matching in files that aren't already open in the current Emacs process.  I'm not sure if it would be worth it, because even if it were faster in some cases for unopened files, it wouldn't be faster compared to searching already opened files.  And even though loading large files can be slow, once they are opened, the price is paid, and searching is faster; doing it in external Emacs processes would be slow every time, not just the first.
