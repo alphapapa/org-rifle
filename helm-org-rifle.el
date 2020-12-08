@@ -1059,7 +1059,7 @@ because it uses variables in its outer scope."
                                   (setq path (s-join "/" (-snoc parts last))))))
                             (concat path tags))
                         ;; Not fontifying
-                        (s-join "/" (list (or path (org-get-outline-path)) heading))))
+                        (s-join "/" (or path (org-get-outline-path t)))))
                   ;; No path or not showing path
                   (if helm-org-rifle-fontify-headings
                       (helm-org-rifle-fontify-like-in-org-mode
