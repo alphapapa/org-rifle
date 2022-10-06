@@ -1,9 +1,5 @@
 #+PROPERTY: LOGGING nil
 
-#+BEGIN_HTML
-<a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="images/dont-tread-on-emacs-150.png" align="right"></a>
-#+END_HTML
-
 * helm-org-rifle                                                   :noexport:
 
 [[https://melpa.org/#/helm-org-rifle][file:https://melpa.org/packages/helm-org-rifle-badge.svg]] [[https://stable.melpa.org/#/helm-org-rifle][file:https://stable.melpa.org/packages/helm-org-rifle-badge.svg]]
