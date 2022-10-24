@@ -86,6 +86,9 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.8-pre
 
+*Additions*
++ Option ~helm-org-rifle-show-level-stars~ shows heading level stars before each entry.
+
 *Fixes*
 + Display when ~helm-org-rifle-fontify-headings~ is nil.
 

@@ -301,6 +301,10 @@ is enabled, the fontification typically makes it obvious that the
 paths are reversed, depending on your Org faces."
   :type 'boolean)
 
+(defcustom helm-org-rifle-show-level-stars nil
+  "Show heading level stars before each heading."
+  :type 'boolean)
+
 (defcustom helm-org-rifle-re-prefix
   "\\(\\_<\\|[[:punct:]]\\)"
   "Regexp matched immediately before each search term.
@@ -1083,7 +1087,9 @@ because it uses variables in its outer scope."
           (setq entry
                 (if helm-org-rifle-show-full-contents
                     (s-join helm-org-rifle-heading-contents-separator
-                            (list heading
+                            (list (if helm-org-rifle-show-level-stars
+                                      (concat (s-repeat level "*") " " heading)
+                                    heading)
                                   (buffer-substring (save-excursion
                                                       (goto-char node-beg)
                                                       (org-end-of-meta-data)
@@ -1091,7 +1097,9 @@ because it uses variables in its outer scope."
                                                     node-end)))
                   ;; Show context strings
                   (s-join helm-org-rifle-heading-contents-separator
-                          (list heading
+                          (list (if helm-org-rifle-show-level-stars
+                                    (concat (s-repeat level "*") " " heading)
+                                  heading)
                                 (s-join helm-org-rifle-ellipsis-string
                                         matched-words-with-context)))))
           ;; Return list in format: text-for-display node-beg
