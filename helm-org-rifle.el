@@ -709,7 +709,7 @@ Files are opened if necessary, and the resulting buffers are left open."
 (defun helm-org-rifle-get-source-for-buffer (buffer)
   "Return Helm source for BUFFER."
   (let ((source (helm-build-sync-source (buffer-name buffer)
-                  :after-init-hook helm-org-rifle-after-init-hook
+                  :after-init-hook 'helm-org-rifle-after-init-hook
                   :candidates (lambda ()
                                 (when (s-present? helm-pattern)
                                   (helm-org-rifle--get-candidates-in-buffer (helm-attr 'buffer) helm-pattern)))
