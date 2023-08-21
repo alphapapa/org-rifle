@@ -90,7 +90,8 @@ Run one of the rifle commands, type some words, and results will be displayed, g
 
 ** 1.7.2-pre
 
-Nothing new yet.
+*Fixes*
++ Helm source warning.  ([[https://github.com/alphapapa/org-rifle/pull/77][#77]].  Thanks to [[https://github.com/Thaodan][Björn Bidar]] and [[https://github.com/thierryvolpiatto][Thierry Volpiatto]].)
 
 ** 1.7.1
 
