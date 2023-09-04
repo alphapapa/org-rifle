@@ -430,6 +430,12 @@ would be ignored."
      :foreground "black"))
   "Face for `helm-org-rifle-separator', which is displayed between results.")
 
+(defcustom helm-org-rifle-always-match-todo-keyword nil
+  "If `t`, allows non-uppercase TODO state strings like \"todo\" in the input
+text to match against the corresponding TODO state in headlines in addition to
+the default behavior of matching the \"todo\" string within entry text."
+  :type 'boolean)
+
 (defcustom helm-org-rifle-occur-kill-empty-buffer t
   "Close occur results buffer after last result is deleted."
   :type 'boolean)
@@ -997,6 +1003,9 @@ because it uses variables in its outer scope."
                                                               tags)
                                                         (when helm-org-rifle-test-against-path
                                                           (or path (setq path (org-get-outline-path))))
+                                                        (when (and helm-org-rifle-always-match-todo-keyword
+                                                                   todo-keyword)
+                                                          (list todo-keyword))
                                                         (mapcar 'car matching-lines-in-node)))
                        for re in required-positive-re-list
                        always (cl-loop for target in targets
